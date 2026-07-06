@@ -4,10 +4,42 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Director {
+  id     Int     @id @default(autoincrement())
+  name   String
+  dob    DateTime
+
+  movies Movie[]
+}
+
+model Actor {
+  id          Int      @id @default(autoincrement())
+  name        String
+  dob         DateTime
+  nationality String
+
+  movies Movie[]
+}
+
+model Movie {
+  id           Int      @id @default(autoincrement())
+  title        String
+  release_year Int
+  duration     Int
+  genre        String
+  rating       Float
+  releaseDate DateTime
+
+  directorId   Int
+  director      Director @relation(fields: [directorId], references: [id])
+
+  actors Actor[]
 }
