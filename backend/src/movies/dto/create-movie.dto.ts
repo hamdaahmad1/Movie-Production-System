@@ -24,6 +24,7 @@ export class CreateMovieDto{
     @IsInt()
     release_year:number;
 
+    @IsInt()
     @Min(1, {message : 'Rating must be atleast 1'}) 
     @Max(10,{message : 'Rating must not exceed 10'})
     rating:number;

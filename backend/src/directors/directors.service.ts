@@ -64,6 +64,7 @@ export class DirectorsService {
                 'Director Not Found'
             )
         }
+        return director;
     }
     async update (id:number, dto:UpdateDirectorDto)
     {

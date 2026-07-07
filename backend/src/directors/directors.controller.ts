@@ -49,7 +49,7 @@ export class DirectorsController {
 
     @Delete(':id')
     remove(@Param('id',ParseIntPipe)id:number){
-        this.directorService.remove(id);
+       return this.directorService.remove(id);
     }
 
 

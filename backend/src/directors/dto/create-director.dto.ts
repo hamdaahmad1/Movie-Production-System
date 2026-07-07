@@ -27,7 +27,7 @@ export class CreateDirectorDto{
     movies : number
 
     @IsDateString()
-     dob : Date
+     dob : string
 
 
 
