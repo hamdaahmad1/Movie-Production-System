@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
+import { UpdateMovieDto } from './dto/update-movie.dto';
+import { ASYNC_OPTIONS_METADATA_KEYS } from '@nestjs/common/module-utils/constants';
 
 
 
@@ -95,6 +97,72 @@ export class MoviesService
 
         }
         return movie;
+
+    }
+
+
+    async update(id:number, dto:UpdateMovieDto){
+        const currentYear= new Date().getFullYear();
+
+        if(dto.release_year && dto.release_year>currentYear){
+            throw new BadRequestException(
+                'Release Year cannot be in future'            );
+        }
+        const{directorId, actorIds, ...movieData}= dto;
+
+        return this.prisma.movie.update({
+            where: {
+                id
+            },
+            data:{
+                ...movieData,
+
+                director: directorId
+                ? {
+
+                    connect:{
+                        id:directorId
+                    }
+                }
+                :undefined,
+
+
+                actors: actorIds
+                ?{
+                    connect: actorIds.map(id=>({
+                        id
+                    }))
+                }
+                :undefined,
+            },
+
+
+
+        });
+
+
+    }
+
+    async remove(id:number){
+
+        const movie =await this.prisma.movie.findUnique({
+
+            where:{
+                id
+            },
+
+        });
+        if(!movie){
+            throw new NotFoundException("Movie Not Found");
+
+        }
+        return this.prisma.movie.delete({
+
+            where:{
+                id
+            },
+
+        });
 
     }
 }

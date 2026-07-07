@@ -1,6 +1,7 @@
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { MoviesService } from './movies.service';
 import { ParseIntPipe } from '@nestjs/common';
+import { UpdateMovieDto } from './dto/update-movie.dto';
 import { 
     Controller,
     Get,
@@ -30,6 +31,22 @@ export class MoviesController {
     @Get(':id')
     findOne(@Param('id', ParseIntPipe) id:number){
         return this.moviesService.findOne(id);
+    }
+
+    @Patch(':id')
+    update(
+
+        @Param('id',ParseIntPipe) id :number,
+        @Body() dto: UpdateMovieDto,
+
+    ) {
+        return this.moviesService.update(id,dto);
+
+    }
+
+    @Delete(':id')
+    remove(@Param('id',ParseIntPipe) id:number){
+        return this.moviesService.remove(id);
     }
 
 
