@@ -36,7 +36,6 @@ model Movie {
   duration     Int
   genre        String
   rating       Float
-  releaseDate DateTime
 
   directorId   Int
   director      Director @relation(fields: [directorId], references: [id])
