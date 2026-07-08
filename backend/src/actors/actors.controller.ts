@@ -6,6 +6,7 @@ import { ParseIntPipe } from '@nestjs/common';
 import { 
     Controller,
     Post,
+    Put,
     Patch,
     Get,
     Delete,
@@ -36,11 +37,19 @@ export class ActorsController
     }
 
     @Patch(':id')
-    update (
+    Partialupdate (
 
         @Param('id',ParseIntPipe) id:number,
         @Body() dto:UpdateActorDto
 
+    ){
+        return this.actorService.partialUpdate(id,dto);
+    }
+
+    @Put(':id')
+    update(
+        @Param('id',ParseIntPipe) id:number,
+        @Body() dto: CreateActorDto,
     ){
         return this.actorService.update(id,dto);
     }

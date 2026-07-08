@@ -6,6 +6,7 @@ import {
     Controller,
     Get,
     Post,
+    Put,
     Patch,
     Delete,
     Body,
@@ -33,15 +34,23 @@ export class MoviesController {
     }
 
     @Patch(':id')
-    update(
+    PartialUpdate(
 
         @Param('id',ParseIntPipe) id :number,
         @Body() dto: UpdateMovieDto,
 
     ) {
-        return this.moviesService.update(id,dto);
+        return this.moviesService.partialUpdate(id,dto);
 
     }
+    @Put(':id')
+    update(
+        @Param('id',ParseIntPipe) id:number,
+        @Body() dto: CreateMovieDto,
+    ){
+        return this.moviesService.update(id,dto);
+    }
+
 
     @Delete(':id')
     remove(@Param('id',ParseIntPipe) id:number){

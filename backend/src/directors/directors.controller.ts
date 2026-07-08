@@ -9,6 +9,7 @@ import {
     Controller,
     Get,
     Post,
+    Put,
     Patch,
     Delete,
     Body,
@@ -38,11 +39,19 @@ export class DirectorsController {
     }
 
     @Patch(':id')
-    update (
+    PartialUpdate (
 
         @Param('id',ParseIntPipe) id:number,
         @Body() dto:UpdateDirectorDto
 
+    ){
+        return this.directorService.partialUpdate(id,dto);
+    }
+
+    @Put(':id')
+    update(
+        @Param('id',ParseIntPipe) id:number,
+        @Body() dto: CreateDirectorDto,
     ){
         return this.directorService.update(id,dto);
     }

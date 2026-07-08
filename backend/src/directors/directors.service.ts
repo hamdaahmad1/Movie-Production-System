@@ -66,7 +66,7 @@ export class DirectorsService {
         }
         return director;
     }
-    async update (id:number, dto:UpdateDirectorDto)
+    async update (id:number, dto:CreateDirectorDto)
     {
         if(dto.dob){
             const DOB= new Date();
@@ -92,6 +92,34 @@ export class DirectorsService {
         },
     });
     }
+    async partialUpdate (id:number, dto:UpdateDirectorDto)
+    {
+        if(dto.dob){
+            const DOB= new Date();
+    
+
+        if(new Date(dto.dob) >DOB)
+        {
+            throw new BadRequestException(
+                'Date of birth cannot be in the future'
+            );
+
+        }
+        
+    }
+    return this.prisma.director.update({
+        where:{
+            id
+        },
+        data:
+        {
+            name:dto.name,
+            dob: dto.dob? new Date(dto.dob) :undefined
+        },
+    });
+    }
+
+
 
     async remove(id:number)
     {

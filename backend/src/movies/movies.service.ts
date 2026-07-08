@@ -101,7 +101,7 @@ export class MoviesService
     }
 
 
-    async update(id:number, dto:UpdateMovieDto){
+    async update(id:number, dto:CreateMovieDto){
         const currentYear= new Date().getFullYear();
 
         if(dto.release_year && dto.release_year>currentYear){
@@ -114,33 +114,72 @@ export class MoviesService
             where: {
                 id
             },
-            data:{
-                ...movieData,
-
-                director: directorId
-                ? {
-
-                    connect:{
-                        id:directorId
-                    }
-                }
-                :undefined,
-
-
-                actors: actorIds
-                ?{
-                    connect: actorIds.map(id=>({
-                        id
-                    }))
-                }
-                :undefined,
+            data: {
+                title: dto.title,
+                genre: dto.genre,
+                rating: dto.rating,
+                duration: dto.duration,
+                release_year: dto.release_year,
+    
+                director: {
+                    connect: {
+                        id: dto.directorId,
+                    },
+                },
+    
+                actors: {
+                    set: dto.actorIds.map(id => ({
+                        id,
+                    })),
+                },
             },
-
+    
 
 
         });
 
 
+    }
+    async partialUpdate(id: number, dto: UpdateMovieDto) {
+        const currentYear = new Date().getFullYear();
+    
+        if (dto.release_year && dto.release_year > currentYear) {
+            throw new BadRequestException(
+                'Release Year cannot be in the future',
+            );
+        }
+    
+        const { directorId, actorIds, ...movieData } = dto;
+    
+        return this.prisma.movie.update({
+            where: {
+                id,
+            },
+            data: {
+                ...movieData,
+    
+                director: directorId
+                    ? {
+                          connect: {
+                              id: directorId,
+                          },
+                      }
+                    : undefined,
+    
+                actors: actorIds
+                    ? {
+                          set: actorIds.map(id => ({
+                              id,
+                          })),
+                      }
+                    : undefined,
+            },
+    
+            include: {
+                director: true,
+                actors: true,
+            },
+        });
     }
 
     async remove(id:number){

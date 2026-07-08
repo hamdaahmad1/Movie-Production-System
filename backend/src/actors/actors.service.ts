@@ -63,8 +63,35 @@ export class ActorsService {
      return actor;
 
  }
+ async update (id:number, dto:CreateActorDto)
+    {
+        if(dto.dob){
+            const DOB= new Date();
+    
 
- async update (id:number, dto:UpdateActorDto)
+        if(new Date(dto.dob) >DOB)
+        {
+            throw new BadRequestException(
+                'Date of birth cannot be in the future'
+            );
+
+        }
+        
+    }
+    return this.prisma.actor.update({
+        where:{
+            id
+        },
+        data:
+        {
+            name:dto.name,
+            dob: dto.dob? new Date(dto.dob) :undefined,
+            nationality:dto.nationality,
+        },
+    });
+    }
+
+ async partialUpdate (id:number, dto:UpdateActorDto)
     {
         if(dto.dob){
             const DOB= new Date();
