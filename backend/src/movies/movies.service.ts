@@ -2,206 +2,334 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
-import { ASYNC_OPTIONS_METADATA_KEYS } from '@nestjs/common/module-utils/constants';
-
-
-
 
 
 @Injectable()
 export class MoviesService 
 {
- constructor(private prisma: PrismaService) {}
 
- async create(dto:CreateMovieDto)
- {
-    const currentYear= new Date().getFullYear();
-    if(dto.release_year>currentYear)
+constructor(private prisma: PrismaService) {}
+
+
+
+async create(dto:CreateMovieDto)
+{
+
+    const currentDate = new Date();
+
+    if(new Date(dto.releaseDate) > currentDate)
     {
         throw new BadRequestException(
-            'Year cannot be in the future'
+            'Release date cannot be in the future'
         );
     }
 
+
     return this.prisma.movie.create(
+    {
+
+        data:
         {
-          data: 
-          {
-                title: dto.title,
-                genre: dto.genre,
-                rating: dto.rating,
-                duration: dto.duration,
-                release_year:dto.release_year,
-                director:
-                {
-                    connect:
-                    {
-                        id:dto.directorId
-                    }
+            title: dto.title,
+            description: dto.description,
+            releaseDate: new Date(dto.releaseDate),
+            language: dto.language,
+            posterUrl: dto.posterUrl,
+            genre: dto.genre,
+            rating: dto.rating,
+            duration: dto.duration,
+            trailerId: dto.trailerId,
 
-                },
-                actors:
-                {
-                    connect:
-    
-                        dto.actorIds.map(id=>({
-                        id,
 
-                    })),
-                    
-                },
-        
+            director:
+            {
+                connect:
+                {
+                    id:dto.directorId
+                }
             },
 
-            include:{
-                director:true,
-                actors:true
 
+            actors:
+            {
+                connect:
+                dto.actorIds.map(id=>({
+                    id
+                }))
             }
 
-        } );
-
-    }
-
-    async findAll()
-    {
-        return this.prisma.movie.findMany({
-        
-            include: {
-                director:true,
-                actors:true,
-            },
-
-        });
-    }
+        },
 
 
-    async findOne(id:number)
-    {
-        const movie = await this.prisma.movie.findUnique({
-            where: 
-            {
-                id
-
-            },
-            include : 
-            {
-                director:true,
-                actors:true,
-            },
-
-        });
-        if(!movie)
+        include:
         {
-            throw new NotFoundException('Movie Not Found');
-
+            director:true,
+            actors:true
         }
-        return movie;
 
+    });
+
+}
+
+
+
+async findAll()
+{
+    return this.prisma.movie.findMany({
+
+        include:
+        {
+            director:true,
+            actors:true,
+        },
+
+    });
+}
+
+
+
+
+async findOne(id:number)
+{
+
+    const movie = await this.prisma.movie.findUnique({
+
+        where:
+        {
+            id
+        },
+
+
+        include:
+        {
+            director:true,
+            actors:true,
+        },
+
+    });
+
+
+    if(!movie)
+    {
+        throw new NotFoundException(
+            'Movie Not Found'
+        );
     }
 
 
-    async update(id:number, dto:CreateMovieDto){
-        const currentYear= new Date().getFullYear();
+    return movie;
 
-        if(dto.release_year && dto.release_year>currentYear){
-            throw new BadRequestException(
-                'Release Year cannot be in future'            );
-        }
-        const{directorId, actorIds, ...movieData}= dto;
-
-        return this.prisma.movie.update({
-            where: {
-                id
-            },
-            data: {
-                title: dto.title,
-                genre: dto.genre,
-                rating: dto.rating,
-                duration: dto.duration,
-                release_year: dto.release_year,
-    
-                director: {
-                    connect: {
-                        id: dto.directorId,
-                    },
-                },
-    
-                actors: {
-                    set: dto.actorIds.map(id => ({
-                        id,
-                    })),
-                },
-            },
-    
+}
 
 
-        });
 
 
-    }
-    async partialUpdate(id: number, dto: UpdateMovieDto) {
-        const currentYear = new Date().getFullYear();
-    
-        if (dto.release_year && dto.release_year > currentYear) {
-            throw new BadRequestException(
-                'Release Year cannot be in the future',
-            );
-        }
-    
-        const { directorId, actorIds, ...movieData } = dto;
-    
-        return this.prisma.movie.update({
-            where: {
-                id,
-            },
-            data: {
-                ...movieData,
-    
-                director: directorId
-                    ? {
-                          connect: {
-                              id: directorId,
-                          },
-                      }
-                    : undefined,
-    
-                actors: actorIds
-                    ? {
-                          set: actorIds.map(id => ({
-                              id,
-                          })),
-                      }
-                    : undefined,
-            },
-    
-            include: {
-                director: true,
-                actors: true,
-            },
-        });
+
+async update(id:number, dto:CreateMovieDto)
+{
+
+    if(new Date(dto.releaseDate) > new Date())
+    {
+        throw new BadRequestException(
+            'Release date cannot be in the future'
+        );
     }
 
-    async remove(id:number){
 
-        const movie =await this.prisma.movie.findUnique({
 
-            where:{
-                id
+    return this.prisma.movie.update({
+
+        where:
+        {
+            id
+        },
+
+
+        data:
+        {
+
+            title:dto.title,
+
+            description:dto.description,
+
+            releaseDate:new Date(dto.releaseDate),
+
+            language:dto.language,
+
+            posterUrl:dto.posterUrl,
+
+            genre:dto.genre,
+
+            rating:dto.rating,
+
+            duration:dto.duration,
+
+            trailerId: dto.trailerId,
+
+
+
+            director:
+            {
+                connect:
+                {
+                    id:dto.directorId
+                }
             },
 
-        });
-        if(!movie){
-            throw new NotFoundException("Movie Not Found");
 
+
+            actors:
+            {
+                set:
+                dto.actorIds.map(id=>({
+                    id
+                }))
+            }
+
+
+        },
+
+
+        include:
+        {
+            director:true,
+            actors:true
         }
-        return this.prisma.movie.delete({
 
-            where:{
-                id
-            },
 
-        });
+    });
 
+}
+
+
+
+
+
+
+
+async partialUpdate(id:number, dto:UpdateMovieDto)
+{
+
+    if(dto.releaseDate && new Date(dto.releaseDate) > new Date())
+    {
+        throw new BadRequestException(
+            'Release date cannot be in the future'
+        );
     }
+
+
+
+    const {
+        directorId,
+        actorIds,
+        releaseDate,
+        ...movieData
+    } = dto;
+
+
+
+    return this.prisma.movie.update({
+
+        where:
+        {
+            id
+        },
+
+
+        data:
+        {
+
+
+            ...movieData,
+
+
+            releaseDate:
+            releaseDate 
+            ? new Date(releaseDate)
+            : undefined,
+
+
+
+            director:
+            directorId
+            ?
+            {
+                connect:
+                {
+                    id:directorId
+                }
+            }
+            :
+            undefined,
+
+
+
+            actors:
+            actorIds
+            ?
+            {
+                set:
+                actorIds.map(id=>({
+                    id
+                }))
+            }
+            :
+            undefined
+
+
+        },
+
+
+        include:
+        {
+            director:true,
+            actors:true
+        }
+
+
+    });
+
+}
+
+
+
+
+
+
+
+async remove(id:number)
+{
+
+    const movie = await this.prisma.movie.findUnique({
+
+        where:
+        {
+            id
+        }
+
+    });
+
+
+
+    if(!movie)
+    {
+        throw new NotFoundException(
+            "Movie Not Found"
+        );
+    }
+
+
+
+    return this.prisma.movie.delete({
+
+        where:
+        {
+            id
+        }
+
+    });
+
+}
+
+
 }

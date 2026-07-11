@@ -7,6 +7,10 @@ import{
     IsArray,
     ArrayNotEmpty,
     ArrayUnique,
+    IsNumber,
+    IsUrl,
+    IsDateString,
+    IsOptional,
 
 
 
@@ -21,8 +25,12 @@ export class CreateMovieDto{
     @IsNotEmpty({message: 'Title is required'})
     title:string
 
-    @IsInt()
-    release_year:number;
+    @IsString()
+    @IsNotEmpty({ message: 'Description is required' })
+    description: string;
+
+    @IsDateString({}, { message: 'Release date must be a valid date' })
+    releaseDate: string;
 
     @IsInt()
     @Min(1, {message : 'Rating must be atleast 1'}) 
@@ -36,6 +44,20 @@ export class CreateMovieDto{
     @IsString()
     @IsNotEmpty({message:'Genre is Required'})
     genre: string;
+    
+    @IsString()
+    @IsNotEmpty({ message: 'Language is required' })
+    language: string;
+
+    @IsString()
+    @IsNotEmpty({message:'Poster URL is required'})
+    @IsUrl({}, { message: 'Poster URL must be valid' })
+    posterUrl: string;
+
+    @IsString()
+    @IsNotEmpty({message:'Trailer Id is required'})
+    @IsUrl({}, {message:'Trailer Id must be valid'})
+    trailerId:string
 
     @IsInt()
     directorId:number;

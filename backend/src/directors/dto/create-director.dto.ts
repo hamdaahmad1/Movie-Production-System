@@ -1,12 +1,12 @@
 import 
 {
-    IsInt,
     IsString,
     IsNotEmpty,
     IsArray,
     ArrayNotEmpty,
     ArrayUnique,
     IsDateString,
+    IsUrl,
 
 
 
@@ -19,14 +19,25 @@ export class CreateDirectorDto{
     @IsString()
     @IsNotEmpty({message: 'name is required'})
     name : string
+    
+    @IsString()
+    @IsNotEmpty({ message: 'Nationality is required' })
+    nationality: string
 
+    @IsString()
+    @IsNotEmpty({ message: 'Biography is required' })
+    biography: string
+
+    @IsNotEmpty({ message: 'Image URL is required'})
+    @IsUrl({}, { message: 'Image URL must be valid' })
+    imageUrl: string
 
     @IsArray()
-    @ArrayNotEmpty()
-    @ArrayUnique()
-    movies : number
+    @ArrayNotEmpty({message:'Movies cannot be empty'})
+    @ArrayUnique({message:'Movies must be unique'})
+    movies : number[]
 
-    @IsDateString()
+    @IsDateString({}, {message:'DOB must be a valid date'})
      dob : string
 
 

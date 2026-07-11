@@ -16,6 +16,9 @@ model Director {
   id     Int     @id @default(autoincrement())
   name   String
   dob    DateTime
+  nationality  String
+  biography    String
+  imageUrl     String
 
   movies Movie[]
 }
@@ -25,6 +28,10 @@ model Actor {
   name        String
   dob         DateTime
   nationality String
+  gender       String
+  biography    String
+  awards       Int
+  imageUrl     String
 
   movies Movie[]
 }
@@ -32,10 +39,14 @@ model Actor {
 model Movie {
   id           Int      @id @default(autoincrement())
   title        String
-  release_year Int
   duration     Int
+  description  String
   genre        String
   rating       Float
+  language     String
+  releaseDate  DateTime
+  posterUrl    String
+  trailerId    String
 
   directorId   Int
   director      Director @relation(fields: [directorId], references: [id])
