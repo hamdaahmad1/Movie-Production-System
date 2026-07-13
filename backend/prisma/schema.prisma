@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,43 +8,40 @@ datasource db {
 }
 
 model Director {
-  id     Int     @id @default(autoincrement())
-  name   String
-  dob    DateTime
-  nationality  String
-  biography    String
-  imageUrl     String
-
-  movies Movie[]
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  dob         DateTime
+  biography   String
+  imageUrl    String
+  nationality String
+  movies      Movie[]
 }
 
 model Actor {
   id          Int      @id @default(autoincrement())
-  name        String
+  name        String   @unique
   dob         DateTime
   nationality String
-  gender       String
-  biography    String
-  awards       Int
-  imageUrl     String
-
-  movies Movie[]
+  awards      Int
+  biography   String
+  gender      String
+  imageUrl    String
+  movies      Movie[]  @relation("ActorToMovie")
 }
 
 model Movie {
-  id           Int      @id @default(autoincrement())
-  title        String
-  duration     Int
-  description  String
-  genre        String
-  rating       Float
-  language     String
-  releaseDate  DateTime
-  posterUrl    String
-  trailerId    String
+  id          Int      @id @default(autoincrement())
+  title       String
+  duration    Int
+  genre       String
+  rating      Float
+  directorId  Int
+  description String
+  language    String
+  posterUrl   String
+  releaseDate DateTime
+  trailerId   String
 
-  directorId   Int
-  director      Director @relation(fields: [directorId], references: [id])
-
-  actors Actor[]
+  director    Director @relation(fields: [directorId], references: [id])
+  actors      Actor[]  @relation("ActorToMovie")
 }

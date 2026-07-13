@@ -13,8 +13,7 @@ import {
     Param,
 
  } from '@nestjs/common';
-
-@Controller('movies')
+  @Controller('movies')
 export class MoviesController {
     constructor(private moviesService:MoviesService){}
 

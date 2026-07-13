@@ -1,10 +1,21 @@
+import { Actor } from "./actor";
+import { Director } from "./director";
+
 export interface Movie {
     id: number;
     title: string;
-    release_year: number;
+    description: string;
+    releaseDate: string;
+    language: string;
+    posterUrl: string;
+    trailerId: string;
     duration: number;
     genre: string;
     rating: number;
+
     directorId: number;
-    actorIds: number[];
+
+    director?: Director;
+
+    actors?: Actor[];
 }

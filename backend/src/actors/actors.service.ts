@@ -1,18 +1,39 @@
-import { Injectable } from '@nestjs/common';
-import { BadRequestException } from '@nestjs/common';
-import { NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
+
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateActorDto } from './dto/create-actor.dto';
 import { UpdateActorDto } from './dto/update-actor.dto';
 
-import { PrismaService } from 'src/prisma/prisma.service';
 @Injectable()
 export class ActorsService {
- constructor(private prisma: PrismaService){}
+  constructor(private prisma: PrismaService) {}
 
- async create(dto: CreateActorDto) {
+  // CREATE
+  async create(dto: CreateActorDto) {
+    // Future DOB validation
     if (new Date(dto.dob) > new Date()) {
       throw new BadRequestException(
         'Date of birth cannot be in the future',
+      );
+    }
+
+    // Duplicate actor validation
+    const existingActor = await this.prisma.actor.findFirst({
+      where: {
+        name: {
+          equals: dto.name,
+          mode: 'insensitive',
+        },
+      },
+    });
+
+    if (existingActor) {
+      throw new BadRequestException(
+        'An actor with this name already exists.',
       );
     }
 
@@ -21,7 +42,7 @@ export class ActorsService {
         name: dto.name,
         dob: new Date(dto.dob),
         nationality: dto.nationality,
-        gender:dto.gender,
+        gender: dto.gender,
         biography: dto.biography,
         awards: dto.awards,
         imageUrl: dto.imageUrl,
@@ -29,6 +50,7 @@ export class ActorsService {
     });
   }
 
+  // GET ALL
   async findAll() {
     return this.prisma.actor.findMany({
       include: {
@@ -37,6 +59,7 @@ export class ActorsService {
     });
   }
 
+  // GET ONE
   async findOne(id: number) {
     const actor = await this.prisma.actor.findUnique({
       where: { id },
@@ -52,8 +75,8 @@ export class ActorsService {
     return actor;
   }
 
-  
-  async update(id: number, dto: CreateActorDto) {
+  // PUT (Full Update)
+  async update(id: number, dto: UpdateActorDto) {
     const actor = await this.prisma.actor.findUnique({
       where: { id },
     });
@@ -62,17 +85,39 @@ export class ActorsService {
       throw new NotFoundException('Actor not found');
     }
 
-    if (new Date(dto.dob) > new Date()) {
+    // Future DOB validation
+    if (dto.dob && new Date(dto.dob) > new Date()) {
       throw new BadRequestException(
         'Date of birth cannot be in the future',
       );
+    }
+
+    // Duplicate actor validation
+    if (dto.name) {
+      const existingActor = await this.prisma.actor.findFirst({
+        where: {
+          name: {
+            equals: dto.name,
+            mode: 'insensitive',
+          },
+          NOT: {
+            id,
+          },
+        },
+      });
+
+      if (existingActor) {
+        throw new BadRequestException(
+          'An actor with this name already exists.',
+        );
+      }
     }
 
     return this.prisma.actor.update({
       where: { id },
       data: {
         name: dto.name,
-        dob: new Date(dto.dob),
+        dob: dto.dob ? new Date(dto.dob) : undefined,
         nationality: dto.nationality,
         gender: dto.gender,
         biography: dto.biography,
@@ -92,10 +137,32 @@ export class ActorsService {
       throw new NotFoundException('Actor not found');
     }
 
+    // Future DOB validation
     if (dto.dob && new Date(dto.dob) > new Date()) {
       throw new BadRequestException(
         'Date of birth cannot be in the future',
       );
+    }
+
+    // Duplicate actor validation
+    if (dto.name) {
+      const existingActor = await this.prisma.actor.findFirst({
+        where: {
+          name: {
+            equals: dto.name,
+            mode: 'insensitive',
+          },
+          NOT: {
+            id,
+          },
+        },
+      });
+
+      if (existingActor) {
+        throw new BadRequestException(
+          'An actor with this name already exists.',
+        );
+      }
     }
 
     return this.prisma.actor.update({
@@ -112,18 +179,27 @@ export class ActorsService {
     });
   }
 
+  // DELETE
   async remove(id: number) {
     const actor = await this.prisma.actor.findUnique({
       where: { id },
+      include: {
+        movies: true,
+      },
     });
-
+  
     if (!actor) {
-      throw new NotFoundException('Actor not found');
+      throw new NotFoundException("Actor not found");
     }
-
+  
+    if (actor.movies.length > 0) {
+      throw new BadRequestException(
+        "Cannot delete this actor because they are assigned to one or more movies."
+      );
+    }
+  
     return this.prisma.actor.delete({
       where: { id },
     });
   }
-
 }

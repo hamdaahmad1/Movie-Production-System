@@ -2,15 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { getDirectors, deleteDirector } from "@/services/directorService";
+import { Director } from "@/types/director";
 
 export default function DirectorsPage() {
-  const [directors, setDirectors] = useState<any[]>([]);
+  const router = useRouter();
+
+  const [directors, setDirectors] = useState<Director[]>([]);
 
   async function loadDirectors() {
-    const data = await getDirectors();
-    setDirectors(data);
+    try {
+      const data = await getDirectors();
+      setDirectors(data);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   useEffect(() => {
@@ -18,49 +26,109 @@ export default function DirectorsPage() {
   }, []);
 
   async function handleDelete(id: number) {
-    if (!confirm("Delete this director?")) return;
+    const confirmDelete = confirm(
+      "Are you sure you want to delete this director?"
+    );
 
-    await deleteDirector(id);
+    if (!confirmDelete) return;
 
-    alert("Director deleted successfully!");
+    try {
+      const result = await deleteDirector(id);
 
-    loadDirectors();
+      if (!result.success) {
+        alert(result.message || "Failed to delete director.");
+        return;
+      }
+
+      alert("Director deleted successfully!");
+
+      loadDirectors();
+    } catch (error) {
+      console.error(error);
+
+      alert("Something went wrong. Please try again.");
+    }
   }
 
   return (
     <div>
       <h1>Directors</h1>
 
+      <button onClick={() => router.push("/")}>Home</button>
+
+      <br />
+      <br />
+
       <Link href="/directors/create">Create Director</Link>
 
       <br />
       <br />
 
-      {directors.map((director) => (
-        <div
-          key={director.id}
-          style={{
-            border: "1px solid black",
-            padding: "10px",
-            marginBottom: "10px",
-          }}
-        >
-          <h3>{director.name}</h3>
+      {directors.length === 0 ? (
+        <p>No directors found.</p>
+      ) : (
+        directors.map((director) => (
+          <div
+            key={director.id}
+            style={{
+              border: "1px solid #ccc",
+              borderRadius: "10px",
+              padding: "20px",
+              marginBottom: "20px",
+            }}
+          >
+            <h2>{director.name}</h2>
 
-          <p>Date of Birth: {director.dob}</p>
+            <img
+              src={director.imageUrl}
+              alt={director.name}
+              width={160}
+              height={220}
+              style={{
+                objectFit: "cover",
+                borderRadius: "8px",
+                border: "1px solid #ccc",
+                display: "block",
+                marginBottom: "15px",
+              }}
+              onError={(e) => {
+                e.currentTarget.src =
+                  "https://via.placeholder.com/160x220?text=No+Image";
+              }}
+            />
 
-          <p>
-            Movies:{" "}
-            {director.movies?.map((movie: any) => movie.title).join(", ")}
-          </p>
+            <p>
+              Date of Birth:{" "}
+              {new Date(director.dob).toLocaleDateString("en-GB")}
+            </p>
 
-          <Link href={`/directors/edit/${director.id}`}>Edit</Link>
+            <p>
+              <strong>Nationality:</strong> {director.nationality}
+            </p>
 
-          {"  "}
+            <p>
+              <strong>Biography:</strong> {director.biography}
+            </p>
 
-          <button onClick={() => handleDelete(director.id)}>Delete</button>
-        </div>
-      ))}
+            <p>
+              <strong>Image URL:</strong> {director.imageUrl}
+            </p>
+
+            <p>
+              <strong>Movies:</strong>{" "}
+              {director.movies?.length
+                ? director.movies.map((movie) => movie.title).join(", ")
+                : "No movies"}
+            </p>
+
+            <Link href={`/directors/edit/${director.id}`}>Edit</Link>
+
+            {" | "}
+
+            <button onClick={() => handleDelete(director.id)}>Delete</button>
+          </div>
+        ))
+      )}
     </div>
   );
 }
