@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createActor } from "@/services/actorService";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CreateActor() {
   const router = useRouter();
+
+  const { user, loading } = useAuth();
 
   const [actor, setActor] = useState({
     name: "",
@@ -14,20 +17,32 @@ export default function CreateActor() {
     biography: "",
     nationality: "",
     awards: "",
-    imageUrl: "",
+    imagePath: "",
   });
 
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+
+    if (user.role !== "ADMIN") {
+      router.replace("/movies");
+    }
+  }, [user, loading, router]);
 
   function validateForm() {
     const name = actor.name.trim();
     const gender = actor.gender.trim();
     const biography = actor.biography.trim();
-    const imageUrl = actor.imageUrl.trim();
-    const awards = Number(actor.awards);
     const nationality = actor.nationality.trim();
+    const imagePath = actor.imagePath.trim();
+    const awards = Number(actor.awards);
 
-    // Name
     if (!name) {
       return "Name is required";
     }
@@ -48,15 +63,13 @@ export default function CreateActor() {
       return "Name contains too many repeated characters";
     }
 
-    // Date of Birth
     if (!actor.dob) {
       return "Date of birth is required";
     }
 
     const dob = new Date(actor.dob);
-    const today = new Date();
 
-    if (dob > today) {
+    if (dob > new Date()) {
       return "Date of birth cannot be in the future";
     }
 
@@ -76,7 +89,6 @@ export default function CreateActor() {
       return "Nationality can only contain letters and spaces";
     }
 
-    // Gender
     if (!gender) {
       return "Gender is required";
     }
@@ -85,7 +97,6 @@ export default function CreateActor() {
       return "Please select a valid gender";
     }
 
-    // Biography
     if (!biography) {
       return "Biography is required";
     }
@@ -98,7 +109,6 @@ export default function CreateActor() {
       return "Biography cannot exceed 1000 characters";
     }
 
-    // Awards
     if (actor.awards === "") {
       return "Awards field is required";
     }
@@ -115,28 +125,24 @@ export default function CreateActor() {
       return "Awards cannot exceed 500";
     }
 
-    // Image URL
-    if (!imageUrl) {
-      return "Image URL is required";
-    }
-
-    try {
-      new URL(imageUrl);
-    } catch {
-      return "Image URL must be valid";
+    if (imagePath) {
+      try {
+        new URL(imagePath);
+      } catch {
+        return "Image URL must be valid";
+      }
     }
 
     return "";
   }
 
-  async function handleSubmit(e: any) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     const validationError = validateForm();
 
     if (validationError) {
       setError(validationError);
-
       return;
     }
 
@@ -144,28 +150,31 @@ export default function CreateActor() {
 
     try {
       await createActor({
-        ...actor,
-
         name: actor.name.trim(),
-
+        dob: actor.dob,
         gender: actor.gender.trim(),
-
         biography: actor.biography.trim(),
-
-        awards: Number(actor.awards),
-
-        imageUrl: actor.imageUrl.trim(),
         nationality: actor.nationality.trim(),
+        awards: Number(actor.awards),
+        imagePath: actor.imagePath.trim(),
       });
 
       alert("Actor created successfully!");
 
       router.push("/actors");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
 
-      alert("Failed to create actor.");
+      setError(error.message || "Failed to create actor.");
     }
+  }
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (!user || user.role !== "ADMIN") {
+    return null;
   }
 
   return (
@@ -212,7 +221,6 @@ export default function CreateActor() {
           onChange={(e) =>
             setActor({
               ...actor,
-
               dob: e.target.value,
             })
           }
@@ -235,8 +243,11 @@ export default function CreateActor() {
           }
         >
           <option value="">Select Gender</option>
+
           <option value="Male">Male</option>
+
           <option value="Female">Female</option>
+
           <option value="Other">Other</option>
         </select>
 
@@ -267,11 +278,12 @@ export default function CreateActor() {
         <br />
 
         <textarea
+          maxLength={1000}
+          rows={5}
           value={actor.biography}
           onChange={(e) =>
             setActor({
               ...actor,
-
               biography: e.target.value,
             })
           }
@@ -306,14 +318,30 @@ export default function CreateActor() {
 
         <input
           type="url"
-          value={actor.imageUrl}
+          placeholder="https://example.com/image.jpg"
+          value={actor.imagePath}
           onChange={(e) =>
             setActor({
               ...actor,
-              imageUrl: e.target.value,
+              imagePath: e.target.value,
             })
           }
         />
+
+        <br />
+        <br />
+
+        {actor.imagePath && (
+          <img
+            src={actor.imagePath}
+            alt={actor.name}
+            width={160}
+            height={220}
+            style={{
+              objectFit: "cover",
+            }}
+          />
+        )}
 
         <br />
         <br />

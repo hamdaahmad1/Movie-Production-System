@@ -7,7 +7,7 @@ export interface Movie {
     description: string;
     releaseDate: string;
     language: string;
-    posterUrl: string;
+    posterPath?: string | null;
     trailerId: string;
     duration: number;
     genre: string;

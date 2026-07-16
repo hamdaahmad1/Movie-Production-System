@@ -4,17 +4,29 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import Navbar from "@/app/components/Navbar";
+
 import { getActors, deleteActor } from "@/services/actorService";
+
 import { Actor } from "@/types/actor";
+
+import { useAuth } from "@/context/AuthContext";
 
 export default function ActorsPage() {
   const router = useRouter();
+
+  const { user } = useAuth();
+
+  const isAdmin = user?.role === "ADMIN";
+
+  const isEditor = user?.role === "EDITOR";
 
   const [actors, setActors] = useState<Actor[]>([]);
 
   async function loadActors() {
     try {
       const data = await getActors();
+
       setActors(data);
     } catch (error) {
       console.error(error);
@@ -30,13 +42,16 @@ export default function ActorsPage() {
       "Are you sure you want to delete this actor?"
     );
 
-    if (!confirmDelete) return;
+    if (!confirmDelete) {
+      return;
+    }
 
     try {
       const result = await deleteActor(id);
 
       if (!result.success) {
         alert(result.message || "Failed to delete actor.");
+
         return;
       }
 
@@ -52,6 +67,8 @@ export default function ActorsPage() {
 
   return (
     <div>
+      <Navbar />
+
       <h1>Actors</h1>
 
       <button onClick={() => router.push("/")}>Home</button>
@@ -59,7 +76,7 @@ export default function ActorsPage() {
       <br />
       <br />
 
-      <Link href="/actors/create">Create Actor</Link>
+      {isAdmin && <Link href="/actors/create">Create Actor</Link>}
 
       <br />
       <br />
@@ -79,26 +96,30 @@ export default function ActorsPage() {
           >
             <h2>{actor.name}</h2>
 
-            <img
-              src={actor.imageUrl}
-              alt={actor.name}
-              width={160}
-              height={220}
-              style={{
-                objectFit: "cover",
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-                display: "block",
-                marginBottom: "15px",
-              }}
-              onError={(e) => {
-                e.currentTarget.src =
-                  "https://via.placeholder.com/160x220?text=No+Image";
-              }}
-            />
+            {actor.imagePath ? (
+              <img
+                src={actor.imagePath}
+                alt={actor.name}
+                width={160}
+                height={220}
+                style={{
+                  objectFit: "cover",
+                  borderRadius: "8px",
+                  border: "1px solid #ccc",
+                  display: "block",
+                  marginBottom: "15px",
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            ) : (
+              <p>No image available</p>
+            )}
 
             <p>
-              Date of Birth: {new Date(actor.dob).toLocaleDateString("en-GB")}
+              <strong>Date of Birth:</strong>{" "}
+              {new Date(actor.dob).toLocaleDateString("en-GB")}
             </p>
 
             <p>
@@ -118,21 +139,21 @@ export default function ActorsPage() {
             </p>
 
             <p>
-              <strong>Image URL:</strong> {actor.imageUrl}
-            </p>
-
-            <p>
               <strong>Movies:</strong>{" "}
               {actor.movies?.length
                 ? actor.movies.map((movie: any) => movie.title).join(", ")
                 : "No movies"}
             </p>
 
-            <Link href={`/actors/edit/${actor.id}`}>Edit</Link>
+            {(isAdmin || isEditor) && (
+              <Link href={`/actors/edit/${actor.id}`}>Edit</Link>
+            )}
 
             {" | "}
 
-            <button onClick={() => handleDelete(actor.id)}>Delete</button>
+            {isAdmin && (
+              <button onClick={() => handleDelete(actor.id)}>Delete</button>
+            )}
           </div>
         ))
       )}

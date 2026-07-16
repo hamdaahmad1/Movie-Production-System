@@ -7,12 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role{
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
 model Director {
   id          Int      @id @default(autoincrement())
   name        String   @unique
   dob         DateTime
   biography   String
-  imageUrl    String
+  imagePath   String?
   nationality String
   movies      Movie[]
 }
@@ -25,7 +31,8 @@ model Actor {
   awards      Int
   biography   String
   gender      String
-  imageUrl    String
+  imagePath   String?
+
   movies      Movie[]  @relation("ActorToMovie")
 }
 
@@ -38,10 +45,28 @@ model Movie {
   directorId  Int
   description String
   language    String
-  posterUrl   String
+  posterPath  String?
   releaseDate DateTime
   trailerId   String
 
   director    Director @relation(fields: [directorId], references: [id])
   actors      Actor[]  @relation("ActorToMovie")
+}
+
+model User{
+
+  id Int @id @default (autoincrement())
+  username String @unique
+  email String @unique
+  password String
+  firstName String
+  lastName String
+  role Role @default(VIEWER)
+
+  ISActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+
+
 }

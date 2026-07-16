@@ -6,10 +6,20 @@ export interface Actor {
     biography: string;
     nationality : string;
     awards: number;
-    imageUrl: string;
+    imagePath: string | null;
 
     movies?: {
         id:number;
         title:string;
     }[];
 }
+
+export interface ActorFormData {
+    name: string;
+    dob: string;
+    nationality: string;
+    gender: string;
+    biography: string;
+    awards: string;
+    image?: File;
+  }

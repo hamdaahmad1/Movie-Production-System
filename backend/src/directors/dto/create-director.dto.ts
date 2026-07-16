@@ -1,69 +1,140 @@
 import {
-    IsString,
-    IsNotEmpty,
-    IsDateString,
-    IsUrl,
-    MinLength,
-    MaxLength,
-    Matches,
-  } from 'class-validator';
-  
-  import { Transform } from 'class-transformer';
-  
-  export class CreateDirectorDto {
-  
-    @Transform(({ value }) => value?.trim().replace(/\s+/g, ' '))
-    @IsString()
-    @IsNotEmpty({ message: 'Name is required' })
-    @MinLength(2, {
-      message: 'Name must be at least 2 characters long',
-    })
-    @MaxLength(100, {
-      message: 'Name cannot exceed 100 characters',
-    })
-    @Matches(/^[A-Za-z\s.'-]+$/, {
+  IsString,
+  IsNotEmpty,
+  IsDateString,
+  MinLength,
+  MaxLength,
+  Matches,
+  IsUrl,
+} from 'class-validator';
+
+import { Transform } from 'class-transformer';
+
+import { ApiProperty } from '@nestjs/swagger';
+
+export class CreateDirectorDto {
+  @ApiProperty({
+    example: 'Christopher Nolan',
+    description:
+      'Full name of the director. Can contain letters, spaces, apostrophes, hyphens, and periods.',
+    minLength: 2,
+    maxLength: 100,
+  })
+  @Transform(({ value }) =>
+    value?.trim().replace(/\s+/g, ' '),
+  )
+  @IsString()
+  @IsNotEmpty({
+    message: 'Name is required',
+  })
+  @MinLength(2, {
+    message:
+      'Name must be at least 2 characters long',
+  })
+  @MaxLength(100, {
+    message:
+      'Name cannot exceed 100 characters',
+  })
+  @Matches(/^[A-Za-z\s.'-]+$/, {
+    message:
+      "Name can only contain letters, spaces, apostrophes ('), hyphens (-), and periods (.)",
+  })
+  @Matches(/^(?!([A-Za-z])\1+$).*/, {
+    message:
+      'Name cannot consist of the same repeated character',
+  })
+  name: string;
+
+  @ApiProperty({
+    example: 'British-American',
+    description:
+      'Nationality of the director.',
+    minLength: 2,
+    maxLength: 50,
+  })
+  @Transform(({ value }) =>
+    value?.trim(),
+  )
+  @IsString()
+  @IsNotEmpty({
+    message:
+      'Nationality is required',
+  })
+  @MinLength(2, {
+    message:
+      'Nationality must be at least 2 characters long',
+  })
+  @MaxLength(50, {
+    message:
+      'Nationality cannot exceed 50 characters',
+  })
+  @Matches(/^[A-Za-z\s]+$/, {
+    message:
+      'Nationality can only contain letters and spaces',
+  })
+  nationality: string;
+
+  @ApiProperty({
+    example:
+      'Christopher Nolan is a British-American filmmaker known for directing complex and visually ambitious films.',
+    description:
+      'Biography of the director.',
+    minLength: 20,
+    maxLength: 1000,
+  })
+  @Transform(({ value }) =>
+    value?.trim(),
+  )
+  @IsString()
+  @IsNotEmpty({
+    message:
+      'Biography is required',
+  })
+  @MinLength(20, {
+    message:
+      'Biography must be at least 20 characters long',
+  })
+  @MaxLength(1000, {
+    message:
+      'Biography cannot exceed 1000 characters',
+  })
+  biography: string;
+
+  @ApiProperty({
+    example: '1970-07-30',
+    description:
+      'Date of birth of the director in ISO 8601 date format.',
+    format: 'date',
+  })
+  @IsDateString(
+    {},
+    {
       message:
-        "Name can only contain letters, spaces, apostrophes ('), hyphens (-), and periods (.)",
-    })
-    @Matches(/^(?!([A-Za-z])\1+$).*/, {
-      message: 'Name cannot consist of the same repeated character',
-    })
-    name: string;
-  
-    @Transform(({ value }) => value?.trim())
-    @IsString()
-    @IsNotEmpty({ message: 'Nationality is required' })
-    @MinLength(2, {
-      message: 'Nationality must be at least 2 characters long',
-    })
-    @MaxLength(50, {
-      message: 'Nationality cannot exceed 50 characters',
-    })
-    @Matches(/^[A-Za-z\s]+$/, {
-      message: 'Nationality can only contain letters and spaces',
-    })
-    nationality: string;
-  
-    @Transform(({ value }) => value?.trim())
-    @IsString()
-    @IsNotEmpty({ message: 'Biography is required' })
-    @MinLength(20, {
-      message: 'Biography must be at least 20 characters long',
-    })
-    @MaxLength(1000, {
-      message: 'Biography cannot exceed 1000 characters',
-    })
-    biography: string;
-  
-    @IsNotEmpty({ message: 'Image URL is required' })
-    @IsUrl({}, { message: 'Image URL must be valid' })
-    @MaxLength(500, {
-      message: 'Image URL cannot exceed 500 characters',
-    })
-    imageUrl: string;
-  
-    @IsDateString({}, {
-      message: 'Date of birth must be a valid date',
-    })
-    dob: string;
-  }
+        'Date of birth must be a valid date',
+    },
+  )
+  dob: string;
+
+  @ApiProperty({
+    example:
+      'https://example.com/images/christopher-nolan.jpg',
+    description:
+      'URL path of the director image.',
+  })
+  @Transform(({ value }) =>
+    value?.trim(),
+  )
+  @IsString()
+  @IsNotEmpty({
+    message:
+      'Image path is required',
+  })
+  @IsUrl(
+    {},
+    {
+      message:
+        'Image path must be a valid URL',
+    },
+  )
+  imagePath: string;
+}

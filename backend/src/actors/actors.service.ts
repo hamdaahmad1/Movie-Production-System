@@ -10,26 +10,37 @@ import { UpdateActorDto } from './dto/update-actor.dto';
 
 @Injectable()
 export class ActorsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+  ) {}
 
-  // CREATE
-  async create(dto: CreateActorDto) {
+  // =========================
+  // CREATE ACTOR
+  // =========================
+
+  async create(
+    dto: CreateActorDto,
+  ) {
     // Future DOB validation
-    if (new Date(dto.dob) > new Date()) {
+    if (
+      new Date(dto.dob) >
+      new Date()
+    ) {
       throw new BadRequestException(
         'Date of birth cannot be in the future',
       );
     }
 
     // Duplicate actor validation
-    const existingActor = await this.prisma.actor.findFirst({
-      where: {
-        name: {
-          equals: dto.name,
-          mode: 'insensitive',
+    const existingActor =
+      await this.prisma.actor.findFirst({
+        where: {
+          name: {
+            equals: dto.name,
+            mode: 'insensitive',
+          },
         },
-      },
-    });
+      });
 
     if (existingActor) {
       throw new BadRequestException(
@@ -40,17 +51,29 @@ export class ActorsService {
     return this.prisma.actor.create({
       data: {
         name: dto.name,
+
         dob: new Date(dto.dob),
-        nationality: dto.nationality,
+
+        nationality:
+          dto.nationality,
+
         gender: dto.gender,
-        biography: dto.biography,
+
+        biography:
+          dto.biography,
+
         awards: dto.awards,
-        imageUrl: dto.imageUrl,
+
+        imagePath:
+          dto.imagePath,
       },
     });
   }
 
-  // GET ALL
+  // =========================
+  // GET ALL ACTORS
+  // =========================
+
   async findAll() {
     return this.prisma.actor.findMany({
       include: {
@@ -59,34 +82,58 @@ export class ActorsService {
     });
   }
 
-  // GET ONE
+  // =========================
+  // GET ONE ACTOR
+  // =========================
+
   async findOne(id: number) {
-    const actor = await this.prisma.actor.findUnique({
-      where: { id },
-      include: {
-        movies: true,
-      },
-    });
+    const actor =
+      await this.prisma.actor.findUnique({
+        where: {
+          id,
+        },
+
+        include: {
+          movies: true,
+        },
+      });
 
     if (!actor) {
-      throw new NotFoundException('Actor not found');
+      throw new NotFoundException(
+        'Actor not found',
+      );
     }
 
     return actor;
   }
 
-  // PUT (Full Update)
-  async update(id: number, dto: UpdateActorDto) {
-    const actor = await this.prisma.actor.findUnique({
-      where: { id },
-    });
+  // =========================
+  // PUT - FULL UPDATE
+  // =========================
+
+  async update(
+    id: number,
+    dto: CreateActorDto,
+  ) {
+    const actor =
+      await this.prisma.actor.findUnique({
+        where: {
+          id,
+        },
+      });
 
     if (!actor) {
-      throw new NotFoundException('Actor not found');
+      throw new NotFoundException(
+        'Actor not found',
+      );
     }
 
     // Future DOB validation
-    if (dto.dob && new Date(dto.dob) > new Date()) {
+    if (
+      dto.dob &&
+      new Date(dto.dob) >
+        new Date()
+    ) {
       throw new BadRequestException(
         'Date of birth cannot be in the future',
       );
@@ -94,17 +141,19 @@ export class ActorsService {
 
     // Duplicate actor validation
     if (dto.name) {
-      const existingActor = await this.prisma.actor.findFirst({
-        where: {
-          name: {
-            equals: dto.name,
-            mode: 'insensitive',
+      const existingActor =
+        await this.prisma.actor.findFirst({
+          where: {
+            name: {
+              equals: dto.name,
+              mode: 'insensitive',
+            },
+
+            NOT: {
+              id,
+            },
           },
-          NOT: {
-            id,
-          },
-        },
-      });
+        });
 
       if (existingActor) {
         throw new BadRequestException(
@@ -114,31 +163,60 @@ export class ActorsService {
     }
 
     return this.prisma.actor.update({
-      where: { id },
+      where: {
+        id,
+      },
+
       data: {
         name: dto.name,
-        dob: dto.dob ? new Date(dto.dob) : undefined,
-        nationality: dto.nationality,
+
+        dob: dto.dob
+          ? new Date(dto.dob)
+          : undefined,
+
+        nationality:
+          dto.nationality,
+
         gender: dto.gender,
-        biography: dto.biography,
+
+        biography:
+          dto.biography,
+
         awards: dto.awards,
-        imageUrl: dto.imageUrl,
+
+        imagePath:
+          dto.imagePath,
       },
     });
   }
 
-  // PATCH (Partial Update)
-  async partialUpdate(id: number, dto: UpdateActorDto) {
-    const actor = await this.prisma.actor.findUnique({
-      where: { id },
-    });
+  // =========================
+  // PATCH - PARTIAL UPDATE
+  // =========================
+
+  async partialUpdate(
+    id: number,
+    dto: UpdateActorDto,
+  ) {
+    const actor =
+      await this.prisma.actor.findUnique({
+        where: {
+          id,
+        },
+      });
 
     if (!actor) {
-      throw new NotFoundException('Actor not found');
+      throw new NotFoundException(
+        'Actor not found',
+      );
     }
 
     // Future DOB validation
-    if (dto.dob && new Date(dto.dob) > new Date()) {
+    if (
+      dto.dob &&
+      new Date(dto.dob) >
+        new Date()
+    ) {
       throw new BadRequestException(
         'Date of birth cannot be in the future',
       );
@@ -146,17 +224,19 @@ export class ActorsService {
 
     // Duplicate actor validation
     if (dto.name) {
-      const existingActor = await this.prisma.actor.findFirst({
-        where: {
-          name: {
-            equals: dto.name,
-            mode: 'insensitive',
+      const existingActor =
+        await this.prisma.actor.findFirst({
+          where: {
+            name: {
+              equals: dto.name,
+              mode: 'insensitive',
+            },
+
+            NOT: {
+              id,
+            },
           },
-          NOT: {
-            id,
-          },
-        },
-      });
+        });
 
       if (existingActor) {
         throw new BadRequestException(
@@ -166,40 +246,67 @@ export class ActorsService {
     }
 
     return this.prisma.actor.update({
-      where: { id },
+      where: {
+        id,
+      },
+
       data: {
         name: dto.name,
-        dob: dto.dob ? new Date(dto.dob) : undefined,
-        nationality: dto.nationality,
+
+        dob: dto.dob
+          ? new Date(dto.dob)
+          : undefined,
+
+        nationality:
+          dto.nationality,
+
         gender: dto.gender,
-        biography: dto.biography,
+
+        biography:
+          dto.biography,
+
         awards: dto.awards,
-        imageUrl: dto.imageUrl,
+
+        imagePath:
+          dto.imagePath,
       },
     });
   }
 
-  // DELETE
+  // =========================
+  // DELETE ACTOR
+  // =========================
+
   async remove(id: number) {
-    const actor = await this.prisma.actor.findUnique({
-      where: { id },
-      include: {
-        movies: true,
-      },
-    });
-  
+    const actor =
+      await this.prisma.actor.findUnique({
+        where: {
+          id,
+        },
+
+        include: {
+          movies: true,
+        },
+      });
+
     if (!actor) {
-      throw new NotFoundException("Actor not found");
-    }
-  
-    if (actor.movies.length > 0) {
-      throw new BadRequestException(
-        "Cannot delete this actor because they are assigned to one or more movies."
+      throw new NotFoundException(
+        'Actor not found',
       );
     }
-  
+
+    if (
+      actor.movies.length > 0
+    ) {
+      throw new BadRequestException(
+        'Cannot delete this actor because they are assigned to one or more movies.',
+      );
+    }
+
     return this.prisma.actor.delete({
-      where: { id },
+      where: {
+        id,
+      },
     });
   }
 }

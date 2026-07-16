@@ -2,29 +2,43 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
+import { useEffect } from "react";
 import { createDirector } from "@/services/directorService";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CreateDirector() {
   const router = useRouter();
+  const { user, loading } = useAuth();
 
   const [director, setDirector] = useState({
     name: "",
     dob: "",
     nationality: "",
     biography: "",
-    imageUrl: "",
+    imagePath: "",
   });
 
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+
+    if (user.role !== "ADMIN") {
+      router.replace("/movies");
+    }
+  }, [user, loading, router]);
 
   function validateForm() {
     const name = director.name.trim();
     const nationality = director.nationality.trim();
     const biography = director.biography.trim();
-    const imageUrl = director.imageUrl.trim();
+    const imagePath = director.imagePath.trim();
 
-    // Name
     if (!name) {
       return "Name is required";
     }
@@ -37,15 +51,14 @@ export default function CreateDirector() {
       return "Name cannot exceed 100 characters";
     }
 
-    if (!/^[A-Za-z\s'-]+$/.test(name)) {
-      return "Name can only contain letters, spaces, apostrophes and hyphens";
+    if (!/^[A-Za-z\s.'-]+$/.test(name)) {
+      return "Name can only contain letters, spaces, apostrophes, hyphens and periods";
     }
 
     if (/(.)\1{4,}/.test(name)) {
       return "Name contains too many repeated characters";
     }
 
-    // Date of Birth
     if (!director.dob) {
       return "Date of birth is required";
     }
@@ -56,7 +69,6 @@ export default function CreateDirector() {
       return "Date of birth cannot be in the future";
     }
 
-    // Nationality
     if (!nationality) {
       return "Nationality is required";
     }
@@ -73,7 +85,6 @@ export default function CreateDirector() {
       return "Nationality can only contain letters and spaces";
     }
 
-    // Biography
     if (!biography) {
       return "Biography is required";
     }
@@ -86,28 +97,28 @@ export default function CreateDirector() {
       return "Biography cannot exceed 1000 characters";
     }
 
-    // Image URL
-    if (!imageUrl) {
-      return "Image URL is required";
-    }
+    if (imagePath) {
+      try {
+        new URL(imagePath);
+      } catch {
+        return "Image URL must be valid";
+      }
 
-    try {
-      new URL(imageUrl);
-    } catch {
-      return "Image URL must be valid";
+      if (imagePath.length > 500) {
+        return "Image URL cannot exceed 500 characters";
+      }
     }
 
     return "";
   }
 
-  async function handleSubmit(e: any) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     const validationError = validateForm();
 
     if (validationError) {
       setError(validationError);
-
       return;
     }
 
@@ -115,21 +126,29 @@ export default function CreateDirector() {
 
     try {
       await createDirector({
-        ...director,
         name: director.name.trim(),
+        dob: director.dob,
         nationality: director.nationality.trim(),
         biography: director.biography.trim(),
-        imageUrl: director.imageUrl.trim(),
+        imagePath: director.imagePath.trim() || null,
       });
 
       alert("Director created successfully!");
 
       router.push("/directors");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
 
-      alert("Failed to create director.");
+      setError(error.message || "Failed to create director.");
     }
+  }
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (!user || user.role !== "ADMIN") {
+    return null;
   }
 
   return (
@@ -176,7 +195,6 @@ export default function CreateDirector() {
           onChange={(e) =>
             setDirector({
               ...director,
-
               dob: e.target.value,
             })
           }
@@ -219,6 +237,7 @@ export default function CreateDirector() {
             })
           }
         />
+
         <br />
         <br />
 
@@ -228,14 +247,36 @@ export default function CreateDirector() {
 
         <input
           type="url"
-          value={director.imageUrl}
+          maxLength={500}
+          placeholder="https://example.com/image.jpg"
+          value={director.imagePath}
           onChange={(e) =>
             setDirector({
               ...director,
-              imageUrl: e.target.value,
+              imagePath: e.target.value,
             })
           }
         />
+
+        <br />
+
+        <small>Optional. Enter a valid image URL.</small>
+
+        <br />
+        <br />
+
+        {director.imagePath && (
+          <img
+            src={director.imagePath}
+            alt={director.name}
+            width={160}
+            height={200}
+            style={{
+              objectFit: "cover",
+              border: "1px solid #ccc",
+            }}
+          />
+        )}
 
         <br />
         <br />

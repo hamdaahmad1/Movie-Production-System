@@ -5,8 +5,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { MoviesModule } from './movies/movies.module';
 import { DirectorsModule } from './directors/directors.module';
 import { ActorsModule } from './actors/actors.module';
+import { AuthModule } from "./auth/auth.module";
 @Module({
-  imports: [MoviesModule, DirectorsModule, ActorsModule,PrismaModule],
+  imports: [MoviesModule, DirectorsModule, ActorsModule,PrismaModule,AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })

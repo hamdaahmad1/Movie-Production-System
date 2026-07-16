@@ -3,18 +3,25 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
+import { useAuth } from "@/context/AuthContext";
 import { getDirectors, deleteDirector } from "@/services/directorService";
 import { Director } from "@/types/director";
 
+import Navbar from "@/app/components/Navbar";
+
 export default function DirectorsPage() {
   const router = useRouter();
+  const { user } = useAuth();
+
+  const isAdmin = user?.role === "ADMIN";
+  const isEditor = user?.role === "EDITOR";
 
   const [directors, setDirectors] = useState<Director[]>([]);
 
   async function loadDirectors() {
     try {
       const data = await getDirectors();
+
       setDirectors(data);
     } catch (error) {
       console.error(error);
@@ -37,6 +44,7 @@ export default function DirectorsPage() {
 
       if (!result.success) {
         alert(result.message || "Failed to delete director.");
+
         return;
       }
 
@@ -52,6 +60,8 @@ export default function DirectorsPage() {
 
   return (
     <div>
+      <Navbar />
+
       <h1>Directors</h1>
 
       <button onClick={() => router.push("/")}>Home</button>
@@ -59,7 +69,7 @@ export default function DirectorsPage() {
       <br />
       <br />
 
-      <Link href="/directors/create">Create Director</Link>
+      {isAdmin && <Link href="/directors/create">Create Director</Link>}
 
       <br />
       <br />
@@ -79,23 +89,26 @@ export default function DirectorsPage() {
           >
             <h2>{director.name}</h2>
 
-            <img
-              src={director.imageUrl}
-              alt={director.name}
-              width={160}
-              height={220}
-              style={{
-                objectFit: "cover",
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-                display: "block",
-                marginBottom: "15px",
-              }}
-              onError={(e) => {
-                e.currentTarget.src =
-                  "https://via.placeholder.com/160x220?text=No+Image";
-              }}
-            />
+            {director.imagePath ? (
+              <img
+                src={director.imagePath}
+                alt={director.name}
+                width={160}
+                height={220}
+                style={{
+                  objectFit: "cover",
+                  borderRadius: "8px",
+                  border: "1px solid #ccc",
+                  display: "block",
+                  marginBottom: "15px",
+                }}
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            ) : (
+              <p>No image available</p>
+            )}
 
             <p>
               Date of Birth:{" "}
@@ -111,21 +124,21 @@ export default function DirectorsPage() {
             </p>
 
             <p>
-              <strong>Image URL:</strong> {director.imageUrl}
-            </p>
-
-            <p>
               <strong>Movies:</strong>{" "}
               {director.movies?.length
                 ? director.movies.map((movie) => movie.title).join(", ")
                 : "No movies"}
             </p>
 
-            <Link href={`/directors/edit/${director.id}`}>Edit</Link>
+            {(isAdmin || isEditor) && (
+              <Link href={`/directors/edit/${director.id}`}>Edit</Link>
+            )}
 
             {" | "}
 
-            <button onClick={() => handleDelete(director.id)}>Delete</button>
+            {isAdmin && (
+              <button onClick={() => handleDelete(director.id)}>Delete</button>
+            )}
           </div>
         ))
       )}

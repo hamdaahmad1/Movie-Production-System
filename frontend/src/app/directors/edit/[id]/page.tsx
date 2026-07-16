@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-
+import { useAuth } from "@/context/AuthContext";
 import { getDirector, updateDirector } from "@/services/directorService";
 
 export default function EditDirector() {
   const router = useRouter();
+
+  const { user, loading } = useAuth();
 
   const params = useParams();
 
@@ -17,10 +19,23 @@ export default function EditDirector() {
     dob: "",
     nationality: "",
     biography: "",
-    imageUrl: "",
+    imagePath: "",
   });
 
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+
+    if (user.role !== "ADMIN" && user.role !== "EDITOR") {
+      router.replace("/movies");
+    }
+  }, [user, loading, router]);
 
   useEffect(() => {
     async function loadDirector() {
@@ -29,17 +44,14 @@ export default function EditDirector() {
 
         setDirector({
           name: data.name,
-
           dob: data.dob.split("T")[0],
-
           nationality: data.nationality,
-
           biography: data.biography,
-
-          imageUrl: data.imageUrl,
+          imagePath: data.imagePath || "",
         });
       } catch (error) {
         console.error(error);
+        setError("Failed to load director.");
       }
     }
 
@@ -52,9 +64,8 @@ export default function EditDirector() {
     const name = director.name.trim();
     const nationality = director.nationality.trim();
     const biography = director.biography.trim();
-    const imageUrl = director.imageUrl.trim();
+    const imagePath = director.imagePath.trim();
 
-    // Name
     if (!name) {
       return "Name is required";
     }
@@ -67,15 +78,14 @@ export default function EditDirector() {
       return "Name cannot exceed 100 characters";
     }
 
-    if (!/^[A-Za-z\s'-]+$/.test(name)) {
-      return "Name can only contain letters, spaces, apostrophes and hyphens";
+    if (!/^[A-Za-z\s.'-]+$/.test(name)) {
+      return "Name can only contain letters, spaces, apostrophes, hyphens and periods";
     }
 
     if (/(.)\1{4,}/.test(name)) {
       return "Name contains too many repeated characters";
     }
 
-    // Date of Birth
     if (!director.dob) {
       return "Date of birth is required";
     }
@@ -86,7 +96,6 @@ export default function EditDirector() {
       return "Date of birth cannot be in the future";
     }
 
-    // Nationality
     if (!nationality) {
       return "Nationality is required";
     }
@@ -103,7 +112,6 @@ export default function EditDirector() {
       return "Nationality can only contain letters and spaces";
     }
 
-    // Biography
     if (!biography) {
       return "Biography is required";
     }
@@ -116,28 +124,24 @@ export default function EditDirector() {
       return "Biography cannot exceed 1000 characters";
     }
 
-    // Image URL
-    if (!imageUrl) {
-      return "Image URL is required";
-    }
-
-    try {
-      new URL(imageUrl);
-    } catch {
-      return "Image URL must be valid";
+    if (imagePath) {
+      try {
+        new URL(imagePath);
+      } catch {
+        return "Image URL must be valid";
+      }
     }
 
     return "";
   }
 
-  async function handleSubmit(e: any) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     const validationError = validateForm();
 
     if (validationError) {
       setError(validationError);
-
       return;
     }
 
@@ -145,21 +149,29 @@ export default function EditDirector() {
 
     try {
       await updateDirector(id, {
-        ...director,
         name: director.name.trim(),
+        dob: director.dob,
         nationality: director.nationality.trim(),
         biography: director.biography.trim(),
-        imageUrl: director.imageUrl.trim(),
+        imagePath: director.imagePath.trim(),
       });
 
       alert("Director updated successfully!");
 
       router.push("/directors");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
 
-      alert("Failed to update director.");
+      setError(error.message || "Failed to update director.");
     }
+  }
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (!user || (user.role !== "ADMIN" && user.role !== "EDITOR")) {
+    return null;
   }
 
   return (
@@ -206,7 +218,6 @@ export default function EditDirector() {
           onChange={(e) =>
             setDirector({
               ...director,
-
               dob: e.target.value,
             })
           }
@@ -230,6 +241,7 @@ export default function EditDirector() {
             })
           }
         />
+
         <br />
         <br />
 
@@ -258,16 +270,33 @@ export default function EditDirector() {
 
         <input
           type="url"
-          value={director.imageUrl}
+          value={director.imagePath}
+          placeholder="https://example.com/image.jpg"
           onChange={(e) =>
             setDirector({
               ...director,
-              imageUrl: e.target.value,
+              imagePath: e.target.value,
             })
           }
         />
 
         <br />
+        <br />
+
+        {director.imagePath && (
+          <img
+            src={director.imagePath}
+            alt={director.name}
+            width={160}
+            height={220}
+            style={{
+              objectFit: "cover",
+              display: "block",
+              marginBottom: "10px",
+            }}
+          />
+        )}
+
         <br />
 
         <button type="submit">Update Director</button>
