@@ -20,17 +20,12 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+
 import type { Response } from 'express';
+
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+
 import type { Request } from 'express';
-
-import { AuthResponseDto } from './dto/auth-response.dto';
-import {
-  AvailabilityResponseDto,
-  LogoutResponseDto,
-} from './dto/auth-simple-response.dto';
-
-import { ProfileResponseDto } from './dto/profile-response.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -48,7 +43,6 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'Registration successful.',
-    type: AuthResponseDto,
   })
   @ApiResponse({
     status: 400,
@@ -62,7 +56,6 @@ export class AuthController {
     return this.authService.register(dto, res);
   }
 
-  
   @Post('login')
   @ApiOperation({
     summary: 'Login a user',
@@ -72,7 +65,6 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'Login successful.',
-    type: AuthResponseDto,
   })
   @ApiResponse({
     status: 401,
@@ -84,8 +76,6 @@ export class AuthController {
   ) {
     return this.authService.login(dto, res);
   }
-
- 
 
   @Get('check-username')
   @ApiOperation({
@@ -102,15 +92,12 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Username availability result.',
-    type: AvailabilityResponseDto,
   })
   checkUsername(
     @Query('username') username: string,
   ) {
     return this.authService.checkUsername(username);
   }
-
-  
 
   @Get('check-email')
   @ApiOperation({
@@ -127,7 +114,6 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Email availability result.',
-    type: AvailabilityResponseDto,
   })
   checkEmail(
     @Query('email') email: string,
@@ -135,7 +121,6 @@ export class AuthController {
     return this.authService.checkEmail(email);
   }
 
-  
   @Post('logout')
   @ApiOperation({
     summary: 'Logout the current user',
@@ -145,15 +130,12 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'User logged out successfully.',
-    type: LogoutResponseDto,
   })
   logout(
     @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.logout(res);
   }
-
-
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
@@ -166,7 +148,6 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'User profile retrieved successfully.',
-    type: ProfileResponseDto,
   })
   @ApiResponse({
     status: 401,

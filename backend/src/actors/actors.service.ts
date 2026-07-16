@@ -14,10 +14,7 @@ export class ActorsService {
     private prisma: PrismaService,
   ) {}
 
-  // =========================
-  // CREATE ACTOR
-  // =========================
-
+  
   async create(
     dto: CreateActorDto,
   ) {
@@ -70,10 +67,7 @@ export class ActorsService {
     });
   }
 
-  // =========================
-  // GET ALL ACTORS
-  // =========================
-
+ 
   async findAll() {
     return this.prisma.actor.findMany({
       include: {
@@ -82,10 +76,7 @@ export class ActorsService {
     });
   }
 
-  // =========================
-  // GET ONE ACTOR
-  // =========================
-
+  
   async findOne(id: number) {
     const actor =
       await this.prisma.actor.findUnique({
@@ -107,10 +98,7 @@ export class ActorsService {
     return actor;
   }
 
-  // =========================
-  // PUT - FULL UPDATE
-  // =========================
-
+  
   async update(
     id: number,
     dto: CreateActorDto,
@@ -190,9 +178,7 @@ export class ActorsService {
     });
   }
 
-  // =========================
-  // PATCH - PARTIAL UPDATE
-  // =========================
+  
 
   async partialUpdate(
     id: number,
@@ -273,9 +259,7 @@ export class ActorsService {
     });
   }
 
-  // =========================
-  // DELETE ACTOR
-  // =========================
+  
 
   async remove(id: number) {
     const actor =

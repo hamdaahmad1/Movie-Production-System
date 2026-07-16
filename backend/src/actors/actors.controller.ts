@@ -35,9 +35,7 @@ export class ActorsController {
     private actorService: ActorsService,
   ) {}
 
-  // =========================
-  // CREATE ACTOR
-  // =========================
+  
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -75,10 +73,7 @@ export class ActorsController {
     return this.actorService.create(dto);
   }
 
-  // =========================
-  // GET ALL ACTORS
-  // =========================
-
+  
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'EDITOR', 'VIEWER')
@@ -107,9 +102,7 @@ export class ActorsController {
     return this.actorService.findAll();
   }
 
-  // =========================
-  // GET ONE ACTOR
-  // =========================
+ 
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -146,9 +139,7 @@ export class ActorsController {
     return this.actorService.findOne(id);
   }
 
-  // =========================
-  // PARTIAL UPDATE ACTOR
-  // =========================
+  
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -194,9 +185,7 @@ export class ActorsController {
     );
   }
 
-  // =========================
-  // FULL UPDATE ACTOR
-  // =========================
+  
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -242,9 +231,7 @@ export class ActorsController {
     );
   }
 
-  // =========================
-  // DELETE ACTOR
-  // =========================
+
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)

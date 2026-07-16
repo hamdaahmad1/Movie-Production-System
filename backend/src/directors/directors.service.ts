@@ -12,9 +12,7 @@ import { UpdateDirectorDto } from './dto/update-director.dto';
 export class DirectorsService {
   constructor(private prisma: PrismaService) {}
 
-  // =========================
-  // CREATE
-  // =========================
+  
 
   async create(dto: CreateDirectorDto) {
     // Future DOB validation
@@ -54,9 +52,7 @@ export class DirectorsService {
     });
   }
 
-  // =========================
-  // GET ALL
-  // =========================
+  
 
   async findAll() {
     return this.prisma.director.findMany({
@@ -66,9 +62,7 @@ export class DirectorsService {
     });
   }
 
-  // =========================
-  // GET ONE
-  // =========================
+  
 
   async findOne(id: number) {
     const director =
@@ -88,9 +82,7 @@ export class DirectorsService {
     return director;
   }
 
-  // =========================
-  // PUT - FULL UPDATE
-  // =========================
+  
 
   async update(
     id: number,
@@ -152,10 +144,7 @@ export class DirectorsService {
     });
   }
 
-  // =========================
-  // PATCH - PARTIAL UPDATE
-  // =========================
-
+  
   async partialUpdate(
     id: number,
     dto: UpdateDirectorDto,
@@ -222,9 +211,7 @@ export class DirectorsService {
     });
   }
 
-  // =========================
-  // DELETE
-  // =========================
+ 
 
   async remove(id: number) {
     const director =
