@@ -10,17 +10,24 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger';
 
+import { Transform } from 'class-transformer';
+
+
 export enum UserRole {
   ADMIN = 'ADMIN',
   EDITOR = 'EDITOR',
   VIEWER = 'VIEWER',
 }
 
+
 export class CreateUserDto {
+
+
   @ApiProperty({
     example: 'adminuser22',
     description: 'Unique username',
   })
+  @Transform(({ value }) => value.trim())
   @IsString()
   @IsNotEmpty({
     message: 'Username is required',
@@ -37,10 +44,14 @@ export class CreateUserDto {
   })
   username: string;
 
+
+
+
   @ApiProperty({
     example: 'admin@example.com',
     description: 'User email address',
   })
+  @Transform(({ value }) => value.trim().toLowerCase())
   @IsEmail(
     {},
     {
@@ -54,6 +65,9 @@ export class CreateUserDto {
     message: 'Email cannot exceed 100 characters',
   })
   email: string;
+
+
+
 
   @ApiProperty({
     example: 'Admin@123',
@@ -79,10 +93,14 @@ export class CreateUserDto {
   )
   password: string;
 
+
+
+
   @ApiProperty({
     example: 'Hamda',
     description: 'User first name',
   })
+  @Transform(({ value }) => value.trim())
   @IsString()
   @IsNotEmpty({
     message: 'First name is required',
@@ -98,10 +116,14 @@ export class CreateUserDto {
   })
   firstName: string;
 
+
+
+
   @ApiProperty({
     example: 'Ahmad',
     description: 'User last name',
   })
+  @Transform(({ value }) => value.trim())
   @IsString()
   @IsNotEmpty({
     message: 'Last name is required',
@@ -117,6 +139,9 @@ export class CreateUserDto {
   })
   lastName: string;
 
+
+
+
   @ApiProperty({
     example: UserRole.VIEWER,
     enum: UserRole,
@@ -126,4 +151,5 @@ export class CreateUserDto {
     message: 'Role must be ADMIN, EDITOR or VIEWER',
   })
   role: UserRole;
+
 }
