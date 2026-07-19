@@ -34,4 +34,28 @@ export class DashboardService {
       recentMovies,
     };
   }
+  async getEditorDashboard() {
+
+    const totalMovies = await this.prisma.movie.count();
+  
+  
+    const recentMovies = await this.prisma.movie.findMany({
+      take: 5,
+  
+      orderBy: {
+        updatedAt: "desc",
+      },
+  
+      include: {
+        director: true,
+        actors: true,
+      },
+    });
+  
+  
+    return {
+      totalMovies,
+      recentMovies,
+    };
+  }
 }

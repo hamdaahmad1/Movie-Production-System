@@ -37,5 +37,21 @@ import {
     })
     getAdminDashboard() {
       return this.dashboardService.getAdminDashboard();
+
+    }
+
+    @ApiBearerAuth("JWT-auth")
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles("EDITOR")
+    @Get("editor")
+    @ApiOperation({
+      summary: "Editor dashboard",
+    })
+    @ApiResponse({
+      status: 200,
+      description: "Dashboard data",
+    })
+    getEditorDashboard() {
+      return this.dashboardService.getEditorDashboard();
     }
   }
