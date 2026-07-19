@@ -21,6 +21,8 @@ model Director {
   imagePath   String?
   nationality String
   movies      Movie[]
+  createdAt DateTime @default(now())
+updatedAt DateTime @default(now()) @updatedAt
 }
 
 model Actor {
@@ -32,7 +34,8 @@ model Actor {
   biography   String
   gender      String
   imagePath   String?
-
+  createdAt DateTime @default(now())
+updatedAt DateTime @default(now()) @updatedAt
   movies      Movie[]  @relation("ActorToMovie")
 }
 
@@ -48,6 +51,8 @@ model Movie {
   posterPath  String?
   releaseDate DateTime
   trailerId   String
+  createdAt DateTime @default(now())
+updatedAt DateTime @default(now()) @updatedAt
 
   director    Director @relation(fields: [directorId], references: [id])
   actors      Actor[]  @relation("ActorToMovie")
@@ -65,7 +70,7 @@ model User{
 
   ISActive Boolean @default(true)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+updatedAt DateTime @default(now()) @updatedAt
   
 
 
