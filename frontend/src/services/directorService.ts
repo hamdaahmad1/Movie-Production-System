@@ -1,13 +1,33 @@
 import { Director } from "@/types/director";
 import API from "./api";
 
-export async function getDirectors() {
-  const response = await API.get("/directors", {
-    withCredentials: true,
-  });
+export async function getDirectors(params?:{
 
+  search?:string;
+ 
+  birthYear?:number;
+ 
+  sortBy?:string;
+ 
+  order?:"asc"|"desc";
+ 
+  page?:number;
+ 
+  limit?:number;
+ 
+ }){
+ 
+ 
+  const response = await API.get("/directors",{
+ 
+    params,
+ 
+    withCredentials:true,
+ 
+  });
   return response.data;
-}
+ 
+ }
 
 
 export async function getDirector(id: number) {

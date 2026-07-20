@@ -1,6 +1,8 @@
 import { UpdateDirectorDto } from './dto/update-director.dto';
 import { CreateDirectorDto } from './dto/create-director.dto';
 import { DirectorsService } from './directors.service';
+import { DirectorQueryDto } from './dto/director-query.dto';
+import { Query } from '@nestjs/common';
 
 import {
   Controller,
@@ -35,9 +37,7 @@ export class DirectorsController {
     private directorService: DirectorsService,
   ) {}
 
-  // =========================
-  // CREATE DIRECTOR
-  // =========================
+
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -79,9 +79,7 @@ export class DirectorsController {
     );
   }
 
-  // =========================
-  // GET ALL DIRECTORS
-  // =========================
+  
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -107,13 +105,15 @@ export class DirectorsController {
     description:
       'Forbidden. User does not have permission.',
   })
-  findAll() {
-    return this.directorService.findAll();
+  findAll(
+    @Query() query: DirectorQueryDto
+  ){
+  
+    return this.directorService.findAll(query);
+  
   }
 
-  // =========================
-  // GET ONE DIRECTOR
-  // =========================
+ 
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -159,9 +159,7 @@ export class DirectorsController {
     );
   }
 
-  // =========================
-  // PARTIAL UPDATE DIRECTOR
-  // =========================
+ 
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -218,9 +216,7 @@ export class DirectorsController {
     );
   }
 
-  // =========================
-  // FULL UPDATE DIRECTOR
-  // =========================
+  
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -277,10 +273,7 @@ export class DirectorsController {
     );
   }
 
-  // =========================
-  // DELETE DIRECTOR
-  // =========================
-
+ 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
