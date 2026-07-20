@@ -1,9 +1,18 @@
 import { Actor } from "@/types/actor";
 import API from "./api";
 
-export async function getActors() {
+export async function getActors(params?: {
+  search?: string;
+  birthYear?: number;
+  sortBy?: string;
+  order?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}) {
+
   const response = await API.get("/actors", {
-    withCredentials: true,
+    params,
+    withCredentials:true,
   });
 
   return response.data;

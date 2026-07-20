@@ -90,9 +90,14 @@ export default function MoviesPage() {
 
       setGenres(genresData);
 
-      setDirectors(directorsData);
-
-      setActors(actorsData);
+      setDirectors(
+        directorsData.data || directorsData
+      );
+  
+      setActors(
+        actorsData.data || actorsData
+      );
+  
     } catch (error) {
       console.error(error);
     }

@@ -1,6 +1,8 @@
 import { UpdateActorDto } from './dto/update-actor.dto';
 import { CreateActorDto } from './dto/create-actor.dto';
 import { ActorsService } from './actors.service';
+import { Query } from '@nestjs/common';
+import { ActorQueryDto } from './dto/actor-query.dto';
 
 import {
   Controller,
@@ -98,8 +100,11 @@ export class ActorsController {
     description:
       'Forbidden. User does not have permission.',
   })
-  findAll() {
-    return this.actorService.findAll();
+  findAll(
+    @Query() query: ActorQueryDto,
+  ) {
+    console.log(query);
+    return this.actorService.findAll(query);
   }
 
  

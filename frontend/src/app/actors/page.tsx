@@ -23,11 +23,40 @@ export default function ActorsPage() {
 
   const [actors, setActors] = useState<Actor[]>([]);
 
+  const [page, setPage] = useState(1);
+
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [filters, setFilters] = useState({
+    search: "",
+
+    birthYear: "",
+
+    sortBy: "",
+
+    order: "desc" as "asc" | "desc",
+  });
+
   async function loadActors() {
     try {
-      const data = await getActors();
+      const response = await getActors({
+        search: filters.search,
 
-      setActors(data);
+        birthYear: filters.birthYear ? Number(filters.birthYear) : undefined,
+
+        sortBy: filters.sortBy,
+
+        order: filters.order,
+
+        page,
+
+        limit: 5,
+      });
+      console.log("ACTORS RESPONSE:", response);
+
+      setActors(response.data);
+
+      setTotalPages(response.totalPages);
     } catch (error) {
       console.error(error);
     }
@@ -35,7 +64,7 @@ export default function ActorsPage() {
 
   useEffect(() => {
     loadActors();
-  }, []);
+  }, [page, filters]);
 
   async function handleDelete(id: number) {
     const confirmDelete = confirm(
@@ -65,6 +94,16 @@ export default function ActorsPage() {
     }
   }
 
+  function handleFilterChange(key: string, value: string) {
+    setPage(1);
+
+    setFilters({
+      ...filters,
+
+      [key]: value,
+    });
+  }
+
   return (
     <div>
       <Navbar />
@@ -81,6 +120,57 @@ export default function ActorsPage() {
       <br />
       <br />
 
+      <h3>Search & Filter</h3>
+
+      <input
+        type="text"
+        placeholder="Search actor name..."
+        value={filters.search}
+        onChange={(e) => handleFilterChange("search", e.target.value)}
+      />
+
+      <br />
+      <br />
+
+      <input
+        type="number"
+        placeholder="Birth Year"
+        max={new Date().getFullYear()}
+        value={filters.birthYear}
+        onChange={(e) => handleFilterChange("birthYear", e.target.value)}
+      />
+
+      <br />
+      <br />
+
+      <select
+        value={filters.sortBy}
+        onChange={(e) => handleFilterChange("sortBy", e.target.value)}
+      >
+        <option value="">Sort By</option>
+
+        <option value="name">Name</option>
+
+        <option value="dob">Date of Birth</option>
+
+        <option value="createdAt">Created Date</option>
+      </select>
+
+      <br />
+      <br />
+
+      <select
+        value={filters.order}
+        onChange={(e) => handleFilterChange("order", e.target.value)}
+      >
+        <option value="desc">Descending (Z-A / Newest)</option>
+
+        <option value="asc">Ascending (A-Z / Oldest)</option>
+      </select>
+
+      <br />
+      <br />
+
       {actors.length === 0 ? (
         <p>No actors found.</p>
       ) : (
@@ -89,8 +179,11 @@ export default function ActorsPage() {
             key={actor.id}
             style={{
               border: "1px solid #ccc",
+
               padding: "20px",
+
               marginBottom: "20px",
+
               borderRadius: "10px",
             }}
           >
@@ -104,9 +197,13 @@ export default function ActorsPage() {
                 height={220}
                 style={{
                   objectFit: "cover",
+
                   borderRadius: "8px",
+
                   border: "1px solid #ccc",
+
                   display: "block",
+
                   marginBottom: "15px",
                 }}
                 onError={(e) => {
@@ -119,7 +216,9 @@ export default function ActorsPage() {
 
             <p>
               <strong>Date of Birth:</strong>{" "}
-              {new Date(actor.dob).toLocaleDateString("en-GB")}
+              {actor.dob
+                ? new Date(actor.dob).toLocaleDateString("en-GB")
+                : "N/A"}
             </p>
 
             <p>
@@ -157,6 +256,20 @@ export default function ActorsPage() {
           </div>
         ))
       )}
+
+      <br />
+
+      <button disabled={page === 1} onClick={() => setPage(page - 1)}>
+        Previous
+      </button>
+
+      <span style={{ margin: "20px" }}>
+        Page {page} of {totalPages}
+      </span>
+
+      <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>
+        Next
+      </button>
     </div>
   );
 }

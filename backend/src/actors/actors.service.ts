@@ -7,6 +7,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateActorDto } from './dto/create-actor.dto';
 import { UpdateActorDto } from './dto/update-actor.dto';
+import { ActorQueryDto } from './dto/actor-query.dto';
 
 @Injectable()
 export class ActorsService {
@@ -68,14 +69,122 @@ export class ActorsService {
   }
 
  
-  async findAll() {
-    return this.prisma.actor.findMany({
-      include: {
-        movies: true,
-      },
-    });
+  async findAll(query: ActorQueryDto) {
+    const {
+      search,
+      birthYear,
+      sortBy,
+      order,
+      page = 1,
+      limit = 10,
+    } = query;
+  
+    const where: any = {};
+  
+    if (search) {
+      where.name = {
+        contains: search,
+        mode: "insensitive",
+      };
+    }
+  
+  
+    if (
+      birthYear &&
+      !isNaN(Number(birthYear)) &&
+      String(birthYear).length === 4
+    ) {
+    
+      const year = Number(birthYear);
+    
+      where.dob = {
+        gte: new Date(`${year}-01-01`),
+        lt: new Date(`${year + 1}-01-01`)
+      };
+    }
+  
+  
+    let orderBy: any = {
+      createdAt: "desc",
+    };
+  
+  
+    if (sortBy) {
+  
+      const sortOrder = order === "asc" ? "asc" : "desc";
+  
+  
+      switch (sortBy) {
+  
+        case "name":
+          orderBy = {
+            name: sortOrder,
+          };
+          break;
+  
+  
+        case "dob":
+          orderBy = {
+            dob: sortOrder,
+          };
+          break;
+  
+  
+        case "createdAt":
+          orderBy = {
+            createdAt: sortOrder,
+          };
+          break;
+  
+  
+        default:
+          orderBy = {
+            createdAt: "desc",
+          };
+      }
+    }
+  
+  
+    const skip = (page - 1) * limit;
+  
+  
+    const [actors, total] = await Promise.all([
+  
+      this.prisma.actor.findMany({
+  
+        where,
+  
+        include: {
+          movies: true,
+        },
+  
+        orderBy,
+  
+        skip,
+  
+        take: limit,
+      }),
+  
+  
+      this.prisma.actor.count({
+        where,
+      }),
+  
+    ]);
+  
+  
+    return {
+      data: actors,
+  
+      total,
+  
+      page,
+  
+      limit,
+  
+      totalPages: Math.ceil(total / limit),
+    };
   }
-
   
   async findOne(id: number) {
     const actor =
