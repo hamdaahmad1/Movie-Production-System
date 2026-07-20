@@ -1,133 +1,74 @@
 import { Director } from "@/types/director";
-
-const API = "http://localhost:3001/directors";
-
-// =========================
-// GET ALL DIRECTORS
-// =========================
+import API from "./api";
 
 export async function getDirectors() {
-  const res = await fetch(API, {
-    cache: "no-store",
-    credentials: "include",
+  const response = await API.get("/directors", {
+    withCredentials: true,
   });
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch directors");
-  }
-
-  return res.json();
+  return response.data;
 }
 
-// =========================
-// GET ONE DIRECTOR
-// =========================
 
 export async function getDirector(id: number) {
-  const res = await fetch(`${API}/${id}`, {
-    credentials: "include",
+  const response = await API.get(`/directors/${id}`, {
+    withCredentials: true,
   });
 
-  if (!res.ok) {
-    throw new Error("Director not found");
-  }
-
-  return res.json();
+  return response.data;
 }
 
-// =========================
-// CREATE DIRECTOR
-// =========================
 
 export async function createDirector(
-  director: Omit<Director, "id">,
+  director: Omit<Director, "id">
 ) {
-  const res = await fetch(API, {
-    method: "POST",
-
-    headers: {
-      "Content-Type": "application/json",
-    },
-
-    credentials: "include",
-
-    body: JSON.stringify({
+  const response = await API.post(
+    "/directors",
+    {
       name: director.name,
       dob: director.dob,
       nationality: director.nationality,
       biography: director.biography,
       imagePath: director.imagePath,
-    }),
-  });
+    },
+    {
+      withCredentials: true,
+    }
+  );
 
-  if (!res.ok) {
-    const error = await res.json();
-
-    throw new Error(
-      Array.isArray(error.message)
-        ? error.message.join(", ")
-        : error.message ||
-            "Failed to create director",
-    );
-  }
-
-  return res.json();
+  return response.data;
 }
 
-// =========================
-// UPDATE DIRECTOR
-// =========================
 
 export async function updateDirector(
   id: number,
-  director: Omit<Director, "id">,
+  director: Omit<Director, "id">
 ) {
-  const res = await fetch(`${API}/${id}`, {
-    method: "PUT",
-
-    headers: {
-      "Content-Type": "application/json",
-    },
-
-    credentials: "include",
-
-    body: JSON.stringify({
+  const response = await API.put(
+    `/directors/${id}`,
+    {
       name: director.name,
       dob: director.dob,
       nationality: director.nationality,
       biography: director.biography,
       imagePath: director.imagePath,
-    }),
-  });
+    },
+    {
+      withCredentials: true,
+    }
+  );
 
-  if (!res.ok) {
-    const error = await res.json();
-
-    throw new Error(
-      Array.isArray(error.message)
-        ? error.message.join(", ")
-        : error.message ||
-            "Failed to update director",
-    );
-  }
-
-  return res.json();
+  return response.data;
 }
 
-// =========================
-// DELETE DIRECTOR
-// =========================
 
 export async function deleteDirector(id: number) {
-  const res = await fetch(`${API}/${id}`, {
-    method: "DELETE",
-    credentials: "include",
+  const response = await API.delete(`/directors/${id}`, {
+    withCredentials: true,
   });
 
-  const data = await res.json();
-
   return {
-    success: res.ok,
-    message: data.message,
+    success: true,
+    message: response.data.message,
   };
 }

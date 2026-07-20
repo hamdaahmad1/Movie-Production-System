@@ -1,6 +1,8 @@
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { MoviesService } from './movies.service';
 import { UpdateMovieDto } from './dto/update-movie.dto';
+import { Query } from "@nestjs/common";
+import { MovieQueryDto } from "./dto/movie-query.dto";
 
 import {
   Controller,
@@ -39,9 +41,7 @@ export class MoviesController {
     private moviesService: MoviesService,
   ) {}
 
-  // =========================
-  // CREATE MOVIE
-  // =========================
+
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -144,9 +144,7 @@ export class MoviesController {
     return this.moviesService.create(dto);
   }
 
-  // =========================
-  // GET ALL MOVIES
-  // =========================
+
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -161,13 +159,41 @@ export class MoviesController {
     status: 200,
     description: 'Movies successfully retrieved',
   })
-  findAll() {
-    return this.moviesService.findAll();
+  findAll(
+    @Query() query: MovieQueryDto,
+  ) {
+    return this.moviesService.findAll(query);
   }
 
-  // =========================
-  // GET ONE MOVIE
-  // =========================
+
+  
+
+  @ApiOperation({
+    summary: "Get all movie genres",
+    description: "Returns a list of all available movie genres."
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Genres fetched successfully",
+    schema: {
+      example: [
+        "Action",
+        "Comedy",
+        "Drama",
+        "Science Fiction"
+      ]
+    }
+  })
+  @ApiResponse({
+    status: 500,
+    description: "Internal server error"
+  })
+  @Get("genres")
+  async getGenres() {
+    return this.moviesService.getGenres();
+  }
+
+
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -195,9 +221,7 @@ export class MoviesController {
     return this.moviesService.findOne(id);
   }
 
-  // =========================
-  // PATCH MOVIE
-  // =========================
+
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -293,9 +317,6 @@ export class MoviesController {
     return this.moviesService.partialUpdate(id, dto);
   }
 
-  // =========================
-  // PUT MOVIE
-  // =========================
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -402,10 +423,6 @@ export class MoviesController {
     return this.moviesService.update(id, dto);
   }
 
-  // =========================
-  // DELETE MOVIE
-  // =========================
-
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
@@ -430,4 +447,5 @@ export class MoviesController {
   ) {
     return this.moviesService.remove(id);
   }
+
 }

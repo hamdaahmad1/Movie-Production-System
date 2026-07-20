@@ -19,3 +19,14 @@ export interface Movie {
 
     actors?: Actor[];
 }
+export interface MovieResponse {
+    data: Movie[];
+  
+    total: number;
+  
+    page: number;
+  
+    limit: number;
+  
+    totalPages: number;
+  }

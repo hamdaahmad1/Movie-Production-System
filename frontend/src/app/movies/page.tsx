@@ -5,6 +5,9 @@ import Link from "next/link";
 import Navbar from "@/app/components/Navbar";
 
 import { getMovies, deleteMovie } from "@/services/movieService";
+import { getGenres } from "@/services/filterService";
+import { getDirectors } from "@/services/directorService";
+import { getActors } from "@/services/actorService";
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -19,11 +22,77 @@ export default function MoviesPage() {
 
   const [movies, setMovies] = useState<any[]>([]);
 
+  const [genres, setGenres] = useState<string[]>([]);
+
+  const [directors, setDirectors] = useState<any[]>([]);
+
+  const [actors, setActors] = useState<any[]>([]);
+
+  const [page, setPage] = useState(1);
+
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [filters, setFilters] = useState({
+    search: "",
+
+    genre: "",
+
+    directorId: "",
+
+    actorId: "",
+
+    year: "",
+
+    sortBy: "",
+
+    order: "desc" as "asc" | "desc",
+  });
+
   async function loadMovies() {
     try {
-      const data = await getMovies();
+      const response = await getMovies({
+        search: filters.search,
 
-      setMovies(data);
+        genre: filters.genre,
+
+        directorId: filters.directorId ? Number(filters.directorId) : undefined,
+
+        actorId: filters.actorId ? Number(filters.actorId) : undefined,
+
+        year: filters.year ? Number(filters.year) : undefined,
+
+        sortBy: filters.sortBy,
+
+        order: filters.order,
+
+        page,
+
+        limit: 5,
+      });
+
+      setMovies(response.data);
+
+      setTotalPages(response.totalPages);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function loadFilters() {
+    try {
+      const [genresData, directorsData, actorsData] = await Promise.all([
+        getGenres(),
+
+        getDirectors(),
+
+        getActors(),
+      ]);
+
+      setGenres(genresData);
+
+      setDirectors(directorsData);
+
+      setActors(actorsData);
     } catch (error) {
       console.error(error);
     }
@@ -31,6 +100,10 @@ export default function MoviesPage() {
 
   useEffect(() => {
     loadMovies();
+  }, [page, filters]);
+
+  useEffect(() => {
+    loadFilters();
   }, []);
 
   useEffect(() => {
@@ -71,6 +144,16 @@ export default function MoviesPage() {
     }
   }
 
+  function handleFilterChange(key: string, value: string) {
+    setPage(1);
+
+    setFilters({
+      ...filters,
+
+      [key]: value,
+    });
+  }
+
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -95,6 +178,103 @@ export default function MoviesPage() {
       <br />
       <br />
 
+      <h3>Search & Filter</h3>
+
+      <input
+        type="text"
+        placeholder="Search movie title..."
+        value={filters.search}
+        onChange={(e) => handleFilterChange("search", e.target.value)}
+      />
+
+      <br />
+      <br />
+
+      <select
+        value={filters.genre}
+        onChange={(e) => handleFilterChange("genre", e.target.value)}
+      >
+        <option value="">All Genres</option>
+
+        {genres.map((genre) => (
+          <option key={genre} value={genre}>
+            {genre}
+          </option>
+        ))}
+      </select>
+
+      <br />
+      <br />
+
+      <select
+        value={filters.directorId}
+        onChange={(e) => handleFilterChange("directorId", e.target.value)}
+      >
+        <option value="">All Directors</option>
+
+        {directors.map((director) => (
+          <option key={director.id} value={director.id}>
+            {director.name}
+          </option>
+        ))}
+      </select>
+
+      <br />
+      <br />
+
+      <select
+        value={filters.actorId}
+        onChange={(e) => handleFilterChange("actorId", e.target.value)}
+      >
+        <option value="">All Actors</option>
+
+        {actors.map((actor) => (
+          <option key={actor.id} value={actor.id}>
+            {actor.name}
+          </option>
+        ))}
+      </select>
+
+      <br />
+      <br />
+
+      <input
+        type="number"
+        placeholder="Release Year"
+        max={new Date().getFullYear()}
+        value={filters.year}
+        onChange={(e) => handleFilterChange("year", e.target.value)}
+      />
+      <br />
+      <br />
+
+      <select
+        value={filters.sortBy}
+        onChange={(e) => handleFilterChange("sortBy", e.target.value)}
+      >
+        <option value="">Sort By</option>
+
+        <option value="title">Title</option>
+
+        <option value="rating">Rating Score</option>
+
+        <option value="year">Release Year</option>
+      </select>
+
+      <br />
+      <br />
+
+      <select
+        value={filters.order}
+        onChange={(e) => handleFilterChange("order", e.target.value)}
+      >
+        <option value="desc">Descending (Newest / Highest First)</option>
+
+        <option value="asc">Ascending (Oldest / Lowest First)</option>
+      </select>
+
+      <br />
+      <br />
       {movies.length === 0 ? (
         <p>No movies found.</p>
       ) : (
@@ -109,7 +289,6 @@ export default function MoviesPage() {
             }}
           >
             <h2>{movie.title}</h2>
-
             {movie.posterPath && (
               <img
                 src={movie.posterPath}
@@ -118,76 +297,51 @@ export default function MoviesPage() {
                   width: "180px",
                   height: "260px",
                   objectFit: "cover",
-                  borderRadius: "8px",
-                  marginBottom: "15px",
-                }}
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
                 }}
               />
             )}
-
             <p>
-              <strong>Description:</strong> {movie.description}
+              <strong>Genre:</strong>
+              {movie.genre}
             </p>
-
             <p>
-              <strong>Release Date:</strong>{" "}
-              {new Date(movie.releaseDate).toLocaleDateString("en-GB")}
+              <strong>Rating:</strong>
+              {movie.rating}/10
             </p>
-
             <p>
-              <strong>Duration:</strong> {movie.duration} minutes
+              <strong>Director:</strong>
+              {movie.director?.name}
             </p>
-
             <p>
-              <strong>Genre:</strong> {movie.genre}
-            </p>
+              <strong>Actors:</strong>
 
-            <p>
-              <strong>Language:</strong> {movie.language}
-            </p>
-
-            <p>
-              <strong>Rating:</strong> {movie.rating}/10
-            </p>
-
-            <p>
-              <strong>Director:</strong> {movie.director?.name || "No director"}
-            </p>
-
-            <p>
-              <strong>Actors:</strong>{" "}
               {movie.actors?.length
                 ? movie.actors.map((actor: any) => actor.name).join(", ")
                 : "No actors"}
             </p>
-
-            <p>
-              <strong>Trailer:</strong>{" "}
-              <a
-                href={movie.trailerId}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Watch Trailer
-              </a>
-            </p>
-
-            <br />
-
             {(isAdmin || isEditor) && (
               <Link href={`/movies/edit/${movie.id}`}>Edit</Link>
-            )}
-
-            {"  "}
-
+            )}{" "}
             {isAdmin && (
               <button onClick={() => handleDelete(movie.id)}>Delete</button>
             )}
           </div>
         ))
       )}
+
+      <br />
+
+      <button disabled={page === 1} onClick={() => setPage(page - 1)}>
+        Previous
+      </button>
+
+      <span style={{ margin: "20px" }}>
+        Page {page} of {totalPages}
+      </span>
+
+      <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>
+        Next
+      </button>
     </div>
   );
 }

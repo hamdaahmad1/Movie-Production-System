@@ -7,29 +7,21 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
+import { MovieQueryDto } from './dto/movie-query.dto';
+
 
 @Injectable()
 export class MoviesService {
   constructor(private prisma: PrismaService) {}
 
-  // =========================
-  // CREATE MOVIE
-  // =========================
-
   async create(dto: CreateMovieDto) {
-    // =========================
-    // RELEASE DATE VALIDATION
-    // =========================
+
 
     if (new Date(dto.releaseDate) > new Date()) {
       throw new BadRequestException(
         'Release date cannot be in the future',
       );
     }
-
-    // =========================
-    // DUPLICATE MOVIE VALIDATION
-    // =========================
 
     const existingMovie =
       await this.prisma.movie.findFirst({
@@ -47,10 +39,6 @@ export class MoviesService {
       );
     }
 
-    // =========================
-    // DIRECTOR VALIDATION
-    // =========================
-
     const director =
       await this.prisma.director.findUnique({
         where: {
@@ -64,9 +52,6 @@ export class MoviesService {
       );
     }
 
-    // =========================
-    // ACTORS VALIDATION
-    // =========================
 
     const actors =
       await this.prisma.actor.findMany({
@@ -84,10 +69,6 @@ export class MoviesService {
         'One or more actor IDs are invalid.',
       );
     }
-
-    // =========================
-    // CREATE MOVIE
-    // =========================
 
     return this.prisma.movie.create({
       data: {
@@ -121,22 +102,127 @@ export class MoviesService {
     });
   }
 
-  // =========================
-  // GET ALL MOVIES
-  // =========================
 
-  async findAll() {
-    return this.prisma.movie.findMany({
-      include: {
-        director: true,
-        actors: true,
-      },
-    });
+  async findAll(query: MovieQueryDto) {
+    const {
+      search,
+      genre,
+      directorId,
+      actorId,
+      year,
+      sortBy,
+      order,
+      page = 1,
+      limit = 10,
+    } = query;
+  
+    const where: any = {};
+  
+    if (search) {
+      where.title = {
+        contains: search,
+        mode: "insensitive",
+      };
+    }
+  
+    if (genre) {
+      where.genre = {
+        contains: genre,
+        mode: "insensitive",
+      };
+    }
+  
+    if (directorId) {
+      where.directorId = directorId;
+    }
+  
+    if (actorId) {
+      where.actors = {
+        some: {
+          id: actorId,
+        },
+      };
+    }
+  
+    if (
+      year &&
+      !isNaN(year) &&
+      String(year).length === 4
+    ) {
+      where.releaseDate = {
+        gte: new Date(`${year}-01-01`),
+        lt: new Date(`${year + 1}-01-01`),
+      };
+    }
+    
+    let orderBy: any = {
+      createdAt: "desc",
+    };
+  
+    if (sortBy) {
+      const sortOrder = order === "asc" ? "asc" : "desc";
+  
+      switch (sortBy) {
+        case "title":
+          orderBy = {
+            title: sortOrder,
+          };
+          break;
+  
+        case "rating":
+          orderBy = {
+            rating: sortOrder,
+          };
+          break;
+  
+        case "year":
+          orderBy = {
+            releaseDate: sortOrder,
+          };
+          break;
+  
+        default:
+          orderBy = {
+            createdAt: "desc",
+          };
+      }
+    }
+  
+    const skip = (page - 1) * limit;
+  
+    const [movies, total] = await Promise.all([
+      this.prisma.movie.findMany({
+        where,
+  
+        include: {
+          director: true,
+          actors: true,
+        },
+  
+        orderBy,
+  
+        skip,
+  
+        take: limit,
+      }),
+  
+      this.prisma.movie.count({
+        where,
+      }),
+    ]);
+  
+    return {
+      data: movies,
+  
+      total,
+  
+      page,
+  
+      limit,
+  
+      totalPages: Math.ceil(total / limit),
+    };
   }
-
-  // =========================
-  // GET ONE MOVIE
-  // =========================
 
   async findOne(id: number) {
     const movie =
@@ -160,17 +246,12 @@ export class MoviesService {
     return movie;
   }
 
-  // =========================
-  // PUT - FULL UPDATE
-  // =========================
-
+ 
   async update(
     id: number,
     dto: CreateMovieDto,
   ) {
-    // =========================
-    // CHECK MOVIE EXISTS
-    // =========================
+  
 
     const movie =
       await this.prisma.movie.findUnique({
@@ -185,10 +266,7 @@ export class MoviesService {
       );
     }
 
-    // =========================
-    // RELEASE DATE VALIDATION
-    // =========================
-
+    
     if (
       new Date(dto.releaseDate) > new Date()
     ) {
@@ -197,10 +275,7 @@ export class MoviesService {
       );
     }
 
-    // =========================
-    // DUPLICATE TITLE VALIDATION
-    // =========================
-
+    
     const existingMovie =
       await this.prisma.movie.findFirst({
         where: {
@@ -221,9 +296,7 @@ export class MoviesService {
       );
     }
 
-    // =========================
-    // DIRECTOR VALIDATION
-    // =========================
+  
 
     const director =
       await this.prisma.director.findUnique({
@@ -238,9 +311,7 @@ export class MoviesService {
       );
     }
 
-    // =========================
-    // ACTORS VALIDATION
-    // =========================
+    
 
     const actors =
       await this.prisma.actor.findMany({
@@ -259,9 +330,7 @@ export class MoviesService {
       );
     }
 
-    // =========================
-    // FULL UPDATE
-    // =========================
+
 
     return this.prisma.movie.update({
       where: {
@@ -299,18 +368,13 @@ export class MoviesService {
     });
   }
 
-  // =========================
-  // PATCH - PARTIAL UPDATE
-  // =========================
+
 
   async partialUpdate(
     id: number,
     dto: UpdateMovieDto,
   ) {
-    // =========================
-    // CHECK MOVIE EXISTS
-    // =========================
-
+    
     const movie =
       await this.prisma.movie.findUnique({
         where: {
@@ -324,10 +388,7 @@ export class MoviesService {
       );
     }
 
-    // =========================
-    // RELEASE DATE VALIDATION
-    // =========================
-
+   
     if (
       dto.releaseDate &&
       new Date(dto.releaseDate) > new Date()
@@ -337,9 +398,7 @@ export class MoviesService {
       );
     }
 
-    // =========================
-    // DUPLICATE TITLE VALIDATION
-    // =========================
+   
 
     if (dto.title) {
       const existingMovie =
@@ -363,9 +422,7 @@ export class MoviesService {
       }
     }
 
-    // =========================
-    // DIRECTOR VALIDATION
-    // =========================
+   
 
     if (dto.directorId) {
       const director =
@@ -382,10 +439,7 @@ export class MoviesService {
       }
     }
 
-    // =========================
-    // ACTORS VALIDATION
-    // =========================
-
+    
     if (dto.actorIds) {
       const actors =
         await this.prisma.actor.findMany({
@@ -405,10 +459,7 @@ export class MoviesService {
       }
     }
 
-    // =========================
-    // SEPARATE RELATION FIELDS
-    // =========================
-
+   
     const {
       directorId,
       actorIds,
@@ -416,9 +467,7 @@ export class MoviesService {
       ...movieData
     } = dto;
 
-    // =========================
-    // PARTIAL UPDATE
-    // =========================
+    
 
     return this.prisma.movie.update({
       where: {
@@ -456,10 +505,7 @@ export class MoviesService {
     });
   }
 
-  // =========================
-  // DELETE MOVIE
-  // =========================
-
+ 
   async remove(id: number) {
     const movie =
       await this.prisma.movie.findUnique({
@@ -479,5 +525,40 @@ export class MoviesService {
         id,
       },
     });
+  }
+
+  async getGenres() {
+
+    const movies = await this.prisma.movie.findMany({
+      select:{
+        genre:true,
+      },
+    });
+  
+  
+    const genres = new Set<string>();
+  
+  
+    movies.forEach((movie)=>{
+  
+      if(movie.genre){
+  
+        movie.genre
+        .split(",")
+        .forEach((genre)=>{
+  
+          genres.add(
+            genre.trim()
+          );
+  
+        });
+  
+      }
+  
+    });
+  
+  
+    return Array.from(genres);
+  
   }
 }
