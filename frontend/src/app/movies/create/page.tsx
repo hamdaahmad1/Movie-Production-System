@@ -57,9 +57,9 @@ export default function CreateMovie() {
 
         const actorsData = await getActors();
 
-        setDirectors(directorsData);
+        setDirectors(directorsData.data || directorsData);
 
-        setActors(actorsData);
+        setActors(actorsData.data || actorsData);
       } catch (error) {
         console.error(error);
 
@@ -501,8 +501,6 @@ export default function CreateMovie() {
         </select>
 
         <br />
-
-        <small>Hold Ctrl or Command to select multiple actors.</small>
 
         <br />
         <br />

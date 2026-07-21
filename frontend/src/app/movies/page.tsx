@@ -8,6 +8,14 @@ import { getMovies, deleteMovie } from "@/services/movieService";
 import { getGenres } from "@/services/filterService";
 import { getDirectors } from "@/services/directorService";
 import { getActors } from "@/services/actorService";
+import {
+  addFavorite,
+  removeFavorite,
+  addWatchlist,
+  removeWatchlist,
+  getFavorites,
+  getWatchlist,
+} from "@/services/movieInteractionService";
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -21,6 +29,9 @@ export default function MoviesPage() {
   const isEditor = user?.role === "EDITOR";
 
   const [movies, setMovies] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<number[]>([]);
+
+  const [watchlist, setWatchlist] = useState<number[]>([]);
 
   const [genres, setGenres] = useState<string[]>([]);
 
@@ -90,14 +101,22 @@ export default function MoviesPage() {
 
       setGenres(genresData);
 
-      setDirectors(
-        directorsData.data || directorsData
-      );
-  
-      setActors(
-        actorsData.data || actorsData
-      );
-  
+      setDirectors(directorsData.data || directorsData);
+
+      setActors(actorsData.data || actorsData);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  async function loadInteractions() {
+    try {
+      const favoritesData = await getFavorites();
+
+      const watchlistData = await getWatchlist();
+
+      setFavorites(favoritesData.map((item: any) => item.movie.id));
+
+      setWatchlist(watchlistData.map((item: any) => item.movie.id));
     } catch (error) {
       console.error(error);
     }
@@ -110,6 +129,11 @@ export default function MoviesPage() {
   useEffect(() => {
     loadFilters();
   }, []);
+  useEffect(() => {
+    if (user?.role === "VIEWER") {
+      loadInteractions();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (loading) return;
@@ -128,6 +152,47 @@ export default function MoviesPage() {
       router.replace("/movies");
     }
   }, [user, loading, router]);
+
+  async function handleFavorite(movieId: number)
+  
+  {
+    try {
+      if (favorites.includes(movieId)) {
+        await removeFavorite(movieId);
+
+        setFavorites(favorites.filter((id) => id !== movieId));
+      } else {
+        await addFavorite(movieId);
+
+        setFavorites([
+          ...favorites,
+          movieId
+        ]);
+      }
+    } catch (error) {
+      console.error(error);
+
+      alert("Favorite operation failed");
+    }
+  }
+
+  async function handleWatchlist(movieId: number) {
+    try {
+      if (watchlist.includes(movieId)) {
+        await removeWatchlist(movieId);
+
+        setWatchlist(watchlist.filter((id) => id !== movieId));
+      } else {
+        await addWatchlist(movieId);
+
+        setWatchlist([...watchlist, movieId]);
+      }
+    } catch (error) {
+      console.error(error);
+
+      alert("Watchlist operation failed");
+    }
+  }
 
   async function handleDelete(id: number) {
     const confirmDelete = confirm(
@@ -306,6 +371,24 @@ export default function MoviesPage() {
               />
             )}
             <p>
+              <strong>Description:</strong>
+              {movie.description}
+            </p>
+            <p>
+              <strong>Duration:</strong>
+              {movie.duration} minutes
+            </p>
+            <p>
+              <strong>Language:</strong>
+              {movie.language}
+            </p>
+            <p>
+              <strong>Release Date:</strong>{" "}
+              {movie.releaseDate
+                ? new Date(movie.releaseDate).toLocaleDateString("en-GB")
+                : "N/A"}
+            </p>
+            <p>
               <strong>Genre:</strong>
               {movie.genre}
             </p>
@@ -324,6 +407,29 @@ export default function MoviesPage() {
                 ? movie.actors.map((actor: any) => actor.name).join(", ")
                 : "No actors"}
             </p>
+            <Link href={`/movies/${movie.id}`}>View Reviews</Link>
+            {" | "}
+            {user.role === "VIEWER" && (
+              <>
+                <button onClick={() => handleFavorite(movie.id)}>
+                  {favorites.includes(movie.id)
+                    ? "Remove Favorite"
+                    : "Add Favorite"}
+                </button>
+
+                {" | "}
+
+                <button onClick={() => handleWatchlist(movie.id)}>
+                  {watchlist.includes(movie.id)
+                    ? "Remove Watchlist"
+                    : "Add Watchlist"}
+                </button>
+
+                {" | "}
+
+                <Link href={`/movies/${movie.id}/review`}>Write Review</Link>
+              </>
+            )}
             {(isAdmin || isEditor) && (
               <Link href={`/movies/edit/${movie.id}`}>Edit</Link>
             )}{" "}

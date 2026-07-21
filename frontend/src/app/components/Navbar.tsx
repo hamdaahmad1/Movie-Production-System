@@ -38,6 +38,10 @@ export default function Navbar() {
       {user?.role === "EDITOR" && (
         <Link href="/editor">Editor</Link>
       )}
+       {user?.role === "VIEWER" && (
+        <Link href="/viewer">Viewer</Link>
+      )}
+      
       <button onClick={handleLogout}>
         Logout
       </button>
