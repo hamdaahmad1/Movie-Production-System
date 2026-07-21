@@ -10,8 +10,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-
-
+import{ UserQueryDto } from './dto/user-query.dto';
 @Injectable()
 export class UsersService {
 
@@ -78,27 +77,138 @@ export class UsersService {
     });
   }
 
-  async findAll(){
-
-    return this.prisma.user.findMany({
-
-      select:{
-        id:true,
-        username:true,
-        email:true,
-        firstName:true,
-        lastName:true,
-        role:true,
-        createdAt:true,
-        updatedAt:true,
-      },
-
-      orderBy:{
-        createdAt:"desc",
-      },
-
-    });
-
+  async findAll(query: UserQueryDto) {
+    const {
+      search,
+      role,
+      sortBy,
+      order,
+      page = 1,
+      limit = 10,
+    } = query;
+  
+    const where: any = {};
+  
+    if (search) {
+      where.OR = [
+        {
+          username: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          firstName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          lastName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          email: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+      ];
+    }
+  
+    if (role) {
+      where.role = role;
+    }
+  
+    let orderBy: any = {
+      createdAt: "desc",
+    };
+  
+    if (sortBy) {
+      const sortOrder = order === "asc" ? "asc" : "desc";
+  
+      switch (sortBy) {
+        case "username":
+          orderBy = {
+            username: sortOrder,
+          };
+          break;
+  
+        case "firstName":
+          orderBy = {
+            firstName: sortOrder,
+          };
+          break;
+  
+        case "lastName":
+          orderBy = {
+            lastName: sortOrder,
+          };
+          break;
+  
+        case "email":
+          orderBy = {
+            email: sortOrder,
+          };
+          break;
+  
+        case "role":
+          orderBy = {
+            role: sortOrder,
+          };
+          break;
+  
+        case "createdAt":
+          orderBy = {
+            createdAt: sortOrder,
+          };
+          break;
+  
+        default:
+          orderBy = {
+            createdAt: "desc",
+          };
+      }
+    }
+  
+    const skip = (page - 1) * limit;
+  
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+  
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+  
+        orderBy,
+  
+        skip,
+  
+        take: limit,
+      }),
+  
+      this.prisma.user.count({
+        where,
+      }),
+    ]);
+  
+    return {
+      data: users,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findOne(id:number){

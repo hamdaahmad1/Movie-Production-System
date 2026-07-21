@@ -1,7 +1,15 @@
 import API from "./api";
 
-export async function getUsers() {
+export async function getUsers(params?: {
+  search?: string;
+  role?: string;
+  sortBy?: string;
+  order?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}) {
   const response = await API.get("/users", {
+    params,
     withCredentials: true,
   });
 

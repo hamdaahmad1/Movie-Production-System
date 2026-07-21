@@ -25,6 +25,8 @@ import { UsersService } from './users.service';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Query } from "@nestjs/common";
+import { UserQueryDto } from "./dto/user-query.dto";
 
 
 @ApiTags('Users')
@@ -76,8 +78,10 @@ export class UsersController {
     status: 200,
     description: 'Users retrieved successfully.',
   })
-  findAll() {
-    return this.usersService.findAll();
+  findAll(
+    @Query() query: UserQueryDto,
+  ) {
+    return this.usersService.findAll(query);
   }
 
 
