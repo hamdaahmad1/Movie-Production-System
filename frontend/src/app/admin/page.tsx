@@ -15,11 +15,14 @@ import Link from "next/link";
 export default function AdminPage() {
   const router = useRouter();
 
-  const { user, loading, logout } = useAuth();
+  const { user, loading} = useAuth();
 
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
 
   const [error, setError] = useState("");
+  const ITEMS_PER_PAGE = 5;
+
+  const [moviePage, setMoviePage] = useState(1);
 
   useEffect(() => {
     if (loading) return;
@@ -47,11 +50,11 @@ export default function AdminPage() {
     }
   }
 
-  async function handleLogout() {
-    await logout();
-
-    router.replace("/login");
-  }
+  const paginatedMovies =
+    dashboard?.recentMovies.slice(
+      (moviePage - 1) * ITEMS_PER_PAGE,
+      moviePage * ITEMS_PER_PAGE
+    ) || [];
 
   if (loading) {
     return <p>Loading...</p>;
@@ -71,7 +74,6 @@ export default function AdminPage() {
       <p>
         Welcome <strong>{user.firstName}</strong>
       </p>
-
 
       <br />
       <br />
@@ -108,7 +110,7 @@ export default function AdminPage() {
 
           <h2>Recent Movies</h2>
 
-          {dashboard.recentMovies.map((movie) => (
+          {paginatedMovies.map((movie) => (
             <div
               key={movie.id}
               style={{
@@ -158,6 +160,25 @@ export default function AdminPage() {
               </p>
             </div>
           ))}
+          <div style={{ marginTop: "20px" }}>
+            <button
+              disabled={moviePage === 1}
+              onClick={() => setMoviePage((p) => p - 1)}
+            >
+              Previous
+            </button>
+
+            <span style={{ margin: "0 10px" }}>Page {moviePage}</span>
+
+            <button
+              disabled={
+                moviePage * ITEMS_PER_PAGE >= dashboard.recentMovies.length
+              }
+              onClick={() => setMoviePage((p) => p + 1)}
+            >
+              Next
+            </button>
+          </div>
         </>
       )}
     </div>
