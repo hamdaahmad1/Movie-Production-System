@@ -137,14 +137,4 @@ export class RegisterDto {
   })
   confirmPassword: string;
 
- 
-  @ApiProperty({
-    example: 'VIEWER',
-    enum: ['VIEWER', 'EDITOR'],
-    description: 'Role selected during registration',
-  })
-  @IsEnum(UserRole, {
-    message: 'Role must be VIEWER or EDITOR',
-  })
-  role: UserRole;
 }

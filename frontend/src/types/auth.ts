@@ -10,7 +10,6 @@ export interface LoginData {
     email: string;
     password: string;
     confirmPassword: string;
-    role: "VIEWER" | "EDITOR";
   }
   
   export interface LoginResponse {

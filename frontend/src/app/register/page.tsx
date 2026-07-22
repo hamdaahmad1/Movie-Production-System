@@ -34,7 +34,7 @@ export default function RegisterPage() {
     null
   );
 
-  const [role, setRole] = useState("VIEWER");
+
 
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
 
@@ -147,16 +147,13 @@ export default function RegisterPage() {
         email: form.email.trim(),
         password: form.password,
         confirmPassword: form.confirmPassword,
-        role: role as "VIEWER" | "EDITOR",
+
       });
 
       alert("Registration successful!");
+      router.push("/viewer");
 
-      if (response.user.role === "EDITOR") {
-        router.push("/editor");
-      } else {
-        router.push("/viewer");
-      }
+      
     } catch (error: any) {
       setError(error.response?.data?.message ?? "Registration failed.");
     } finally {
@@ -267,25 +264,7 @@ export default function RegisterPage() {
           onChange={handleChange}
         />
 
-        <label>
-          <input
-            type="radio"
-            value="VIEWER"
-            checked={role === "VIEWER"}
-            onChange={(e) => setRole(e.target.value)}
-          />
-          Viewer
-        </label>
-
-        <label>
-          <input
-            type="radio"
-            value="EDITOR"
-            checked={role === "EDITOR"}
-            onChange={(e) => setRole(e.target.value)}
-          />
-          Editor
-        </label>
+        
 
         <br />
         <br />

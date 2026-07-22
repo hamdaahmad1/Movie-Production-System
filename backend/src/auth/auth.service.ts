@@ -99,14 +99,6 @@ import {
       }
     
 
-      if (
-        dto.role !== UserRole.VIEWER &&
-        dto.role !== UserRole.EDITOR
-      ) {
-        throw new BadRequestException(
-          "You can only register as Viewer or Editor.",
-        );
-      }
       
       const user = await this.usersService.create({
         username: dto.username,
@@ -114,7 +106,7 @@ import {
         password: dto.password,
         firstName: dto.firstName,
         lastName: dto.lastName,
-        role: dto.role,
+        role: UserRole.VIEWER,
       });
 
 
