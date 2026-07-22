@@ -69,6 +69,8 @@ import {
         dto,
       );
     }
+
+
   
     @Patch(':id')
 @Roles('ADMIN')
@@ -88,6 +90,7 @@ update(
    dto,
  );
 }
+
   
     @Delete(':id')
     @Roles('VIEWER','ADMIN')
@@ -130,6 +133,29 @@ update(
       );
     }
 
+    
+    @Get("my-reviews")
+    @Roles("VIEWER")
+@UseGuards(JwtAuthGuard)
+@ApiOperation({
+  summary: "Get reviews written by logged-in user"
+})
+@ApiResponse({
+  status: 200,
+  description: "User reviews fetched successfully"
+})
+@ApiResponse({
+  status: 401,
+  description: "Unauthorized"
+})
+getMyReviews(
+  @Req() req:any
+){
+  return this.reviewsService.getMyReviews(
+    req.user.id
+  );
+}
+
     @Get(":id")
 @Roles("ADMIN")
 @ApiOperation({
@@ -140,6 +166,7 @@ findOne(
 ) {
   return this.reviewsService.findOne(Number(id));
 }
+
   
     @Get('movie/:movieId/rating')
     @Roles(
@@ -166,24 +193,4 @@ findOne(
 
 
 
-    @Get("my-reviews")
-@UseGuards(JwtAuthGuard)
-@ApiOperation({
-  summary: "Get reviews written by logged-in user"
-})
-@ApiResponse({
-  status: 200,
-  description: "User reviews fetched successfully"
-})
-@ApiResponse({
-  status: 401,
-  description: "Unauthorized"
-})
-getMyReviews(
-  @Req() req:any
-){
-  return this.reviewsService.getMyReviews(
-    req.user.sub
-  );
-}
   }

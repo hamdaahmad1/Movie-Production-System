@@ -81,7 +81,7 @@ import {
    )
    {
    return this.service.getFavorites(
-    req.user.id
+    req.user.id,
    );
    
    }
@@ -139,7 +139,7 @@ getWatchlist(
 ){
 
 return this.service.getWatchlist(
-    req.user.id,
+    req.user.id
 );
 
 }
