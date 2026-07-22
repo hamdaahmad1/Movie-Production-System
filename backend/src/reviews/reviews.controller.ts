@@ -71,27 +71,23 @@ import {
     }
   
     @Patch(':id')
-    @Roles('VIEWER')
-    @ApiOperation({
-      summary: 'Update review',
-    })
-    @ApiParam({
-      name: 'id',
-      example: 1,
-    })
-    update(
-      @Req() req: any,
-  
-      @Param('id') id: string,
-  
-      @Body() dto: CreateReviewDto,
-    ) {
-      return this.reviewsService.update(
-        req.user.id,
-        Number(id),
-        dto,
-      );
-    }
+@Roles('ADMIN')
+@ApiOperation({
+  summary: 'Admin update review',
+})
+@ApiParam({
+  name: 'id',
+  example: 1,
+})
+update(
+ @Param('id') id:string,
+ @Body() dto:CreateReviewDto,
+){
+ return this.reviewsService.update(
+   Number(id),
+   dto,
+ );
+}
   
     @Delete(':id')
     @Roles('VIEWER','ADMIN')
@@ -133,6 +129,17 @@ import {
         Number(movieId),
       );
     }
+
+    @Get(":id")
+@Roles("ADMIN")
+@ApiOperation({
+  summary: "Get review by id",
+})
+findOne(
+  @Param("id") id: string,
+) {
+  return this.reviewsService.findOne(Number(id));
+}
   
     @Get('movie/:movieId/rating')
     @Roles(

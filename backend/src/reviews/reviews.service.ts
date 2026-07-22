@@ -64,46 +64,32 @@ import
    }
 
    
-   async update(userId: number,id: number,dto: CreateReviewDto,) 
-   {
-  
-    const review =await this.prisma.review.findUnique({
-  
-        where: {
-          id,
-        },
-  
-      });
-  
-  
-    if (!review) {
-  
-      throw new NotFoundException(
-        'Review not found',
-      );
-  
-    }
-  
-  
-    if (review.userId !== userId) {
-  
-      throw new ForbiddenException(
-        'You can only update your own review',
-      );
-  
-    }
-  
-  
+   async update(
+    id:number,
+    dto:CreateReviewDto,
+   ){
     return this.prisma.review.update({
-  
-      where: {
+      where:{
         id,
       },
-  
-      data: dto,
-  
+      data:{
+        rating:dto.rating,
+        comment:dto.comment,
+      },
+    });
+   }
+
+   
+  async findOne(id: number) {
+    const review = await this.prisma.review.findUnique({
+      where: { id },
     });
   
+    if (!review) {
+      throw new NotFoundException("Review not found");
+    }
+  
+    return review;
   }
 
 

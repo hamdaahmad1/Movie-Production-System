@@ -9,6 +9,7 @@ import Navbar from "@/app/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 
 import { getMovieReviews, deleteReview } from "@/services/reviewService";
+import Link from "next/link";
 
 export default function MovieDetailsPage() {
   const params = useParams();
@@ -16,6 +17,7 @@ export default function MovieDetailsPage() {
   const router = useRouter();
 
   const movieId = Number(params.id);
+  
 
   const { user, loading } = useAuth();
 
@@ -111,6 +113,12 @@ export default function MovieDetailsPage() {
               <p>
                 <strong>Comment:</strong> {review.comment}
               </p>
+
+              {user?.role === "ADMIN" && (
+                <Link href={`/movies/${movieId}/review/edit/${review.id}`}>
+                  <button>Edit Review</button>
+                </Link>
+              )}
 
               {(user?.role === "ADMIN" || review.user?.id === user?.id) && (
                 <button onClick={() => handleDelete(review.id)}>

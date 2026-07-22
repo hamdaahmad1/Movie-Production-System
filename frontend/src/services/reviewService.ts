@@ -11,6 +11,14 @@ export async function getMovieReviews(movieId: number) {
   return response.data;
 }
 
+export async function getReview(id: number) {
+  const response = await API.get(`/reviews/${id}`, {
+    withCredentials: true,
+  });
+
+  return response.data;
+}
+
 export async function createReview(
     movieId: number,
     data: {
@@ -29,23 +37,21 @@ export async function createReview(
     return response.data;
   }
 
-export async function updateReview(
-  id: number,
-  data: {
-    rating: number;
-    comment: string;
-  }
-) {
-  const response = await API.patch(
-    `/reviews/${id}`,
-    data,
-    {
-      withCredentials: true,
-    }
-  );
-
-  return response.data;
-}
+  export async function updateReview(
+    id:number,
+    data:any
+   ){
+   
+    const response = await API.patch(
+      `/reviews/${id}`,
+      data,
+      {
+       withCredentials:true,
+      }
+    );
+   
+    return response.data;
+   }
 
 export async function deleteReview(id: number) {
   const response = await API.delete(
