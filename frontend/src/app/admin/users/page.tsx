@@ -38,7 +38,7 @@ export default function UsersPage() {
         sortBy: filters.sortBy,
         order: filters.order,
         page,
-        limit: 5,
+        limit: 10,
       });
 
       setUsers(response.data);

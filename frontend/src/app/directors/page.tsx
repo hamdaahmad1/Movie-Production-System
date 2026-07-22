@@ -50,7 +50,7 @@ export default function DirectorsPage() {
 
         page,
 
-        limit: 5,
+        limit: 10,
       });
 
       console.log("DIRECTORS RESPONSE:", response);

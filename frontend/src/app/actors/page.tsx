@@ -50,7 +50,7 @@ export default function ActorsPage() {
 
         page,
 
-        limit: 5,
+        limit: 10,
       });
       console.log("ACTORS RESPONSE:", response);
 

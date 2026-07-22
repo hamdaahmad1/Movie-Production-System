@@ -78,7 +78,7 @@ export default function MoviesPage() {
 
         page,
 
-        limit: 5,
+        limit: 10,
       });
 
       setMovies(response.data);
