@@ -5,10 +5,14 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getDirector, updateDirector } from "@/services/directorService";
 
+import { uploadImage } from "@/services/uploadService";
+import { getImageUrl } from "@/app/utils/imageUrl";
+
 export default function EditDirector() {
   const router = useRouter();
 
   const { user, loading } = useAuth();
+  const [uploading, setUploading] = useState(false);
 
   const params = useParams();
 
@@ -124,15 +128,61 @@ export default function EditDirector() {
       return "Biography cannot exceed 1000 characters";
     }
 
-    if (imagePath) {
-      try {
-        new URL(imagePath);
-      } catch {
-        return "Image URL must be valid";
-      }
-    }
+    //if (imagePath) {
+      //try {
+        //new URL(imagePath);
+      //} catch {
+       // return "Image URL must be valid";
+      //}
+    //}
 
     return "";
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    // Allowed file types
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+
+    if (!allowedTypes.includes(file.type)) {
+      alert("Only JPG, JPEG and PNG images are allowed.");
+
+      e.target.value = "";
+      return;
+    }
+
+    // File size limit (2 MB)
+    const maxSize = 2 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      alert("Image size must be less than 2 MB.");
+
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      const result = await uploadImage(file, "directors");
+
+      setDirector((prev) => ({
+        ...prev,
+        imagePath: result.imagePath,
+      }));
+    } catch (error) {
+      console.error(error);
+
+      alert("Image upload failed.");
+    } finally {
+      setUploading(false);
+
+      // allows selecting same file again
+      e.target.value = "";
+    }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -264,39 +314,52 @@ export default function EditDirector() {
         <br />
         <br />
 
-        <label>Image URL</label>
+        <label>Profile Image</label>
 
         <br />
 
-        <input
-          type="url"
-          value={director.imagePath}
-          placeholder="https://example.com/image.jpg"
-          onChange={(e) =>
-            setDirector({
-              ...director,
-              imagePath: e.target.value,
-            })
-          }
-        />
+        <input type="file"
+         accept=".jpg,.jpeg,.png"
+          onChange={handleImageUpload} />
+
+        <br />
+
+        <small>Optional. Upload a new profile image.</small>
 
         <br />
         <br />
+
+        {uploading && <p>Uploading image...</p>}
 
         {director.imagePath && (
-          <img
-            src={director.imagePath}
-            alt={director.name}
-            width={160}
-            height={220}
-            style={{
-              objectFit: "cover",
-              display: "block",
-              marginBottom: "10px",
-            }}
+          <>
+            <img
+              src={getImageUrl(director.imagePath)}
+              alt={director.name}
+              width={160}
+              height={220}
+              style={{
+                objectFit: "cover",
+                display: "block",
+                marginBottom: "10px",
+              }}
           />
+
+            <button
+              type="button"
+              onClick={() =>
+                setDirector({
+                  ...director,
+                  imagePath: "",
+                })
+              }
+            >
+              Remove Image
+            </button>
+          </>
         )}
 
+        <br />
         <br />
 
         <button type="submit">Update Director</button>

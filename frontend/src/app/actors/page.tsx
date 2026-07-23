@@ -115,7 +115,7 @@ export default function ActorsPage() {
       <br />
       <br />
 
-      {isAdmin && <Link href="/actors/create">Create Actor</Link>}
+      {(isAdmin || isEditor) && <Link href="/actors/create">Create Actor</Link>}
 
       <br />
       <br />

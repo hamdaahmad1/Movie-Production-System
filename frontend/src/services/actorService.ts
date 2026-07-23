@@ -1,4 +1,3 @@
-import { Actor } from "@/types/actor";
 import API from "./api";
 
 export async function getActors(params?: {
@@ -29,20 +28,16 @@ export async function getActor(id: number) {
 
 
 export async function createActor(
-  actor: Omit<Actor, "id">
+  formData: FormData
 ) {
   const response = await API.post(
     "/actors",
+    formData,
     {
-      name: actor.name,
-      dob: actor.dob,
-      nationality: actor.nationality,
-      gender: actor.gender,
-      biography: actor.biography,
-      awards: actor.awards,
-      imagePath: actor.imagePath,
-    },
-    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+
       withCredentials: true,
     }
   );
@@ -53,20 +48,16 @@ export async function createActor(
 
 export async function updateActor(
   id: number,
-  actor: Omit<Actor, "id">
+  formData: FormData
 ) {
   const response = await API.put(
     `/actors/${id}`,
+    formData,
     {
-      name: actor.name,
-      dob: actor.dob,
-      nationality: actor.nationality,
-      gender: actor.gender,
-      biography: actor.biography,
-      awards: actor.awards,
-      imagePath: actor.imagePath,
-    },
-    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+
       withCredentials: true,
     }
   );

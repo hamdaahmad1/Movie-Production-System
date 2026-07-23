@@ -1,5 +1,3 @@
-
-import { Movie } from "@/types/movie";
 import API from "@/services/api"; 
 
 export async function getMovies(params?: {
@@ -32,25 +30,16 @@ export async function getMovie(id: number) {
 
 
 export async function createMovie(
-  movie: Omit<Movie, "id" | "director" | "actors">,
-  actorIds: number[],
+  formData: FormData
 ) {
   const response = await API.post(
     "/movies",
+    formData,
     {
-      title: movie.title,
-      description: movie.description,
-      releaseDate: movie.releaseDate,
-      language: movie.language,
-      posterPath: movie.posterPath,
-      trailerId: movie.trailerId,
-      duration: movie.duration,
-      genre: movie.genre,
-      rating: movie.rating,
-      directorId: movie.directorId,
-      actorIds: actorIds,
-    },
-    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+
       withCredentials: true,
     }
   );
@@ -59,27 +48,17 @@ export async function createMovie(
 }
 
 
+
 export async function updateMovie(
-  id: number,
-  movie: Omit<Movie, "id" | "director" | "actors">,
-  actorIds: number[],
-) {
+id: number, p0: { title: string; description: string; releaseDate: string; duration: number; genre: string; language: string; rating: number; trailerId: string; posterPath: string; directorId: number; }, actorIds: number[], poster: File | null, formData: FormData) {
   const response = await API.put(
     `/movies/${id}`,
+    formData,
     {
-      title: movie.title,
-      description: movie.description,
-      releaseDate: movie.releaseDate,
-      language: movie.language,
-      posterPath: movie.posterPath,
-      trailerId: movie.trailerId,
-      duration: movie.duration,
-      genre: movie.genre,
-      rating: movie.rating,
-      directorId: movie.directorId,
-      actorIds: actorIds,
-    },
-    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+
       withCredentials: true,
     }
   );

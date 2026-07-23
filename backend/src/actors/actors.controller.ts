@@ -14,26 +14,31 @@ import {
   Body,
   Param,
   ParseIntPipe,
-  UseGuards,
+  UploadedFile,
+   UseInterceptors,
+    ParseFilePipe,
+   MaxFileSizeValidator,
+   FileTypeValidator
 } from '@nestjs/common';
 
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+
 
 @ApiTags('Actors')
 @Controller('actors')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard,RolesGuard)
 export class ActorsController {
   constructor(
     private actorService: ActorsService,
@@ -41,41 +46,130 @@ export class ActorsController {
 
   
 
-
-  @Roles('ADMIN')
   @Post()
-  @ApiOperation({
-    summary: 'Create a new actor',
-    description:
-      'Creates a new actor. ADMIN and EDITOR users can create actors.',
-  })
-  @ApiBody({
-    type: CreateActorDto,
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Actor successfully created.',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid actor data.',
-  })
-  @ApiResponse({
-    status: 401,
-    description:
-      'Unauthorized. JWT token is missing or invalid.',
-  })
-  @ApiResponse({
-    status: 403,
-    description:
-      'Forbidden. User does not have permission.',
-  })
-  create(
-    @Body() dto: CreateActorDto,
-  ) {
-    return this.actorService.create(dto);
-  }
+@Roles('ADMIN','EDITOR')
 
+@ApiOperation({
+  summary: 'Create a new actor',
+  description:
+    'Creates a new actor with an optional profile image upload. ADMIN and EDITOR users can create actors.',
+})
+
+@ApiConsumes('multipart/form-data')
+
+@UseInterceptors(
+  FileInterceptor('image')
+)
+
+@ApiBody({
+  schema: {
+    type: 'object',
+
+    properties: {
+
+      name: {
+        type: 'string',
+        example: 'Cillian Murphy',
+      },
+
+      dob: {
+        type: 'string',
+        format: 'date',
+        example: '1980-05-25',
+      },
+
+      gender: {
+        type: 'string',
+        example: 'Male',
+      },
+
+      nationality: {
+        type: 'string',
+        example: 'Irish',
+      },
+
+      biography: {
+        type: 'string',
+        example:
+          'Irish actor known for Peaky Blinders and Oppenheimer.',
+      },
+
+      awards: {
+        type: 'string',
+        example:
+          'Academy Award Winner',
+      },
+
+      image: {
+        type: 'string',
+        format: 'binary',
+        description:
+          'Actor profile image (optional)',
+      },
+
+    },
+  },
+})
+
+
+@ApiResponse({
+  status: 201,
+  description: 'Actor successfully created.',
+})
+
+@ApiResponse({
+  status: 400,
+  description: 'Invalid actor data.',
+})
+
+@ApiResponse({
+  status: 401,
+  description:
+    'Unauthorized. JWT token is missing or invalid.',
+})
+
+@ApiResponse({
+  status: 403,
+  description:
+    'Forbidden. User does not have permission.',
+})
+
+create(
+  @Body()
+  dto: CreateActorDto,
+
+  @UploadedFile(
+    new ParseFilePipe({
+
+      fileIsRequired:false,
+
+      validators:[
+
+        new MaxFileSizeValidator({
+          maxSize:5 * 1024 * 1024,
+        }),
+
+        new FileTypeValidator({
+          fileType:'image',
+        }),
+
+      ],
+
+    })
+  )
+  file?: Express.Multer.File,
+
+
+  
+
+) {
+
+  return this.actorService.create(
+    dto,
+    file,
+  );
+
+}
   
   
   @Roles('ADMIN', 'EDITOR', 'VIEWER')
@@ -146,91 +240,215 @@ export class ActorsController {
 
   
   @Roles('ADMIN', 'EDITOR')
-  @Patch(':id')
-  @ApiOperation({
-    summary: 'Partially update an actor',
-    description:
-      'Updates one or more actor fields, including the image URL if provided.',
-  })
-  @ApiParam({
-    name: 'id',
-    type: Number,
-    example: 1,
-    description: 'Unique ID of the actor',
-  })
-  @ApiBody({
-    type: UpdateActorDto,
-  })
-  @ApiResponse({
-    status: 200,
-    description:
-      'Actor successfully updated.',
-  })
-  @ApiResponse({
-    status: 400,
-    description:
-      'Invalid actor data.',
-  })
-  @ApiResponse({
-    status: 404,
-    description:
-      'Actor not found.',
-  })
-  partialUpdate(
-    @Param('id', ParseIntPipe) id: number,
+@Patch(':id')
+@ApiOperation({
+  summary: 'Partially update an actor',
+  description:
+    'Updates one or more actor fields, including the profile image if provided.',
+})
+@ApiConsumes('multipart/form-data')
+@UseInterceptors(
+  FileInterceptor('image'),
+)
+@ApiParam({
+  name: 'id',
+  type: Number,
+  example: 1,
+  description: 'Unique ID of the actor',
+})
+@ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+      name: {
+        type: 'string',
+        example: 'Cillian Murphy',
+      },
 
-    @Body() dto: UpdateActorDto,
-  ) {
-    return this.actorService.partialUpdate(
-      id,
-      dto,
-    );
-  }
+      dateOfBirth: {
+        type: 'string',
+        format: 'date',
+        example: '1980-05-25',
+      },
+
+      gender: {
+        type: 'string',
+        example: 'Male',
+      },
+
+      nationality: {
+        type: 'string',
+        example: 'Irish',
+      },
+
+      biography: {
+        type: 'string',
+        example:
+          'Irish actor known for Peaky Blinders and Oppenheimer.',
+      },
+
+      awards: {
+        type: 'string',
+        example: 'Academy Award Winner',
+      },
+
+      image: {
+        type: 'string',
+        format: 'binary',
+        description: 'Actor profile image (optional)',
+      },
+    },
+  },
+})
+@ApiResponse({
+  status: 200,
+  description: 'Actor successfully updated.',
+})
+@ApiResponse({
+  status: 400,
+  description: 'Invalid actor data.',
+})
+@ApiResponse({
+  status: 404,
+  description: 'Actor not found.',
+})
+partialUpdate(
+  @Body() dto: UpdateActorDto,
+  @Param('id', ParseIntPipe) id: number,
+
+  @UploadedFile(
+    new ParseFilePipe({
+      fileIsRequired: false,
+      validators: [
+        new MaxFileSizeValidator({
+          maxSize: 5 * 1024 * 1024,
+        }),
+        new FileTypeValidator({
+          fileType: 'image',
+        }),
+      ],
+    }),
+  )
+  file?: Express.Multer.File,
+) {
+  return this.actorService.partialUpdate(
+    id,
+    dto,
+    file,
+  );
+}
 
   
 
   
-  @Roles('ADMIN', 'EDITOR')
-  @Put(':id')
-  @ApiOperation({
-    summary: 'Fully update an actor',
-    description:
-      'Replaces all actor information, including the image URL.',
-  })
-  @ApiParam({
-    name: 'id',
-    type: Number,
-    example: 1,
-    description: 'Unique ID of the actor',
-  })
-  @ApiBody({
-    type: CreateActorDto,
-  })
-  @ApiResponse({
-    status: 200,
-    description:
-      'Actor successfully updated.',
-  })
-  @ApiResponse({
-    status: 400,
-    description:
-      'Invalid actor data.',
-  })
-  @ApiResponse({
-    status: 404,
-    description:
-      'Actor not found.',
-  })
-  update(
-    @Param('id', ParseIntPipe) id: number,
+@Roles('ADMIN', 'EDITOR')
+@Put(':id')
+@ApiOperation({
+  summary: 'Fully update an actor',
+  description:
+    'Replaces all actor information, including the profile image if provided.',
+})
+@ApiConsumes('multipart/form-data')
+@UseInterceptors(
+  FileInterceptor('image'),
+)
+@ApiParam({
+  name: 'id',
+  type: Number,
+  example: 1,
+  description: 'Unique ID of the actor',
+})
+@ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+      name: {
+        type: 'string',
+        example: 'Cillian Murphy',
+      },
 
-    @Body() dto: CreateActorDto,
-  ) {
-    return this.actorService.update(
-      id,
-      dto,
-    );
-  }
+      dateOfBirth: {
+        type: 'string',
+        format: 'date',
+        example: '1980-05-25',
+      },
+
+      gender: {
+        type: 'string',
+        example: 'Male',
+      },
+
+      nationality: {
+        type: 'string',
+        example: 'Irish',
+      },
+
+      biography: {
+        type: 'string',
+        example:
+          'Irish actor known for Peaky Blinders and Oppenheimer.',
+      },
+
+      awards: {
+        type: 'string',
+        example: 'Academy Award Winner',
+      },
+
+      image: {
+        type: 'string',
+        format: 'binary',
+        description: 'Actor profile image (optional)',
+      },
+    },
+
+    required: [
+      'name',
+      'dateOfBirth',
+      'gender',
+      'nationality',
+      'biography',
+    ],
+  },
+})
+@ApiResponse({
+  status: 200,
+  description: 'Actor successfully updated.',
+})
+@ApiResponse({
+  status: 400,
+  description: 'Invalid actor data.',
+})
+@ApiResponse({
+  status: 404,
+  description: 'Actor not found.',
+})
+update(
+  @Param('id', ParseIntPipe) id: number,
+  @Body() dto: CreateActorDto,
+
+  @UploadedFile(
+    new ParseFilePipe({
+      fileIsRequired: false,
+      validators: [
+        new MaxFileSizeValidator({
+          maxSize: 5 * 1024 * 1024,
+        }),
+        new FileTypeValidator({
+          fileType: 'image',
+        }),
+      ],
+    }),
+  )
+  file?: Express.Multer.File,
+
+  
+) {
+  return this.actorService.update(
+    id,
+    file,
+    dto,
+  );
+}
 
 
 

@@ -14,7 +14,11 @@ import {
   Body,
   Param,
   ParseIntPipe,
-  UseGuards,
+  UploadedFile,
+  UseInterceptors,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
 
 import {
@@ -24,11 +28,11 @@ import {
   ApiParam,
   ApiResponse,
   ApiTags,
+  ApiConsumes,
 } from '@nestjs/swagger';
 
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Directors')
 @Controller('directors')
@@ -40,49 +44,93 @@ export class DirectorsController {
 
 
   @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
   @Post()
-  @ApiOperation({
-    summary: 'Create a new director',
-    description:
-      'Creates a new director. ADMIN and EDITOR users can create directors.',
-  })
-  @ApiBody({
-    type: CreateDirectorDto,
-  })
-  @ApiResponse({
-    status: 201,
-    description:
-      'Director successfully created.',
-  })
-  @ApiResponse({
-    status: 400,
-    description:
-      'Invalid director data.',
-  })
-  @ApiResponse({
-    status: 401,
-    description:
-      'Unauthorized. JWT token is missing or invalid.',
-  })
-  @ApiResponse({
-    status: 403,
-    description:
-      'Forbidden. User does not have permission.',
-  })
-  create(
-    @Body() dto: CreateDirectorDto,
-  ) {
-    return this.directorService.create(
-      dto,
-    );
-  }
+@Roles('ADMIN','EDITOR')
+@ApiOperation({
+  summary: 'Create a new director',
+  description:
+    'Creates a new director with optional profile image upload.',
+})
+@ApiConsumes('multipart/form-data')
+@UseInterceptors(
+  FileInterceptor('image'),
+)
+@ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+
+      name: {
+        type: 'string',
+        example: 'Christopher Nolan',
+      },
+
+      dob: {
+        type: 'string',
+        format: 'date',
+        example: '1970-07-30',
+      },
+
+      gender: {
+        type: 'string',
+        example: 'Male',
+      },
+
+      nationality: {
+        type: 'string',
+        example: 'British',
+      },
+
+      biography: {
+        type: 'string',
+        example:
+          'Director known for Inception and Interstellar.',
+      },
+
+      awards: {
+        type: 'string',
+        example:
+          'Academy Award Winner',
+      },
+
+      image: {
+        type: 'string',
+        format: 'binary',
+        description:
+          'Director profile image (optional)',
+      },
+    },
+  },
+})
+create(
+  @Body() dto: CreateDirectorDto,
+
+  @UploadedFile(
+    new ParseFilePipe({
+      fileIsRequired: false,
+      validators:[
+        new MaxFileSizeValidator({
+          maxSize:5 * 1024 * 1024,
+        }),
+
+        new FileTypeValidator({
+          fileType:'image',
+        }),
+      ],
+    }),
+  )
+  file?: Express.Multer.File,
+)
+{
+  return this.directorService.create(
+    dto,
+    file,
+  );
+}
 
   
 
   @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'EDITOR', 'VIEWER')
   @Get()
   @ApiOperation({
@@ -116,7 +164,6 @@ export class DirectorsController {
  
 
   @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'EDITOR', 'VIEWER')
   @Get(':id')
   @ApiOperation({
@@ -162,7 +209,6 @@ export class DirectorsController {
  
 
   @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'EDITOR')
   @Patch(':id')
   @ApiOperation({
@@ -219,7 +265,6 @@ export class DirectorsController {
   
 
   @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'EDITOR')
   @Put(':id')
   @ApiOperation({
@@ -275,7 +320,6 @@ export class DirectorsController {
 
  
   @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @Delete(':id')
   @ApiOperation({

@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { createDirector } from "@/services/directorService";
 import { useAuth } from "@/context/AuthContext";
+import { uploadImage } from "@/services/uploadService";
+import { getImageUrl } from "@/app/utils/imageUrl";
 
 export default function CreateDirector() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const [uploading, setUploading] = useState(false);
 
   const [director, setDirector] = useState({
     name: "",
@@ -97,7 +100,7 @@ export default function CreateDirector() {
       return "Biography cannot exceed 1000 characters";
     }
 
-    if (imagePath) {
+    /* if (imagePath) {
       try {
         new URL(imagePath);
       } catch {
@@ -107,9 +110,55 @@ export default function CreateDirector() {
       if (imagePath.length > 500) {
         return "Image URL cannot exceed 500 characters";
       }
-    }
+    } */
 
     return "";
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    // Allowed file types
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+
+    if (!allowedTypes.includes(file.type)) {
+      alert("Only JPG, JPEG and PNG images are allowed.");
+
+      e.target.value = "";
+      return;
+    }
+
+    // File size limit (2 MB)
+    const maxSize = 2 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      alert("Image size must be less than 2 MB.");
+
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      const result = await uploadImage(file, "directors");
+
+      setDirector((prev) => ({
+        ...prev,
+        imagePath: result.imagePath,
+      }));
+    } catch (error) {
+      console.error(error);
+
+      alert("Image upload failed.");
+    } finally {
+      setUploading(false);
+
+      // allows selecting same file again
+      e.target.value = "";
+    }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -245,37 +294,47 @@ export default function CreateDirector() {
 
         <br />
 
-        <input
-          type="url"
-          maxLength={500}
-          placeholder="https://example.com/image.jpg"
-          value={director.imagePath}
-          onChange={(e) =>
-            setDirector({
-              ...director,
-              imagePath: e.target.value,
-            })
-          }
-        />
+        <input type="file" 
+        accept=".jpg,.jpeg,.png"
+         onChange={handleImageUpload} />
 
         <br />
 
-        <small>Optional. Enter a valid image URL.</small>
+        <small>Optional. Upload a profile image.</small>
 
         <br />
+
+        {uploading && <p>Uploading image...</p>}
+
         <br />
 
         {director.imagePath && (
-          <img
-            src={director.imagePath}
-            alt={director.name}
-            width={160}
-            height={200}
-            style={{
-              objectFit: "cover",
-              border: "1px solid #ccc",
-            }}
-          />
+          <>
+            <img
+              src={getImageUrl(director.imagePath)}
+              width={160}
+              height={200}
+              style={{
+                objectFit: "cover",
+                border: "1px solid #ccc",
+              }}
+
+            />
+            <br />
+            <br />
+
+            <button
+              type="button"
+              onClick={() =>
+                setDirector({
+                  ...director,
+                  imagePath: "",
+                })
+              }
+            >
+              Remove Image
+            </button>
+          </>
         )}
 
         <br />

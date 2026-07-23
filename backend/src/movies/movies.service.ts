@@ -8,14 +8,16 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { MovieQueryDto } from './dto/movie-query.dto';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 
 @Injectable()
 export class MoviesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService,
+    private cloudinaryService: CloudinaryService
+  ) {}
 
-  async create(dto: CreateMovieDto) {
-
+  async create(dto: CreateMovieDto, file?: Express.Multer.File) {
 
     if (new Date(dto.releaseDate) > new Date()) {
       throw new BadRequestException(
@@ -70,6 +72,17 @@ export class MoviesService {
       );
     }
 
+
+    let posterPath = null;
+    if (file) {
+
+    const uploadResult:any =
+      await this.cloudinaryService.uploadImage(file);
+
+    posterPath = uploadResult.secure_url;
+
+  }
+
     return this.prisma.movie.create({
       data: {
         title: dto.title,
@@ -80,7 +93,7 @@ export class MoviesService {
         language: dto.language,
         rating: dto.rating,
         trailerId: dto.trailerId,
-        posterPath: dto.posterPath,
+        posterPath: posterPath,
 
         director: {
           connect: {
@@ -250,6 +263,7 @@ export class MoviesService {
   async update(
     id: number,
     dto: CreateMovieDto,
+    file?: Express.Multer.File,
   ) {
   
 
@@ -266,6 +280,15 @@ export class MoviesService {
       );
     }
 
+    let posterPath = movie.posterPath;
+       if(file)
+      {
+
+       const uploadResult:any =
+        await this.cloudinaryService.uploadImage(file);
+        posterPath = uploadResult.secure_url;
+
+      }
     
     if (
       new Date(dto.releaseDate) > new Date()
@@ -295,6 +318,7 @@ export class MoviesService {
         'A movie with this title already exists.',
       );
     }
+    
 
   
 
@@ -329,6 +353,7 @@ export class MoviesService {
         'One or more actor IDs are invalid.',
       );
     }
+    
 
 
 
@@ -346,7 +371,7 @@ export class MoviesService {
         language: dto.language,
         rating: dto.rating,
         trailerId: dto.trailerId,
-        posterPath: dto.posterPath,
+        posterPath,
 
         director: {
           connect: {
@@ -370,10 +395,7 @@ export class MoviesService {
 
 
 
-  async partialUpdate(
-    id: number,
-    dto: UpdateMovieDto,
-  ) {
+  async partialUpdate(id: number, dto: UpdateMovieDto, file?: Express.Multer.File) {
     
     const movie =
       await this.prisma.movie.findUnique({
@@ -466,6 +488,19 @@ export class MoviesService {
       releaseDate,
       ...movieData
     } = dto;
+    let posterPath = movie.posterPath;
+
+
+   if(file)
+   {
+
+     const uploadResult:any =
+      await this.cloudinaryService.uploadImage(file);
+
+
+       posterPath = uploadResult.secure_url;
+
+    }
 
     
 
@@ -476,6 +511,7 @@ export class MoviesService {
 
       data: {
         ...movieData,
+        posterPath,
 
         releaseDate: releaseDate
           ? new Date(releaseDate)

@@ -13,6 +13,7 @@ import { getActors } from "@/services/actorService";
 
 export default function CreateMovie() {
   const router = useRouter();
+  const [poster, setPoster] = useState<File | null>(null);
 
   const { user, loading } = useAuth();
 
@@ -25,7 +26,6 @@ export default function CreateMovie() {
     language: "",
     rating: "",
     trailerId: "",
-    posterPath: "",
     directorId: "",
     actorIds: [] as number[],
   });
@@ -80,8 +80,6 @@ export default function CreateMovie() {
     const language = movie.language.trim();
 
     const trailerId = movie.trailerId.trim();
-
-    const posterPath = movie.posterPath.trim();
 
     const duration = Number(movie.duration);
 
@@ -185,11 +183,15 @@ export default function CreateMovie() {
       return "At least one actor must be selected";
     }
 
-    if (posterPath) {
-      try {
-        new URL(posterPath);
-      } catch {
-        return "Poster path must be a valid URL";
+    if (poster) {
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+      if (!allowedTypes.includes(poster.type)) {
+        return "Only JPG, PNG and WEBP images are allowed";
+      }
+
+      if (poster.size > 5 * 1024 * 1024) {
+        return "Image size cannot exceed 5MB";
       }
     }
 
@@ -221,31 +223,35 @@ export default function CreateMovie() {
     setError("");
 
     try {
-      await createMovie(
-        {
-          title: movie.title.trim(),
+      const formData = new FormData();
 
-          description: movie.description.trim(),
+      formData.append("title", movie.title.trim());
 
-          releaseDate: movie.releaseDate,
+      formData.append("description", movie.description.trim());
 
-          duration: Number(movie.duration),
+      formData.append("releaseDate", movie.releaseDate);
 
-          genre: movie.genre.trim(),
+      formData.append("duration", String(movie.duration));
 
-          language: movie.language.trim(),
+      formData.append("genre", movie.genre.trim());
 
-          rating: Number(movie.rating),
+      formData.append("language", movie.language.trim());
 
-          trailerId: movie.trailerId.trim(),
+      formData.append("rating", String(movie.rating));
 
-          posterPath: movie.posterPath.trim() || null,
+      formData.append("trailerId", movie.trailerId.trim());
 
-          directorId: Number(movie.directorId),
-        },
+      formData.append("directorId", String(movie.directorId));
 
-        movie.actorIds
-      );
+      movie.actorIds.forEach((id) => {
+        formData.append("actorIds", String(id));
+      });
+
+      if (poster) {
+        formData.append("image", poster);
+      }
+
+      await createMovie(formData);
 
       alert("Movie created successfully!");
 
@@ -437,27 +443,34 @@ export default function CreateMovie() {
         <br />
         <br />
 
-        <label>Movie Poster URL</label>
+        <label>Movie Poster</label>
 
         <br />
 
         <input
-          type="url"
-          value={movie.posterPath}
-          onChange={(e) =>
-            setMovie({
-              ...movie,
-              posterPath: e.target.value,
-            })
-          }
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={(e) => {
+            const file = e.target.files?.[0] || null;
+
+            setPoster(file);
+          }}
         />
 
         <br />
 
-        <small>Optional. Enter a valid image URL.</small>
-
-        <br />
-        <br />
+        <small>Optional. JPG, PNG, WEBP only. Max size 5MB.</small>
+        {poster && (
+          <img
+            src={URL.createObjectURL(poster)}
+            alt="Poster preview"
+            width={160}
+            height={220}
+            style={{
+              objectFit: "cover",
+            }}
+          />
+        )}
 
         <label>Director</label>
 

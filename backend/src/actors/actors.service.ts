@@ -8,16 +8,17 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateActorDto } from './dto/create-actor.dto';
 import { UpdateActorDto } from './dto/update-actor.dto';
 import { ActorQueryDto } from './dto/actor-query.dto';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class ActorsService {
   constructor(
     private prisma: PrismaService,
+    private cloudinaryService: CloudinaryService,
   ) {}
 
   
-  async create(
-    dto: CreateActorDto,
+  async create(dto: CreateActorDto, file: Express.Multer.File | undefined,
   ) {
     // Future DOB validation
     if (
@@ -46,6 +47,15 @@ export class ActorsService {
       );
     }
 
+    let imagePath = null;
+
+if (file) {
+  const uploadResult: any =
+    await this.cloudinaryService.uploadImage(file);
+
+  imagePath = uploadResult.secure_url;
+}
+
     return this.prisma.actor.create({
       data: {
         name: dto.name,
@@ -62,8 +72,7 @@ export class ActorsService {
 
         awards: dto.awards,
 
-        imagePath:
-          dto.imagePath,
+        imagePath,
       },
     });
   }
@@ -208,10 +217,7 @@ export class ActorsService {
   }
 
   
-  async update(
-    id: number,
-    dto: CreateActorDto,
-  ) {
+  async update(id: number, file: Express.Multer.File | undefined, dto: CreateActorDto) {
     const actor =
       await this.prisma.actor.findUnique({
         where: {
@@ -258,6 +264,14 @@ export class ActorsService {
         );
       }
     }
+    let imagePath = actor.imagePath;
+
+if (file) {
+  const uploadResult: any =
+    await this.cloudinaryService.uploadImage(file);
+
+  imagePath = uploadResult.secure_url;
+}
 
     return this.prisma.actor.update({
       where: {
@@ -281,18 +295,14 @@ export class ActorsService {
 
         awards: dto.awards,
 
-        imagePath:
-          dto.imagePath,
+        imagePath,
       },
     });
   }
 
   
 
-  async partialUpdate(
-    id: number,
-    dto: UpdateActorDto,
-  ) {
+  async partialUpdate(id: number, dto: UpdateActorDto, file?: Express.Multer.File | undefined) {
     const actor =
       await this.prisma.actor.findUnique({
         where: {
@@ -340,6 +350,15 @@ export class ActorsService {
       }
     }
 
+    let imagePath = actor.imagePath;
+
+if (file) {
+  const uploadResult: any =
+    await this.cloudinaryService.uploadImage(file);
+
+  imagePath = uploadResult.secure_url;
+}
+
     return this.prisma.actor.update({
       where: {
         id,
@@ -362,8 +381,7 @@ export class ActorsService {
 
         awards: dto.awards,
 
-        imagePath:
-          dto.imagePath,
+        imagePath,
       },
     });
   }

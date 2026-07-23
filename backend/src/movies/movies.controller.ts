@@ -1,63 +1,76 @@
+import { UpdateMovieDto } from './dto/update-movie.dto';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { MoviesService } from './movies.service';
-import { UpdateMovieDto } from './dto/update-movie.dto';
-import { Query } from "@nestjs/common";
-import { MovieQueryDto } from "./dto/movie-query.dto";
+import { Query } from '@nestjs/common';
+import { MovieQueryDto } from './dto/movie-query.dto';
 
 import {
   Controller,
-  Get,
   Post,
   Put,
   Patch,
+  Get,
   Delete,
   Body,
   Param,
   ParseIntPipe,
-  UseGuards,
+  UploadedFile,
+  UseInterceptors,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator
 } from '@nestjs/common';
 
+
 import {
-  ApiBadRequestResponse,
-  ApiBody,
   ApiBearerAuth,
+  ApiBody,
   ApiConsumes,
-  ApiCreatedResponse,
-  ApiNotFoundResponse,
   ApiOperation,
   ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+
+
 
 @ApiTags('Movies')
 @Controller('movies')
+@ApiBearerAuth()
 export class MoviesController {
+
   constructor(
     private moviesService: MoviesService,
   ) {}
 
 
 
-  @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'EDITOR')
+
   @Post()
+  @Roles('ADMIN','EDITOR')
+
   @ApiOperation({
     summary: 'Create a new movie',
     description:
-      'Creates a movie and associates it with a director and multiple actors.',
+      'Creates a new movie with an optional poster image upload. ADMIN and EDITOR users can create movies.',
   })
-  @ApiConsumes('application/json')
+
+  @ApiConsumes('multipart/form-data')
+
+  @UseInterceptors(
+    FileInterceptor('poster')
+  )
+
   @ApiBody({
-    description: 'Movie data with poster URL',
     schema: {
       type: 'object',
+
       properties: {
+
         title: {
           type: 'string',
           example: 'Inception',
@@ -85,7 +98,8 @@ export class MoviesController {
 
         description: {
           type: 'string',
-          example: 'A skilled thief enters the dreams of others.',
+          example:
+            'A skilled thief enters the dreams of others.',
         },
 
         language: {
@@ -101,351 +115,514 @@ export class MoviesController {
 
         trailerId: {
           type: 'string',
-          example: 'https://www.youtube.com/watch?v=YoHD_xgiXEw',
+          example:
+            'https://www.youtube.com/watch?v=YoHD_xgiXEw',
         },
 
-        actorIds: {
-          type: 'array',
-          items: {
-            type: 'number',
-          },
-          example: [1, 2, 3],
-        },
-
-        posterPath: {
+        poster: {
           type: 'string',
-          format: 'uri',
-          example: 'https://example.com/inception-poster.jpg',
+          format: 'binary',
+          description:
+            'Movie poster image (optional)',
         },
-      },
 
-      required: [
-        'title',
-        'duration',
-        'genre',
-        'rating',
-        'directorId',
-        'description',
-        'language',
-        'releaseDate',
-        'trailerId',
-        'actorIds',
-        'posterPath',
-      ],
+      },
     },
   })
-  @ApiCreatedResponse({
-    description: 'Movie successfully created',
+
+
+  @ApiResponse({
+    status: 201,
+    description: 'Movie successfully created.',
   })
-  @ApiBadRequestResponse({
-    description: 'Invalid movie data',
+
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid movie data.',
   })
-  create(@Body() dto: CreateMovieDto) {
-    return this.moviesService.create(dto);
+
+  @ApiResponse({
+    status: 401,
+    description:
+      'Unauthorized. JWT token is missing or invalid.',
+  })
+
+  @ApiResponse({
+    status: 403,
+    description:
+      'Forbidden. User does not have permission.',
+  })
+
+
+  create(
+
+    @Body()
+    dto: CreateMovieDto,
+
+
+    @UploadedFile(
+      new ParseFilePipe({
+
+        fileIsRequired:false,
+
+        validators:[
+
+          new MaxFileSizeValidator({
+            maxSize:5 * 1024 * 1024,
+          }),
+
+          new FileTypeValidator({
+            fileType:'image',
+          }),
+
+        ],
+
+      })
+    )
+
+    file?: Express.Multer.File,
+
+
+  ) {
+
+    return this.moviesService.create(
+      dto,
+      file,
+    );
+
   }
 
 
 
-  @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+
+
+
   @Roles('ADMIN', 'EDITOR', 'VIEWER')
   @Get()
+
   @ApiOperation({
     summary: 'Get all movies',
     description:
       'Returns a list of all movies with their directors and actors.',
   })
+
   @ApiResponse({
     status: 200,
-    description: 'Movies successfully retrieved',
+    description:
+      'Movies successfully retrieved.',
   })
+
+  @ApiResponse({
+    status: 401,
+    description:
+      'Unauthorized. JWT token is missing or invalid.',
+  })
+
+  @ApiResponse({
+    status: 403,
+    description:
+      'Forbidden. User does not have permission.',
+  })
+
   findAll(
     @Query() query: MovieQueryDto,
   ) {
+
     return this.moviesService.findAll(query);
+
   }
 
 
-  
+
+
+
+
+
+
+  @Roles('ADMIN', 'EDITOR', 'VIEWER')
+  @Get('genres')
 
   @ApiOperation({
-    summary: "Get all movie genres",
-    description: "Returns a list of all available movie genres."
+    summary: 'Get all movie genres',
+    description:
+      'Returns a list of all available movie genres.',
   })
+
   @ApiResponse({
-    status: 200,
-    description: "Genres fetched successfully",
-    schema: {
-      example: [
-        "Action",
-        "Comedy",
-        "Drama",
-        "Science Fiction"
-      ]
-    }
+    status:200,
+    description:
+      'Genres successfully retrieved.',
   })
+
   @ApiResponse({
-    status: 500,
-    description: "Internal server error"
+    status:500,
+    description:
+      'Internal server error.',
   })
-  @Get("genres")
-  async getGenres() {
+
+  getGenres() {
+
     return this.moviesService.getGenres();
+
   }
 
 
 
-  @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+
+
+
+
+
   @Roles('ADMIN', 'EDITOR', 'VIEWER')
   @Get(':id')
+
   @ApiOperation({
     summary: 'Get a movie by ID',
+    description:
+      'Returns a single movie using the movie ID.',
   })
+
   @ApiParam({
-    name: 'id',
-    type: Number,
-    example: 1,
-    description: 'Movie ID',
+    name:'id',
+    type:Number,
+    example:1,
+    description:
+      'Unique ID of the movie',
   })
+
   @ApiResponse({
-    status: 200,
-    description: 'Movie successfully retrieved',
+    status:200,
+    description:
+      'Movie successfully retrieved.',
   })
-  @ApiNotFoundResponse({
-    description: 'Movie not found',
+
+  @ApiResponse({
+    status:404,
+    description:
+      'Movie not found.',
   })
+
+  @ApiResponse({
+    status:401,
+    description:
+      'Unauthorized. JWT token is missing or invalid.',
+  })
+
+
   findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) id:number,
   ) {
+
     return this.moviesService.findOne(id);
+
   }
 
 
 
-  @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'EDITOR')
+
+
+
+
+
+
+  @Roles('ADMIN','EDITOR')
+
   @Patch(':id')
+
   @ApiOperation({
-    summary: 'Partially update a movie',
+    summary:'Partially update a movie',
+    description:
+      'Updates one or more movie fields, including the poster image if provided.',
   })
-  @ApiConsumes('application/json')
+
+  @ApiConsumes('multipart/form-data')
+
+
+  @UseInterceptors(
+    FileInterceptor('poster'),
+  )
+
+
   @ApiParam({
-    name: 'id',
-    type: Number,
-    example: 1,
+    name:'id',
+    type:Number,
+    example:1,
+    description:
+      'Unique ID of the movie',
   })
+
+
   @ApiBody({
-    description: 'Movie fields to update',
-    schema: {
-      type: 'object',
-      properties: {
-        title: {
-          type: 'string',
-          example: 'Updated Movie Title',
+    schema:{
+      type:'object',
+
+      properties:{
+
+        title:{
+          type:'string',
+          example:'Inception',
         },
 
-        duration: {
-          type: 'number',
-          example: 150,
+        duration:{
+          type:'number',
+          example:148,
         },
 
-        genre: {
-          type: 'string',
-          example: 'Action',
+        genre:{
+          type:'string',
+          example:'Science Fiction',
         },
 
-        rating: {
-          type: 'number',
-          example: 9.0,
+        rating:{
+          type:'number',
+          example:8.8,
         },
 
-        directorId: {
-          type: 'number',
-          example: 1,
+        poster:{
+          type:'string',
+          format:'binary',
+          description:
+            'Movie poster image (optional)',
         },
 
-        description: {
-          type: 'string',
-          example: 'Updated movie description.',
-        },
-
-        language: {
-          type: 'string',
-          example: 'English',
-        },
-
-        releaseDate: {
-          type: 'string',
-          format: 'date',
-          example: '2020-01-01',
-        },
-
-        trailerId: {
-          type: 'string',
-          example: 'https://www.youtube.com/watch?v=UpdatedTrailerId',
-        },
-
-        actorIds: {
-          type: 'array',
-          items: {
-            type: 'number',
-          },
-          example: [1, 2],
-        },
-
-        posterPath: {
-          type: 'string',
-          format: 'uri',
-          example: 'https://example.com/updated-poster.jpg',
-        },
       },
     },
   })
+
+
   @ApiResponse({
-    status: 200,
-    description: 'Movie successfully updated',
+    status:200,
+    description:
+      'Movie successfully updated.',
   })
-  @ApiNotFoundResponse({
-    description: 'Movie not found',
+
+
+  @ApiResponse({
+    status:404,
+    description:
+      'Movie not found.',
   })
+
+
+
   partialUpdate(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateMovieDto,
+
+
+    @Param('id', ParseIntPipe)
+    id:number,
+
+
+    @Body()
+    dto:UpdateMovieDto,
+
+
+    @UploadedFile(
+      new ParseFilePipe({
+
+        fileIsRequired:false,
+
+        validators:[
+
+          new MaxFileSizeValidator({
+            maxSize:5 * 1024 * 1024,
+          }),
+
+          new FileTypeValidator({
+            fileType:'image',
+          }),
+
+        ],
+
+      })
+    )
+
+    file?:Express.Multer.File,
+
+
   ) {
-    return this.moviesService.partialUpdate(id, dto);
+
+
+    return this.moviesService.partialUpdate(
+      id,
+      dto,
+      file,
+    );
+
+
   }
 
 
-  @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'EDITOR')
+
+
+
+
+
+
+
+
+  @Roles('ADMIN','EDITOR')
+
   @Put(':id')
+
+
   @ApiOperation({
-    summary: 'Replace a movie',
+    summary:'Fully update a movie',
+    description:
+      'Replaces all movie information, including the poster image if provided.',
   })
-  @ApiConsumes('application/json')
+
+
+  @ApiConsumes('multipart/form-data')
+
+
+  @UseInterceptors(
+    FileInterceptor('poster'),
+  )
+
+
   @ApiParam({
-    name: 'id',
-    type: Number,
-    example: 1,
+    name:'id',
+    type:Number,
+    example:1,
+    description:
+      'Unique ID of the movie',
   })
-  @ApiBody({
-    description: 'Complete movie data',
-    schema: {
-      type: 'object',
-      properties: {
-        title: {
-          type: 'string',
-          example: 'Inception',
-        },
 
-        duration: {
-          type: 'number',
-          example: 148,
-        },
 
-        genre: {
-          type: 'string',
-          example: 'Science Fiction',
-        },
 
-        rating: {
-          type: 'number',
-          example: 8.8,
-        },
-
-        directorId: {
-          type: 'number',
-          example: 1,
-        },
-
-        description: {
-          type: 'string',
-          example: 'A skilled thief enters the dreams of others.',
-        },
-
-        language: {
-          type: 'string',
-          example: 'English',
-        },
-
-        releaseDate: {
-          type: 'string',
-          format: 'date',
-          example: '2010-07-16',
-        },
-
-        trailerId: {
-          type: 'string',
-          example: 'https://www.youtube.com/watch?v=YoHD_xgiXEw',
-        },
-
-        actorIds: {
-          type: 'array',
-          items: {
-            type: 'number',
-          },
-          example: [1, 2, 3],
-        },
-
-        posterPath: {
-          type: 'string',
-          format: 'uri',
-          example: 'https://example.com/inception-poster.jpg',
-        },
-      },
-
-      required: [
-        'title',
-        'duration',
-        'genre',
-        'rating',
-        'directorId',
-        'description',
-        'language',
-        'releaseDate',
-        'trailerId',
-        'actorIds',
-        'posterPath',
-      ],
-    },
-  })
   @ApiResponse({
-    status: 200,
-    description: 'Movie successfully replaced',
+    status:200,
+    description:
+      'Movie successfully updated.',
   })
+
+
+  @ApiResponse({
+    status:400,
+    description:
+      'Invalid movie data.',
+  })
+
+
+  @ApiResponse({
+    status:404,
+    description:
+      'Movie not found.',
+  })
+
+
+
   update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: CreateMovieDto,
+
+
+    @Param('id', ParseIntPipe)
+    id:number,
+
+
+    @Body()
+    dto:CreateMovieDto,
+
+
+    @UploadedFile(
+      new ParseFilePipe({
+
+        fileIsRequired:false,
+
+        validators:[
+
+          new MaxFileSizeValidator({
+            maxSize:5 * 1024 * 1024,
+          }),
+
+          new FileTypeValidator({
+            fileType:'image',
+          }),
+
+        ],
+
+      })
+    )
+
+    file?:Express.Multer.File,
+
+
   ) {
-    return this.moviesService.update(id, dto);
+
+
+    return this.moviesService.update(
+      id,
+      dto,
+      file,
+    );
+
+
   }
 
-  @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+
+
+
+
+
+
+
+
   @Roles('ADMIN')
+
   @Delete(':id')
+
+
   @ApiOperation({
-    summary: 'Delete a movie',
+    summary:'Delete a movie',
+    description:
+      'Deletes a movie. Only ADMIN users are allowed to perform this operation.',
   })
+
+
   @ApiParam({
-    name: 'id',
-    type: Number,
-    example: 1,
+    name:'id',
+    type:Number,
+    example:1,
+    description:
+      'Unique ID of the movie',
   })
+
+
   @ApiResponse({
-    status: 200,
-    description: 'Movie successfully deleted',
+    status:200,
+    description:
+      'Movie successfully deleted.',
   })
-  @ApiNotFoundResponse({
-    description: 'Movie not found',
+
+
+  @ApiResponse({
+    status:404,
+    description:
+      'Movie not found.',
   })
+
+
+  @ApiResponse({
+    status:401,
+    description:
+      'Unauthorized. JWT token is missing or invalid.',
+  })
+
+
+  @ApiResponse({
+    status:403,
+    description:
+      'Forbidden. Only ADMIN users can delete movies.',
+  })
+
+
+
   remove(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) id:number,
   ) {
+
     return this.moviesService.remove(id);
+
   }
+
 
 }

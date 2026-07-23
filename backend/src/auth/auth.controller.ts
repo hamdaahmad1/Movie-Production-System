@@ -6,7 +6,6 @@ import {
   Query,
   Res,
   Req,
-  UseGuards,
 } from '@nestjs/common';
 
 import {
@@ -20,20 +19,24 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-
 import type { Response } from 'express';
-
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-
 import type { Request } from 'express';
+import { Public } from './decorators/public.decorator';
+
+
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
+
+
   constructor(
     private readonly authService: AuthService,
   ) {}
 
+
+
+  @Public()
   @Post('register')
   @ApiOperation({
     summary: 'Register a new user',
@@ -56,6 +59,10 @@ export class AuthController {
     return this.authService.register(dto, res);
   }
 
+
+
+
+  @Public()
   @Post('login')
   @ApiOperation({
     summary: 'Login a user',
@@ -77,6 +84,10 @@ export class AuthController {
     return this.authService.login(dto, res);
   }
 
+
+
+
+  @Public()
   @Get('check-username')
   @ApiOperation({
     summary: 'Check username availability',
@@ -99,6 +110,10 @@ export class AuthController {
     return this.authService.checkUsername(username);
   }
 
+
+
+
+  @Public()
   @Get('check-email')
   @ApiOperation({
     summary: 'Check email availability',
@@ -121,7 +136,11 @@ export class AuthController {
     return this.authService.checkEmail(email);
   }
 
+
+
+
   @Post('logout')
+  @ApiBearerAuth('access-token')
   @ApiOperation({
     summary: 'Logout the current user',
     description:
@@ -137,7 +156,9 @@ export class AuthController {
     return this.authService.logout(res);
   }
 
-  @UseGuards(JwtAuthGuard)
+
+
+
   @Get('me')
   @ApiBearerAuth('access-token')
   @ApiOperation({
@@ -154,7 +175,10 @@ export class AuthController {
     description:
       'Authentication required. JWT token is missing, invalid, or expired.',
   })
-  getProfile(@Req() req: Request) {
+  getProfile(
+    @Req() req: Request,
+  ) {
     return this.authService.getProfile(req.user.id);
   }
+
 }

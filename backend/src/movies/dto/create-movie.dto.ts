@@ -177,32 +177,6 @@ export class CreateMovieDto {
   })
   language: string;
 
-  @ApiProperty({
-    example:
-      'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg',
-    description:
-      'URL of the movie poster image',
-  })
-  @Transform(({ value }) =>
-    value?.trim(),
-  )
-  @IsString()
-  @IsNotEmpty({
-    message:
-      'Poster URL is required',
-  })
-  @IsUrl(
-    {},
-    {
-      message:
-        'Poster URL must be a valid URL',
-    },
-  )
-  @MaxLength(1000, {
-    message:
-      'Poster URL cannot exceed 1000 characters',
-  })
-  posterPath: string;
 
   @ApiProperty({
     example:
@@ -271,4 +245,5 @@ export class CreateMovieDto {
       'Each actor ID must be an integer number',
   })
   actorIds: number[];
+  posterPath: any;
 }

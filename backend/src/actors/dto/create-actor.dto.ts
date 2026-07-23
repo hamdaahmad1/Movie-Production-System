@@ -147,26 +147,4 @@ export class CreateActorDto {
   })
   awards: number;
 
-  @ApiProperty({
-    example:
-      "https://example.com/images/leonardo-dicaprio.jpg",
-    description:
-      "URL of the actor's image",
-  })
-  @Transform(({ value }) =>
-    value?.trim(),
-  )
-  @IsString()
-  @IsNotEmpty({
-    message:
-      "Image URL is required",
-  })
-  @IsUrl(
-    {},
-    {
-      message:
-        "Image URL must be a valid URL",
-    },
-  )
-  imagePath: string;
 }

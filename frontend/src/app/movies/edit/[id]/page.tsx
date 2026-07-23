@@ -11,6 +11,8 @@ import { useAuth } from "@/context/AuthContext";
 export default function EditMovie() {
   const router = useRouter();
   const params = useParams();
+  const [imagePreview, setImagePreview] = useState("");
+  const [poster, setPoster] = useState<File | null>(null);
 
   const { user, loading } = useAuth();
 
@@ -29,6 +31,8 @@ export default function EditMovie() {
     directorId: "",
     actorIds: [] as number[],
   });
+
+  // setImagePreview is moved inside the loadData function
 
   const [directors, setDirectors] = useState<any[]>([]);
 
@@ -85,6 +89,8 @@ export default function EditMovie() {
 
           actorIds: movieData.actors.map((actor: any) => actor.id),
         });
+
+        setImagePreview(movieData.posterPath || "");
       } catch (error) {
         console.error(error);
 
@@ -220,10 +226,22 @@ export default function EditMovie() {
       return "Please select at least one actor";
     }
 
-    if (movie.posterPath && movie.posterPath.length > 500) {
-      return "Poster URL cannot exceed 500 characters";
-    }
+    if (poster) {
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/jpg",
+        "image/webp",
+      ];
 
+      if (!allowedTypes.includes(poster.type)) {
+        return "Only JPG, PNG and WEBP images are allowed";
+      }
+
+      if (poster.size > 5 * 1024 * 1024) {
+        return "Image size cannot exceed 5MB";
+      }
+    }
     return "";
   }
 
@@ -240,6 +258,24 @@ export default function EditMovie() {
     setError("");
 
     try {
+      const formData = new FormData();
+
+      formData.append("title", movie.title.trim());
+      formData.append("description", movie.description.trim());
+      formData.append("releaseDate", movie.releaseDate);
+      formData.append("duration", String(movie.duration));
+      formData.append("genre", movie.genre.trim());
+      formData.append("language", movie.language.trim());
+      formData.append("rating", String(movie.rating));
+      formData.append("trailerId", movie.trailerId.trim());
+      formData.append("posterPath", movie.posterPath);
+      formData.append("directorId", String(movie.directorId));
+      formData.append("actorIds", JSON.stringify(movie.actorIds));
+
+      if (poster) {
+        formData.append("poster", poster);
+      }
+
       await updateMovie(
         id,
         {
@@ -257,13 +293,16 @@ export default function EditMovie() {
 
           rating: Number(movie.rating),
 
-          posterPath: movie.posterPath.trim() ? movie.posterPath.trim() : null,
-
           trailerId: movie.trailerId.trim(),
+
+          posterPath: movie.posterPath,
 
           directorId: Number(movie.directorId),
         },
-        movie.actorIds
+
+        movie.actorIds,
+        poster,
+        formData
       );
 
       alert("Movie updated successfully!");
@@ -433,33 +472,32 @@ export default function EditMovie() {
         <br />
         <br />
 
-        <label>Poster URL</label>
+        <label>Movie Poster</label>
 
         <br />
 
         <input
-          type="url"
-          placeholder="https://example.com/poster.jpg"
-          value={movie.posterPath}
-          onChange={(e) =>
-            setMovie({
-              ...movie,
-              posterPath: e.target.value,
-            })
-          }
+          type="file"
+          accept="image/png,image/jpeg,image/jpg,image/webp"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+
+            if (file) {
+              setPoster(file);
+
+              setImagePreview(URL.createObjectURL(file));
+            }
+          }}
         />
 
         <br />
 
-        <small>Optional. Enter a valid URL for the movie poster.</small>
+        <small>Maximum size: 5MB. Allowed formats: JPG, PNG, WEBP</small>
 
-        <br />
-        <br />
-
-        {movie.posterPath && (
+        {imagePreview && (
           <>
             <img
-              src={movie.posterPath}
+              src={imagePreview}
               alt={movie.title}
               width={160}
               height={220}

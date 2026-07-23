@@ -8,14 +8,15 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDirectorDto } from './dto/create-director.dto';
 import { UpdateDirectorDto } from './dto/update-director.dto';
 import{ DirectorQueryDto } from './dto/director-query.dto';
+import{ CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class DirectorsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService,private cloudinaryService: CloudinaryService) {}
 
   
 
-  async create(dto: CreateDirectorDto) {
+  async create(dto: CreateDirectorDto,file?: Express.Multer.File) {
     // Future DOB validation
     if (new Date(dto.dob) > new Date()) {
       throw new BadRequestException(
@@ -40,6 +41,18 @@ export class DirectorsService {
       );
     }
 
+    let imagePath = null;
+
+if(file){
+
+ const uploadResult:any =
+ await this.cloudinaryService.uploadImage(file);
+
+ imagePath =
+ uploadResult.secure_url;
+
+}
+
     return this.prisma.director.create({
       data: {
         name: dto.name,
@@ -48,7 +61,7 @@ export class DirectorsService {
         biography: dto.biography,
 
         // Save URL directly
-        imagePath: dto.imagePath,
+        imagePath,
       },
     });
   }
@@ -234,6 +247,7 @@ export class DirectorsService {
   async update(
     id: number,
     dto: CreateDirectorDto,
+    file?:Express.Multer.File,
   ) {
     const director =
       await this.prisma.director.findUnique({
@@ -276,6 +290,20 @@ export class DirectorsService {
       );
     }
 
+    let imagePath =
+director.imagePath;
+
+
+if(file){
+
+ const uploadResult:any =
+ await this.cloudinaryService.uploadImage(file);
+
+ imagePath =
+ uploadResult.secure_url;
+
+}
+
     return this.prisma.director.update({
       where: { id },
 
@@ -284,9 +312,7 @@ export class DirectorsService {
         dob: new Date(dto.dob),
         nationality: dto.nationality,
         biography: dto.biography,
-
-        // Replace URL
-        imagePath: dto.imagePath,
+        imagePath,
       },
     });
   }
@@ -295,6 +321,7 @@ export class DirectorsService {
   async partialUpdate(
     id: number,
     dto: UpdateDirectorDto,
+    file?:Express.Multer.File,
   ) {
     const director =
       await this.prisma.director.findUnique({
@@ -339,6 +366,20 @@ export class DirectorsService {
       }
     }
 
+    let imagePath =
+director.imagePath;
+
+
+if(file){
+
+ const uploadResult:any =
+ await this.cloudinaryService.uploadImage(file);
+
+ imagePath =
+ uploadResult.secure_url;
+
+}
+
     return this.prisma.director.update({
       where: { id },
 
@@ -353,7 +394,7 @@ export class DirectorsService {
         biography: dto.biography,
 
         // Update URL only if provided
-        imagePath: dto.imagePath,
+        imagePath,
       },
     });
   }

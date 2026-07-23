@@ -6,6 +6,7 @@ import {
   MaxLength,
   Matches,
   IsUrl,
+  IsOptional,
 } from 'class-validator';
 
 import { Transform } from 'class-transformer';
@@ -113,27 +114,7 @@ export class CreateDirectorDto {
     },
   )
   dob: string;
+  imagePath: any;
 
-  @ApiProperty({
-    example:
-      'https://example.com/images/christopher-nolan.jpg',
-    description:
-      'URL path of the director image.',
-  })
-  @Transform(({ value }) =>
-    value?.trim(),
-  )
-  @IsString()
-  @IsNotEmpty({
-    message:
-      'Image path is required',
-  })
-  @IsUrl(
-    {},
-    {
-      message:
-        'Image path must be a valid URL',
-    },
-  )
-  imagePath: string;
+
 }

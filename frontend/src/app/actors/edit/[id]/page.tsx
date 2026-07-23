@@ -3,15 +3,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import {
-  getActor,
-  updateActor,
-} from "@/services/actorService";
+import { getActor, updateActor } from "@/services/actorService";
 
 export default function EditActor() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const params = useParams();
+  const [image, setImage] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState("");
 
   const id = Number(params.id);
 
@@ -22,7 +21,6 @@ export default function EditActor() {
     biography: "",
     awards: "",
     nationality: "",
-    imagePath: "",
   });
 
   const [error, setError] = useState("");
@@ -35,10 +33,7 @@ export default function EditActor() {
       return;
     }
 
-    if (
-      user.role !== "ADMIN" &&
-      user.role !== "EDITOR"
-    ) {
+    if (user.role !== "ADMIN" && user.role !== "EDITOR") {
       router.replace("/movies");
     }
   }, [user, loading, router]);
@@ -55,8 +50,8 @@ export default function EditActor() {
           biography: data.biography,
           awards: String(data.awards),
           nationality: data.nationality,
-          imagePath: data.imagePath || "",
         });
+        setPreviewImage(data.imagePath || "");
       } catch (error) {
         console.error(error);
         setError("Failed to load actor.");
@@ -74,7 +69,6 @@ export default function EditActor() {
     const biography = actor.biography.trim();
     const nationality = actor.nationality.trim();
     const awards = Number(actor.awards);
-    const imagePath = actor.imagePath.trim();
 
     if (!name) {
       return "Name is required";
@@ -156,20 +150,22 @@ export default function EditActor() {
       return "Awards cannot exceed 500";
     }
 
-    if (imagePath) {
-      try {
-        new URL(imagePath);
-      } catch {
-        return "Image URL must be valid";
+    if (image) {
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+      if (!allowedTypes.includes(image.type)) {
+        return "Only JPG, PNG and WEBP images are allowed";
+      }
+
+      if (image.size > 5 * 1024 * 1024) {
+        return "Image size cannot exceed 5MB";
       }
     }
 
     return "";
   }
 
-  async function handleSubmit(
-    e: React.FormEvent<HTMLFormElement>,
-  ) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     const validationError = validateForm();
@@ -182,15 +178,25 @@ export default function EditActor() {
     setError("");
 
     try {
-      await updateActor(id, {
-        ...actor,
-        name: actor.name.trim(),
-        gender: actor.gender.trim(),
-        biography: actor.biography.trim(),
-        awards: Number(actor.awards),
-        nationality: actor.nationality.trim(),
-        imagePath: actor.imagePath.trim(),
-      });
+      const formData = new FormData();
+
+      formData.append("name", actor.name.trim());
+
+      formData.append("dob", actor.dob);
+
+      formData.append("gender", actor.gender.trim());
+
+      formData.append("biography", actor.biography.trim());
+
+      formData.append("nationality", actor.nationality.trim());
+
+      formData.append("awards", String(Number(actor.awards)));
+
+      if (image) {
+        formData.append("image", image);
+      }
+
+      await updateActor(id, formData);
 
       alert("Actor updated successfully!");
 
@@ -198,9 +204,7 @@ export default function EditActor() {
     } catch (error: any) {
       console.error(error);
 
-      setError(
-        error.message || "Failed to update actor.",
-      );
+      setError(error.message || "Failed to update actor.");
     }
   }
 
@@ -208,11 +212,7 @@ export default function EditActor() {
     return <p>Loading...</p>;
   }
 
-  if (
-    !user ||
-    (user.role !== "ADMIN" &&
-      user.role !== "EDITOR")
-  ) {
+  if (!user || (user.role !== "ADMIN" && user.role !== "EDITOR")) {
     return null;
   }
 
@@ -220,13 +220,9 @@ export default function EditActor() {
     <div>
       <h1>Edit Actor</h1>
 
-      <button onClick={() => router.push("/")}>
-        Home
-      </button>
+      <button onClick={() => router.push("/")}>Home</button>
 
-      <button onClick={() => router.push("/actors")}>
-        Actors List
-      </button>
+      <button onClick={() => router.push("/actors")}>Actors List</button>
 
       <br />
       <br />
@@ -260,9 +256,7 @@ export default function EditActor() {
         <input
           type="date"
           value={actor.dob}
-          max={new Date()
-            .toISOString()
-            .split("T")[0]}
+          max={new Date().toISOString().split("T")[0]}
           onChange={(e) =>
             setActor({
               ...actor,
@@ -287,21 +281,13 @@ export default function EditActor() {
             })
           }
         >
-          <option value="">
-            Select Gender
-          </option>
+          <option value="">Select Gender</option>
 
-          <option value="Male">
-            Male
-          </option>
+          <option value="Male">Male</option>
 
-          <option value="Female">
-            Female
-          </option>
+          <option value="Female">Female</option>
 
-          <option value="Other">
-            Other
-          </option>
+          <option value="Other">Other</option>
         </select>
 
         <br />
@@ -318,8 +304,7 @@ export default function EditActor() {
           onChange={(e) =>
             setActor({
               ...actor,
-              nationality:
-                e.target.value,
+              nationality: e.target.value,
             })
           }
         />
@@ -336,8 +321,7 @@ export default function EditActor() {
           onChange={(e) =>
             setActor({
               ...actor,
-              biography:
-                e.target.value,
+              biography: e.target.value,
             })
           }
         />
@@ -365,39 +349,43 @@ export default function EditActor() {
         <br />
         <br />
 
-        <label>Actor Image URL</label>
+        <label>Actor Image</label>
 
         <br />
 
         <input
-          type="url"
-          placeholder="https://example.com/actor-image.jpg"
-          value={actor.imagePath}
-          onChange={(e) =>
-            setActor({
-              ...actor,
-              imagePath: e.target.value,
-            })
-          }
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+
+            if (file) {
+              setImage(file);
+
+              setPreviewImage(URL.createObjectURL(file));
+            }
+          }}
         />
 
         <br />
         <br />
 
-        {actor.imagePath && (
+        {previewImage && (
           <img
-            src={actor.imagePath}
+            src={previewImage}
             alt={actor.name}
             width={150}
+            height={200}
+            style={{
+              objectFit: "cover",
+            }}
           />
         )}
 
         <br />
         <br />
 
-        <button type="submit">
-          Update Actor
-        </button>
+        <button type="submit">Update Actor</button>
       </form>
     </div>
   );

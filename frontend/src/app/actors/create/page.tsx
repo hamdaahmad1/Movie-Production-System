@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function CreateActor() {
   const router = useRouter();
+  const [image, setImage] = useState<File | null>(null);
 
   const { user, loading } = useAuth();
 
@@ -17,7 +18,6 @@ export default function CreateActor() {
     biography: "",
     nationality: "",
     awards: "",
-    imagePath: "",
   });
 
   const [error, setError] = useState("");
@@ -30,9 +30,12 @@ export default function CreateActor() {
       return;
     }
 
-    if (user.role !== "ADMIN") {
+    if (
+      user.role !== "ADMIN" &&
+      user.role !== "EDITOR"
+     ) {
       router.replace("/movies");
-    }
+     }
   }, [user, loading, router]);
 
   function validateForm() {
@@ -40,7 +43,6 @@ export default function CreateActor() {
     const gender = actor.gender.trim();
     const biography = actor.biography.trim();
     const nationality = actor.nationality.trim();
-    const imagePath = actor.imagePath.trim();
     const awards = Number(actor.awards);
 
     if (!name) {
@@ -124,12 +126,20 @@ export default function CreateActor() {
     if (awards > 500) {
       return "Awards cannot exceed 500";
     }
+    if (image) {
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+      ];
 
-    if (imagePath) {
-      try {
-        new URL(imagePath);
-      } catch {
-        return "Image URL must be valid";
+      if (!allowedTypes.includes(image.type)) {
+        return "Only JPG,JPEG, PNG and WEBP  images are allowed";
+      }
+
+      if (image.size > 5 * 1024 * 1024) {
+        return "Image size cannot exceed 5MB";
       }
     }
 
@@ -149,15 +159,25 @@ export default function CreateActor() {
     setError("");
 
     try {
-      await createActor({
-        name: actor.name.trim(),
-        dob: actor.dob,
-        gender: actor.gender.trim(),
-        biography: actor.biography.trim(),
-        nationality: actor.nationality.trim(),
-        awards: Number(actor.awards),
-        imagePath: actor.imagePath.trim(),
-      });
+      const formData = new FormData();
+
+      formData.append("name", actor.name.trim());
+
+      formData.append("dob", actor.dob);
+
+      formData.append("gender", actor.gender.trim());
+
+      formData.append("biography", actor.biography.trim());
+
+      formData.append("nationality", actor.nationality.trim());
+
+      formData.append("awards", String(Number(actor.awards)));
+
+      if (image) {
+        formData.append("image", image);
+      }
+
+      await createActor(formData);
 
       alert("Actor created successfully!");
 
@@ -173,9 +193,15 @@ export default function CreateActor() {
     return <p>Loading...</p>;
   }
 
-  if (!user || user.role !== "ADMIN") {
+  if (
+    !user ||
+    (
+    user.role !== "ADMIN" &&
+    user.role !== "EDITOR"
+    )
+   ) {
     return null;
-  }
+   }
 
   return (
     <div>
@@ -312,29 +338,29 @@ export default function CreateActor() {
         <br />
         <br />
 
-        <label>Image URL</label>
+        <label>Actor Image</label>
 
         <br />
 
         <input
-          type="url"
-          placeholder="https://example.com/image.jpg"
-          value={actor.imagePath}
-          onChange={(e) =>
-            setActor({
-              ...actor,
-              imagePath: e.target.value,
-            })
-          }
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+
+            if (file) {
+              setImage(file);
+            }
+          }}
         />
 
         <br />
         <br />
 
-        {actor.imagePath && (
+        {image && (
           <img
-            src={actor.imagePath}
-            alt={actor.name}
+            src={URL.createObjectURL(image)}
+            alt="preview"
             width={160}
             height={220}
             style={{

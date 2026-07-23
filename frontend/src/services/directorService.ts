@@ -1,4 +1,4 @@
-import { Director } from "@/types/director";
+
 import API from "./api";
 
 export async function getDirectors(params?:{
@@ -40,18 +40,16 @@ export async function getDirector(id: number) {
 
 
 export async function createDirector(
-  director: Omit<Director, "id">
+  formData: FormData
 ) {
   const response = await API.post(
     "/directors",
+    formData,
     {
-      name: director.name,
-      dob: director.dob,
-      nationality: director.nationality,
-      biography: director.biography,
-      imagePath: director.imagePath,
-    },
-    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+
       withCredentials: true,
     }
   );
@@ -62,25 +60,22 @@ export async function createDirector(
 
 export async function updateDirector(
   id: number,
-  director: Omit<Director, "id">
+  formData: FormData
 ) {
   const response = await API.put(
     `/directors/${id}`,
+    formData,
     {
-      name: director.name,
-      dob: director.dob,
-      nationality: director.nationality,
-      biography: director.biography,
-      imagePath: director.imagePath,
-    },
-    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+
       withCredentials: true,
     }
   );
 
   return response.data;
 }
-
 
 export async function deleteDirector(id: number) {
   const response = await API.delete(`/directors/${id}`, {
