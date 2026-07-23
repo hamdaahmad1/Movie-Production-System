@@ -32,6 +32,8 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @ApiTags('Actors')
 @Controller('actors')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard,RolesGuard)
 export class ActorsController {
   constructor(
     private actorService: ActorsService,
@@ -39,9 +41,8 @@ export class ActorsController {
 
   
 
-  @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'EDITOR')
+
+  @Roles('ADMIN')
   @Post()
   @ApiOperation({
     summary: 'Create a new actor',
@@ -76,8 +77,7 @@ export class ActorsController {
   }
 
   
-  @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  
   @Roles('ADMIN', 'EDITOR', 'VIEWER')
   @Get()
   @ApiOperation({
@@ -103,14 +103,12 @@ export class ActorsController {
   findAll(
     @Query() query: ActorQueryDto,
   ) {
-    console.log(query);
     return this.actorService.findAll(query);
   }
 
  
 
-  @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+ 
   @Roles('ADMIN', 'EDITOR', 'VIEWER')
   @Get(':id')
   @ApiOperation({
@@ -146,8 +144,7 @@ export class ActorsController {
 
   
 
-  @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  
   @Roles('ADMIN', 'EDITOR')
   @Patch(':id')
   @ApiOperation({
@@ -192,8 +189,7 @@ export class ActorsController {
 
   
 
-  @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  
   @Roles('ADMIN', 'EDITOR')
   @Put(':id')
   @ApiOperation({
@@ -238,8 +234,7 @@ export class ActorsController {
 
 
 
-  @ApiBearerAuth('JWT-auth')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  
   @Roles('ADMIN')
   @Delete(':id')
   @ApiOperation({
