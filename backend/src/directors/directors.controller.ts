@@ -41,7 +41,7 @@ export class DirectorsController {
 
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'EDITOR')
+  @Roles('ADMIN')
   @Post()
   @ApiOperation({
     summary: 'Create a new director',
