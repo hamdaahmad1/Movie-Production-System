@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 export default function CreateActor() {
   const router = useRouter();
   const [image, setImage] = useState<File | null>(null);
+  
 
   const { user, loading } = useAuth();
 
@@ -30,12 +31,9 @@ export default function CreateActor() {
       return;
     }
 
-    if (
-      user.role !== "ADMIN" &&
-      user.role !== "EDITOR"
-     ) {
+    if (user.role !== "ADMIN" && user.role !== "EDITOR") {
       router.replace("/movies");
-     }
+    }
   }, [user, loading, router]);
 
   function validateForm() {
@@ -177,6 +175,8 @@ export default function CreateActor() {
         formData.append("image", image);
       }
 
+      
+      
       await createActor(formData);
 
       alert("Actor created successfully!");
@@ -186,22 +186,18 @@ export default function CreateActor() {
       console.error(error);
 
       setError(error.message || "Failed to create actor.");
-    }
+    } 
+    
+    
   }
 
   if (loading) {
     return <p>Loading...</p>;
   }
 
-  if (
-    !user ||
-    (
-    user.role !== "ADMIN" &&
-    user.role !== "EDITOR"
-    )
-   ) {
+  if (!user || (user.role !== "ADMIN" && user.role !== "EDITOR")) {
     return null;
-   }
+  }
 
   return (
     <div>
@@ -338,7 +334,7 @@ export default function CreateActor() {
         <br />
         <br />
 
-        <label>Actor Image</label>
+        <label>Actor Poster</label>
 
         <br />
 
@@ -346,21 +342,19 @@ export default function CreateActor() {
           type="file"
           accept="image/png,image/jpeg,image/webp"
           onChange={(e) => {
-            const file = e.target.files?.[0];
+            const file = e.target.files?.[0] || null;
 
-            if (file) {
-              setImage(file);
-            }
+            setImage(file);
           }}
         />
 
         <br />
-        <br />
 
+        <small>Optional. JPG, PNG, WEBP only. Max size 5MB.</small>
         {image && (
           <img
             src={URL.createObjectURL(image)}
-            alt="preview"
+            alt="Poster preview"
             width={160}
             height={220}
             style={{

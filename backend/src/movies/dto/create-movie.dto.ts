@@ -221,29 +221,38 @@ export class CreateMovieDto {
     type: [Number],
   })
   @Transform(({ value }) => {
+
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value).map(Number);
+      } catch {
+        return [];
+      }
+    }
+  
     if (Array.isArray(value)) {
       return value.map(Number);
     }
-
-    return [Number(value)];
+  
+    return [];
+  
   })
   @IsArray({
-    message:
-      'Actor IDs must be an array',
+    message: 'Actor IDs must be an array',
   })
   @ArrayNotEmpty({
-    message:
-      'At least one actor is required',
+    message: 'At least one actor is required',
   })
   @ArrayUnique({
-    message:
-      'Duplicate actor IDs are not allowed',
+    message: 'Duplicate actor IDs are not allowed',
   })
   @IsInt({
     each: true,
-    message:
-      'Each actor ID must be an integer number',
+    message: 'Each actor ID must be an integer number',
   })
   actorIds: number[];
+
+
+  
   posterPath: any;
 }

@@ -1,5 +1,6 @@
 import API from "@/services/api"; 
 
+
 export async function getMovies(params?: {
   search?: string;
   genre?: string;
@@ -48,9 +49,10 @@ export async function createMovie(
 }
 
 
-
 export async function updateMovie(
-id: number, p0: { title: string; description: string; releaseDate: string; duration: number; genre: string; language: string; rating: number; trailerId: string; posterPath: string; directorId: number; }, actorIds: number[], poster: File | null, formData: FormData) {
+  id: number,
+  formData: FormData
+) {
   const response = await API.put(
     `/movies/${id}`,
     formData,

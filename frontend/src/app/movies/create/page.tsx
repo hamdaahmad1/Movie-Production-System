@@ -248,7 +248,7 @@ export default function CreateMovie() {
       });
 
       if (poster) {
-        formData.append("image", poster);
+        formData.append("poster", poster);
       }
 
       await createMovie(formData);
@@ -469,7 +469,10 @@ export default function CreateMovie() {
             style={{
               objectFit: "cover",
             }}
+
           />
+          
+  
         )}
 
         <label>Director</label>

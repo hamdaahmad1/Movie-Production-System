@@ -10,7 +10,7 @@ export default function EditActor() {
   const { user, loading } = useAuth();
   const params = useParams();
   const [image, setImage] = useState<File | null>(null);
-  const [previewImage, setPreviewImage] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
 
   const id = Number(params.id);
 
@@ -21,6 +21,7 @@ export default function EditActor() {
     biography: "",
     awards: "",
     nationality: "",
+    imagePath: "",
   });
 
   const [error, setError] = useState("");
@@ -50,8 +51,12 @@ export default function EditActor() {
           biography: data.biography,
           awards: String(data.awards),
           nationality: data.nationality,
+          imagePath: data.imagePath || "",
+
+
         });
-        setPreviewImage(data.imagePath || "");
+        setImagePreview(data.imagePath || "");
+
       } catch (error) {
         console.error(error);
         setError("Failed to load actor.");
@@ -362,7 +367,7 @@ export default function EditActor() {
             if (file) {
               setImage(file);
 
-              setPreviewImage(URL.createObjectURL(file));
+              setImagePreview(URL.createObjectURL(file));
             }
           }}
         />
@@ -370,9 +375,9 @@ export default function EditActor() {
         <br />
         <br />
 
-        {previewImage && (
+        {imagePreview && (
           <img
-            src={previewImage}
+            src={imagePreview}
             alt={actor.name}
             width={150}
             height={200}

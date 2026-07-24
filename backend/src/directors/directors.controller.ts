@@ -262,61 +262,136 @@ create(
     );
   }
 
-  
 
   @ApiBearerAuth('JWT-auth')
-  @Roles('ADMIN', 'EDITOR')
-  @Put(':id')
-  @ApiOperation({
-    summary: 'Fully update a director',
-    description:
-      'Replaces all director information, including the image URL.',
-  })
-  @ApiParam({
-    name: 'id',
-    type: Number,
-    example: 1,
-    description:
-      'Unique ID of the director',
-  })
-  @ApiBody({
-    type: CreateDirectorDto,
-  })
-  @ApiResponse({
-    status: 200,
-    description:
-      'Director successfully updated.',
-  })
-  @ApiResponse({
-    status: 400,
-    description:
-      'Invalid director data.',
-  })
-  @ApiResponse({
-    status: 401,
-    description:
-      'Unauthorized. JWT token is missing or invalid.',
-  })
-  @ApiResponse({
-    status: 403,
-    description:
-      'Forbidden. User does not have permission.',
-  })
-  @ApiResponse({
-    status: 404,
-    description:
-      'Director not found.',
-  })
-  update(
-    @Param('id', ParseIntPipe) id: number,
+@Roles('ADMIN', 'EDITOR')
 
-    @Body() dto: CreateDirectorDto,
-  ) {
-    return this.directorService.update(
-      id,
-      dto,
-    );
-  }
+@Put(':id')
+
+@ApiOperation({
+  summary: 'Fully update a director',
+  description:
+    'Replaces all director information, including the profile image if provided.',
+})
+
+@ApiConsumes('multipart/form-data')
+
+@UseInterceptors(
+  FileInterceptor('image'),
+)
+
+@ApiParam({
+  name: 'id',
+  type: Number,
+  example: 1,
+  description:
+    'Unique ID of the director',
+})
+
+@ApiBody({
+  schema: {
+    type: 'object',
+
+    properties: {
+
+      name: {
+        type: 'string',
+        example: 'Alfonso Cuaron',
+      },
+
+      dob: {
+        type: 'string',
+        format: 'date',
+        example: '1961-12-07',
+      },
+
+      nationality: {
+        type: 'string',
+        example: 'Mexican',
+      },
+
+      biography: {
+        type: 'string',
+        example:
+          'Mexican filmmaker known for innovative cinematography.',
+      },
+
+      image: {
+        type: 'string',
+        format: 'binary',
+        description:
+          'Director profile image (optional)',
+      },
+
+    },
+  },
+})
+
+
+@ApiResponse({
+  status:200,
+  description:
+    'Director successfully updated.',
+})
+
+
+@ApiResponse({
+  status:400,
+  description:
+    'Invalid director data.',
+})
+
+
+@ApiResponse({
+  status:404,
+  description:
+    'Director not found.',
+})
+
+
+update(
+
+  @Param('id', ParseIntPipe)
+  id:number,
+
+
+  @Body()
+  dto:CreateDirectorDto,
+
+
+  @UploadedFile(
+    new ParseFilePipe({
+
+      fileIsRequired:false,
+
+      validators:[
+
+        new MaxFileSizeValidator({
+          maxSize:5 * 1024 * 1024,
+        }),
+
+        new FileTypeValidator({
+          fileType:'image',
+        }),
+
+      ],
+
+    })
+  )
+
+  file?:Express.Multer.File,
+
+
+){
+
+  return this.directorService.update(
+    id,
+    dto,
+    file,
+  );
+
+}
+
 
  
   @ApiBearerAuth('JWT-auth')

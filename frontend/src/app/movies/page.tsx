@@ -153,9 +153,7 @@ export default function MoviesPage() {
     }
   }, [user, loading, router]);
 
-  async function handleFavorite(movieId: number)
-  
-  {
+  async function handleFavorite(movieId: number) {
     try {
       if (favorites.includes(movieId)) {
         await removeFavorite(movieId);
@@ -164,10 +162,7 @@ export default function MoviesPage() {
       } else {
         await addFavorite(movieId);
 
-        setFavorites([
-          ...favorites,
-          movieId
-        ]);
+        setFavorites([...favorites, movieId]);
       }
     } catch (error) {
       console.error(error);
@@ -243,7 +238,7 @@ export default function MoviesPage() {
       <br />
       <br />
 
-      {isAdmin && <Link href="/movies/create">Create Movie</Link>}
+      {(isAdmin || isEditor) && <Link href="/movies/create">Create Movie</Link>}
 
       <br />
       <br />

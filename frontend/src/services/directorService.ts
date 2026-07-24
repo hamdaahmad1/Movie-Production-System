@@ -1,39 +1,35 @@
 
-import API from "./api";
+import API from "@/services/api";
 
-export async function getDirectors(params?:{
 
-  search?:string;
- 
-  birthYear?:number;
- 
-  sortBy?:string;
- 
-  order?:"asc"|"desc";
- 
-  page?:number;
- 
-  limit?:number;
- 
- }){
- 
- 
-  const response = await API.get("/directors",{
- 
-    params,
- 
-    withCredentials:true,
- 
-  });
+export async function getDirectors(params?: {
+  search?: string;
+  birthYear?: number;
+  sortBy?: string;
+  order?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}) {
+  const response = await API.get(
+    "/directors",
+    {
+      params,
+
+      withCredentials: true,
+    }
+  );
+
   return response.data;
- 
- }
+}
 
 
 export async function getDirector(id: number) {
-  const response = await API.get(`/directors/${id}`, {
-    withCredentials: true,
-  });
+  const response = await API.get(
+    `/directors/${id}`,
+    {
+      withCredentials: true,
+    }
+  );
 
   return response.data;
 }
@@ -77,10 +73,16 @@ export async function updateDirector(
   return response.data;
 }
 
-export async function deleteDirector(id: number) {
-  const response = await API.delete(`/directors/${id}`, {
-    withCredentials: true,
-  });
+
+export async function deleteDirector(
+  id: number
+) {
+  const response = await API.delete(
+    `/directors/${id}`,
+    {
+      withCredentials: true,
+    }
+  );
 
   return {
     success: true,

@@ -46,9 +46,8 @@ export class ActorsController {
 
   
 
+  @Roles('ADMIN','EDITOR')
   @Post()
-@Roles('ADMIN','EDITOR')
-
 @ApiOperation({
   summary: 'Create a new actor',
   description:
