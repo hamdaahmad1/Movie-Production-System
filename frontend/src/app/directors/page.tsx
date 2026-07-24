@@ -116,7 +116,7 @@ export default function DirectorsPage() {
       <br />
       <br />
 
-      {isAdmin && <Link href="/directors/create">Create Director</Link>}
+      {(isAdmin || isEditor) && <Link href="/directors/create">Create Director</Link>}
 
       <br />
       <br />

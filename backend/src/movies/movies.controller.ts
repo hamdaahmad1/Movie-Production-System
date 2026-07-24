@@ -50,9 +50,8 @@ export class MoviesController {
 
 
 
-  @Post()
   @Roles('ADMIN','EDITOR')
-
+  @Post()
   @ApiOperation({
     summary: 'Create a new movie',
     description:
@@ -326,7 +325,6 @@ export class MoviesController {
 
 
   @Roles('ADMIN','EDITOR')
-
   @Patch(':id')
 
   @ApiOperation({
@@ -455,107 +453,170 @@ export class MoviesController {
 
 
 
-
-
-
-
-
-  @Roles('ADMIN','EDITOR')
-
+  @ApiBearerAuth('JWT-auth')
+  @Roles('ADMIN', 'EDITOR')
+  
   @Put(':id')
-
-
+  
   @ApiOperation({
-    summary:'Fully update a movie',
+    summary: 'Fully update a movie',
     description:
-      'Replaces all movie information, including the poster image if provided.',
+      'Updates movie information with optional poster image upload.',
   })
-
-
+  
   @ApiConsumes('multipart/form-data')
-
-
+  
   @UseInterceptors(
     FileInterceptor('poster'),
   )
-
-
+  
   @ApiParam({
-    name:'id',
-    type:Number,
-    example:1,
-    description:
-      'Unique ID of the movie',
+    name: 'id',
+    type: Number,
+    example: 1,
+    description: 'Unique ID of the movie',
   })
-
-
-
+  
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+  
+        title: {
+          type: 'string',
+          example: 'Interstellar',
+        },
+  
+        description: {
+          type: 'string',
+          example:
+            'A science fiction movie about space exploration.',
+        },
+  
+        releaseDate: {
+          type: 'string',
+          format: 'date',
+          example: '2014-11-07',
+        },
+  
+        duration: {
+          type: 'number',
+          example: 169,
+        },
+  
+        genre: {
+          type: 'string',
+          example: 'Science Fiction',
+        },
+  
+        language: {
+          type: 'string',
+          example: 'English',
+        },
+  
+        rating: {
+          type: 'number',
+          example: 8.7,
+        },
+  
+        trailerId: {
+          type: 'string',
+          example:
+            'https://youtube.com/watch?v=xxxx',
+        },
+  
+        posterPath: {
+          type: 'string',
+          example:
+            'old-cloudinary-url',
+        },
+  
+        directorId: {
+          type: 'number',
+          example: 1,
+        },
+  
+        actorIds: {
+          type: 'string',
+          example:
+            '[1,2,3]',
+          description:
+            'JSON string array of actor IDs',
+        },
+  
+        poster: {
+          type: 'string',
+          format: 'binary',
+          description:
+            'Movie poster image',
+        },
+  
+      },
+    },
+  })
+  
+  
   @ApiResponse({
-    status:200,
+    status: 200,
     description:
       'Movie successfully updated.',
   })
-
-
+  
+  
   @ApiResponse({
-    status:400,
+    status: 400,
     description:
       'Invalid movie data.',
   })
-
-
+  
+  
   @ApiResponse({
-    status:404,
+    status: 404,
     description:
       'Movie not found.',
   })
-
-
-
+  
+  
   update(
-
-
+  
     @Param('id', ParseIntPipe)
-    id:number,
-
-
+    id: number,
+  
+  
     @Body()
-    dto:CreateMovieDto,
-
-
+    dto: CreateMovieDto,
+  
+  
     @UploadedFile(
       new ParseFilePipe({
-
-        fileIsRequired:false,
-
-        validators:[
-
+  
+        fileIsRequired: false,
+  
+        validators: [
+  
           new MaxFileSizeValidator({
-            maxSize:5 * 1024 * 1024,
+            maxSize: 5 * 1024 * 1024,
           }),
-
+  
+  
           new FileTypeValidator({
-            fileType:'image',
+            fileType: 'image',
           }),
-
+  
         ],
-
-      })
+  
+      }),
     )
-
-    file?:Express.Multer.File,
-
-
+    file?: Express.Multer.File,
+  
   ) {
-
-
+  
     return this.moviesService.update(
       id,
       dto,
       file,
     );
-
-
+  
   }
 
 

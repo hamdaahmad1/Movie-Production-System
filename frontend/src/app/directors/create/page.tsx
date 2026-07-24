@@ -5,20 +5,17 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { createDirector } from "@/services/directorService";
 import { useAuth } from "@/context/AuthContext";
-import { uploadImage } from "@/services/uploadService";
-import { getImageUrl } from "@/app/utils/imageUrl";
 
 export default function CreateDirector() {
   const router = useRouter();
   const { user, loading } = useAuth();
-  const [uploading, setUploading] = useState(false);
+  const [image, setImage] = useState<File | null>(null);
 
   const [director, setDirector] = useState({
     name: "",
     dob: "",
     nationality: "",
     biography: "",
-    imagePath: "",
   });
 
   const [error, setError] = useState("");
@@ -31,7 +28,7 @@ export default function CreateDirector() {
       return;
     }
 
-    if (user.role !== "ADMIN") {
+    if (user.role !== "ADMIN" && user.role !== "EDITOR") {
       router.replace("/movies");
     }
   }, [user, loading, router]);
@@ -40,7 +37,6 @@ export default function CreateDirector() {
     const name = director.name.trim();
     const nationality = director.nationality.trim();
     const biography = director.biography.trim();
-    const imagePath = director.imagePath.trim();
 
     if (!name) {
       return "Name is required";
@@ -100,65 +96,24 @@ export default function CreateDirector() {
       return "Biography cannot exceed 1000 characters";
     }
 
-    /* if (imagePath) {
-      try {
-        new URL(imagePath);
-      } catch {
-        return "Image URL must be valid";
+    if (image) {
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+      ];
+
+      if (!allowedTypes.includes(image.type)) {
+        return "Only JPG,JPEG, PNG and WEBP  images are allowed";
       }
 
-      if (imagePath.length > 500) {
-        return "Image URL cannot exceed 500 characters";
+      if (image.size > 5 * 1024 * 1024) {
+        return "Image size cannot exceed 5MB";
       }
-    } */
+    }
 
     return "";
-  }
-
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-
-    if (!file) return;
-
-    // Allowed file types
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
-
-    if (!allowedTypes.includes(file.type)) {
-      alert("Only JPG, JPEG and PNG images are allowed.");
-
-      e.target.value = "";
-      return;
-    }
-
-    // File size limit (2 MB)
-    const maxSize = 2 * 1024 * 1024;
-
-    if (file.size > maxSize) {
-      alert("Image size must be less than 2 MB.");
-
-      e.target.value = "";
-      return;
-    }
-
-    try {
-      setUploading(true);
-
-      const result = await uploadImage(file, "directors");
-
-      setDirector((prev) => ({
-        ...prev,
-        imagePath: result.imagePath,
-      }));
-    } catch (error) {
-      console.error(error);
-
-      alert("Image upload failed.");
-    } finally {
-      setUploading(false);
-
-      // allows selecting same file again
-      e.target.value = "";
-    }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -174,14 +129,21 @@ export default function CreateDirector() {
     setError("");
 
     try {
-      await createDirector({
-        name: director.name.trim(),
-        dob: director.dob,
-        nationality: director.nationality.trim(),
-        biography: director.biography.trim(),
-        imagePath: director.imagePath.trim() || null,
-      });
+      const formData = new FormData();
 
+      formData.append("name", director.name.trim());
+
+      formData.append("dob", director.dob);
+
+      formData.append("biography", director.biography.trim());
+
+      formData.append("nationality", director.nationality.trim());
+
+      if (image) {
+        formData.append("image", image);
+      }
+
+      await createDirector(formData);
       alert("Director created successfully!");
 
       router.push("/directors");
@@ -196,7 +158,7 @@ export default function CreateDirector() {
     return <p>Loading...</p>;
   }
 
-  if (!user || user.role !== "ADMIN") {
+  if (!user || (user.role !== "ADMIN" && user.role !== "EDITOR")) {
     return null;
   }
 
@@ -290,47 +252,45 @@ export default function CreateDirector() {
         <br />
         <br />
 
-        <label>Image URL</label>
+        <label>Director Image</label>
 
         <br />
 
-        <input type="file" 
-        accept=".jpg,.jpeg,.png"
-         onChange={handleImageUpload} />
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+
+            if (file) {
+              setImage(file);
+            }
+          }}
+        />
 
         <br />
-
-        <small>Optional. Upload a profile image.</small>
-
         <br />
 
-        {uploading && <p>Uploading image...</p>}
-
-        <br />
-
-        {director.imagePath && (
+        {image && (
           <>
             <img
-              src={getImageUrl(director.imagePath)}
+              src={URL.createObjectURL(image)}
+              alt="preview"
               width={160}
-              height={200}
+              height={220}
               style={{
                 objectFit: "cover",
-                border: "1px solid #ccc",
               }}
-
             />
+
             <br />
             <br />
 
             <button
               type="button"
-              onClick={() =>
-                setDirector({
-                  ...director,
-                  imagePath: "",
-                })
-              }
+              onClick={() => {
+                setImage(null);
+              }}
             >
               Remove Image
             </button>

@@ -5,14 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getDirector, updateDirector } from "@/services/directorService";
 
-import { uploadImage } from "@/services/uploadService";
-import { getImageUrl } from "@/app/utils/imageUrl";
-
 export default function EditDirector() {
   const router = useRouter();
 
   const { user, loading } = useAuth();
-  const [uploading, setUploading] = useState(false);
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
 
   const params = useParams();
 
@@ -23,7 +21,7 @@ export default function EditDirector() {
     dob: "",
     nationality: "",
     biography: "",
-    imagePath: "",
+    image: "",
   });
 
   const [error, setError] = useState("");
@@ -51,8 +49,9 @@ export default function EditDirector() {
           dob: data.dob.split("T")[0],
           nationality: data.nationality,
           biography: data.biography,
-          imagePath: data.imagePath || "",
+          image: data.image || "",
         });
+        setImagePreview(data.image || "");
       } catch (error) {
         console.error(error);
         setError("Failed to load director.");
@@ -68,7 +67,6 @@ export default function EditDirector() {
     const name = director.name.trim();
     const nationality = director.nationality.trim();
     const biography = director.biography.trim();
-    const imagePath = director.imagePath.trim();
 
     if (!name) {
       return "Name is required";
@@ -128,61 +126,19 @@ export default function EditDirector() {
       return "Biography cannot exceed 1000 characters";
     }
 
-    //if (imagePath) {
-      //try {
-        //new URL(imagePath);
-      //} catch {
-       // return "Image URL must be valid";
-      //}
-    //}
+    if (image) {
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+      if (!allowedTypes.includes(image.type)) {
+        return "Only JPG, PNG and WEBP images are allowed";
+      }
+
+      if (image.size > 5 * 1024 * 1024) {
+        return "Image size cannot exceed 5MB";
+      }
+    }
 
     return "";
-  }
-
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-
-    if (!file) return;
-
-    // Allowed file types
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
-
-    if (!allowedTypes.includes(file.type)) {
-      alert("Only JPG, JPEG and PNG images are allowed.");
-
-      e.target.value = "";
-      return;
-    }
-
-    // File size limit (2 MB)
-    const maxSize = 2 * 1024 * 1024;
-
-    if (file.size > maxSize) {
-      alert("Image size must be less than 2 MB.");
-
-      e.target.value = "";
-      return;
-    }
-
-    try {
-      setUploading(true);
-
-      const result = await uploadImage(file, "directors");
-
-      setDirector((prev) => ({
-        ...prev,
-        imagePath: result.imagePath,
-      }));
-    } catch (error) {
-      console.error(error);
-
-      alert("Image upload failed.");
-    } finally {
-      setUploading(false);
-
-      // allows selecting same file again
-      e.target.value = "";
-    }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -198,13 +154,21 @@ export default function EditDirector() {
     setError("");
 
     try {
-      await updateDirector(id, {
-        name: director.name.trim(),
-        dob: director.dob,
-        nationality: director.nationality.trim(),
-        biography: director.biography.trim(),
-        imagePath: director.imagePath.trim(),
-      });
+      const formData = new FormData();
+
+      formData.append("name", director.name.trim());
+
+      formData.append("dob", director.dob);
+
+      formData.append("biography", director.biography.trim());
+
+      formData.append("nationality", director.nationality.trim());
+
+      if (image) {
+        formData.append("image", image);
+      }
+
+      await updateDirector(id, formData);
 
       alert("Director updated successfully!");
 
@@ -314,49 +278,37 @@ export default function EditDirector() {
         <br />
         <br />
 
-        <label>Profile Image</label>
+        <label>Director Image</label>
 
         <br />
 
-        <input type="file"
-         accept=".jpg,.jpeg,.png"
-          onChange={handleImageUpload} />
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+
+            if (file) {
+              setImage(file);
+
+              setImagePreview(URL.createObjectURL(file));
+            }
+          }}
+        />
 
         <br />
-
-        <small>Optional. Upload a new profile image.</small>
-
-        <br />
         <br />
 
-        {uploading && <p>Uploading image...</p>}
-
-        {director.imagePath && (
-          <>
-            <img
-              src={getImageUrl(director.imagePath)}
-              alt={director.name}
-              width={160}
-              height={220}
-              style={{
-                objectFit: "cover",
-                display: "block",
-                marginBottom: "10px",
-              }}
+        {imagePreview && (
+          <img
+            src={imagePreview}
+            alt={director.name}
+            width={150}
+            height={200}
+            style={{
+              objectFit: "cover",
+            }}
           />
-
-            <button
-              type="button"
-              onClick={() =>
-                setDirector({
-                  ...director,
-                  imagePath: "",
-                })
-              }
-            >
-              Remove Image
-            </button>
-          </>
         )}
 
         <br />

@@ -26,7 +26,7 @@ export default function EditMovie() {
     genre: "",
     language: "",
     rating: "",
-    posterPath: "",
+    poster: "",
     trailerId: "",
     directorId: "",
     actorIds: [] as number[],
@@ -81,7 +81,7 @@ export default function EditMovie() {
 
           rating: String(movieData.rating),
 
-          posterPath: movieData.posterPath || "",
+          poster: movieData.poster || "",
 
           trailerId: movieData.trailerId,
 
@@ -90,7 +90,7 @@ export default function EditMovie() {
           actorIds: movieData.actors.map((actor: any) => actor.id),
         });
 
-        setImagePreview(movieData.posterPath || "");
+        setImagePreview(movieData.poster || "");
       } catch (error) {
         console.error(error);
 
@@ -268,7 +268,7 @@ export default function EditMovie() {
       formData.append("language", movie.language.trim());
       formData.append("rating", String(movie.rating));
       formData.append("trailerId", movie.trailerId.trim());
-      formData.append("posterPath", movie.posterPath);
+      formData.append("poster", movie.poster);
       formData.append("directorId", String(movie.directorId));
       formData.append("actorIds", JSON.stringify(movie.actorIds));
 
@@ -276,34 +276,7 @@ export default function EditMovie() {
         formData.append("poster", poster);
       }
 
-      await updateMovie(
-        id,
-        {
-          title: movie.title.trim(),
-
-          description: movie.description.trim(),
-
-          releaseDate: movie.releaseDate,
-
-          duration: Number(movie.duration),
-
-          genre: movie.genre.trim(),
-
-          language: movie.language.trim(),
-
-          rating: Number(movie.rating),
-
-          trailerId: movie.trailerId.trim(),
-
-          posterPath: movie.posterPath,
-
-          directorId: Number(movie.directorId),
-        },
-
-        movie.actorIds,
-        poster,
-        formData
-      );
+      await updateMovie(id, formData);
 
       alert("Movie updated successfully!");
 

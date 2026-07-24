@@ -1,4 +1,5 @@
-import API from "./api";
+import API from "@/services/api";
+
 
 export async function getActors(params?: {
   search?: string;
@@ -8,20 +9,26 @@ export async function getActors(params?: {
   page?: number;
   limit?: number;
 }) {
+  const response = await API.get(
+    "/actors",
+    {
+      params,
 
-  const response = await API.get("/actors", {
-    params,
-    withCredentials:true,
-  });
+      withCredentials: true,
+    }
+  );
 
   return response.data;
 }
 
 
 export async function getActor(id: number) {
-  const response = await API.get(`/actors/${id}`, {
-    withCredentials: true,
-  });
+  const response = await API.get(
+    `/actors/${id}`,
+    {
+      withCredentials: true,
+    }
+  );
 
   return response.data;
 }
@@ -66,10 +73,15 @@ export async function updateActor(
 }
 
 
-export async function deleteActor(id: number) {
-  const response = await API.delete(`/actors/${id}`, {
-    withCredentials: true,
-  });
+export async function deleteActor(
+  id: number
+) {
+  const response = await API.delete(
+    `/actors/${id}`,
+    {
+      withCredentials: true,
+    }
+  );
 
   return {
     success: true,
