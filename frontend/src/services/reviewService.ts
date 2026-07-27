@@ -8,7 +8,7 @@ export async function getMovieReviews(movieId: number) {
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 export async function getReview(id: number) {
@@ -16,7 +16,7 @@ export async function getReview(id: number) {
     withCredentials: true,
   });
 
-  return response.data;
+  return response.data.data;
 }
 
 export async function createReview(
@@ -34,7 +34,7 @@ export async function createReview(
       }
     );
   
-    return response.data;
+    return response.data.data;
   }
 
   export async function updateReview(
@@ -50,7 +50,7 @@ export async function createReview(
       }
     );
    
-    return response.data;
+    return response.data.data;
    }
 
 export async function deleteReview(id: number) {
@@ -61,7 +61,7 @@ export async function deleteReview(id: number) {
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 export async function getMyReviews() {
     const response = await API.get(
@@ -71,5 +71,5 @@ export async function getMyReviews() {
       }
     );
   
-    return response.data;
+    return response.data.data;
   }

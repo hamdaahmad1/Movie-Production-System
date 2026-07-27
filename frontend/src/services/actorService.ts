@@ -18,7 +18,7 @@ export async function getActors(params?: {
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 
@@ -30,7 +30,7 @@ export async function getActor(id: number) {
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 
@@ -49,7 +49,7 @@ export async function createActor(
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 
@@ -69,7 +69,7 @@ export async function updateActor(
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 

@@ -8,7 +8,7 @@ export const authService = {
       withCredentials: true,
     });
 
-    return response.data;
+    return response.data.data;
   },
 
   async login(data: LoginData) {
@@ -16,7 +16,7 @@ export const authService = {
       withCredentials: true,
     });
 
-    return response.data;
+    return response.data.data;
   },
 
   async logout() {
@@ -28,7 +28,7 @@ export const authService = {
       }
     );
 
-    return response.data;
+    return response.data.data;
   },
 
   async me(): Promise<User> {
@@ -36,7 +36,7 @@ export const authService = {
       withCredentials: true,
     });
 
-    return response.data;
+    return response.data.data;
   },
 
   async checkUsername(username: string) {
@@ -44,7 +44,7 @@ export const authService = {
       params: { username },
     });
 
-    return response.data;
+    return response.data.data;
   },
 
   async checkEmail(email: string) {
@@ -52,6 +52,6 @@ export const authService = {
       params: { email },
     });
 
-    return response.data;
+    return response.data.data;
   },
 };

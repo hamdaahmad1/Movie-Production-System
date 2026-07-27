@@ -5,7 +5,7 @@ export async function getAdminDashboard() {
     withCredentials: true,
   });
 
-  return response.data;
+  return response.data.data;
 }
 export async function getEditorDashboard(){
 
@@ -14,6 +14,6 @@ export async function getEditorDashboard(){
        withCredentials:true
     });
    
-    return response.data;
+    return response.data.data;
    
    }

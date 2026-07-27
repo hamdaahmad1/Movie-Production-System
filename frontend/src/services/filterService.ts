@@ -9,8 +9,9 @@ export async function getGenres(){
             withCredentials:true,
         }
     );
+    console.log("GENRES RESPONSE:", response.data);
 
 
-    return response.data;
+    return response.data.data;
 
 }

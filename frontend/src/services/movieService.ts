@@ -17,7 +17,7 @@ export async function getMovies(params?: {
     withCredentials: true,
   });
 
-  return response.data;
+  return response.data.data;
 }
 
 
@@ -26,7 +26,7 @@ export async function getMovie(id: number) {
     withCredentials: true,
   });
 
-  return response.data;
+  return response.data.data;
 }
 
 
@@ -45,7 +45,7 @@ export async function createMovie(
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 
@@ -65,7 +65,7 @@ export async function updateMovie(
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 

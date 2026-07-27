@@ -13,7 +13,7 @@ export async function getUsers(params?: {
     withCredentials: true,
   });
 
-  return response.data;
+  return response.data.data;
 }
 
 
@@ -22,7 +22,7 @@ export async function deleteUser(id: number) {
     withCredentials: true,
   });
 
-  return response.data;
+  return response.data.data;
 }
 
 
@@ -31,7 +31,7 @@ export async function getUser(id: number) {
     withCredentials: true,
   });
 
-  return response.data;
+  return response.data.data;
 }
 
 
@@ -47,7 +47,7 @@ export async function updateUser(
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 
@@ -60,5 +60,5 @@ export async function createUser(data: any) {
     }
   );
 
-  return response.data;
+  return response.data.data;
 }

@@ -531,29 +531,37 @@ export default function EditMovie() {
 
         <br />
 
-        <select
-          multiple
-          size={5}
-          value={movie.actorIds.map(String)}
-          onChange={(e) => {
-            const ids = Array.from(e.target.selectedOptions, (option) =>
-              Number(option.value)
-            );
+        {actors.map((actor) => (
+          <div key={actor.id}>
+            <label>
+              <input
+                type="checkbox"
+                value={actor.id}
+                checked={movie.actorIds.includes(actor.id)}
+                onChange={(e) => {
+                  const actorId = Number(e.target.value);
 
-            setMovie({
-              ...movie,
-              actorIds: ids,
-            });
-          }}
-        >
-          {actors.map((actor) => (
-            <option key={actor.id} value={actor.id}>
+                  let updatedActorIds;
+
+                  if (e.target.checked) {
+                    updatedActorIds = [...movie.actorIds, actorId];
+                  } else {
+                    updatedActorIds = movie.actorIds.filter(
+                      (id) => id !== actorId
+                    );
+                  }
+
+                  setMovie({
+                    ...movie,
+                    actorIds: updatedActorIds,
+                  });
+                }}
+              />{" "}
               {actor.name}
-            </option>
-          ))}
-        </select>
+            </label>
+          </div>
+        ))}
 
-        <br />
         <br />
 
         <button type="submit">Update Movie</button>
