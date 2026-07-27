@@ -9,7 +9,7 @@ export async function addFavorite(movieId: number) {
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 export async function removeFavorite(movieId: number) {
@@ -20,7 +20,7 @@ export async function removeFavorite(movieId: number) {
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 export async function getFavorites() {
@@ -31,7 +31,7 @@ export async function getFavorites() {
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 export async function addWatchlist(movieId: number) {
@@ -43,7 +43,7 @@ export async function addWatchlist(movieId: number) {
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 export async function removeWatchlist(movieId: number) {
@@ -54,7 +54,7 @@ export async function removeWatchlist(movieId: number) {
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 export async function getWatchlist() {
@@ -65,5 +65,5 @@ export async function getWatchlist() {
     }
   );
 
-  return response.data;
+  return response.data.data;
 }

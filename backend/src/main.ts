@@ -1,13 +1,14 @@
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 import { ValidationPipe } from '@nestjs/common';
 
 import cookieParser from 'cookie-parser';
-import { join } from 'path';
+
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 
@@ -17,13 +18,11 @@ async function bootstrap() {
     AppModule,
   );
 
-
-  // Serve uploaded images/files
-  app.useStaticAssets(
-    join(__dirname, '..', 'uploads'),
-    {
-      prefix: '/uploads/',
-    },
+  app.useGlobalInterceptors(
+    new ResponseInterceptor()
+   );
+   app.useGlobalFilters(
+    new HttpExceptionFilter(),
   );
 
 

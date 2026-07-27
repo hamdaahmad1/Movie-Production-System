@@ -19,7 +19,7 @@ export async function getDirectors(params?: {
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 
@@ -31,7 +31,7 @@ export async function getDirector(id: number) {
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 
@@ -50,7 +50,7 @@ export async function createDirector(
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 
@@ -70,7 +70,7 @@ export async function updateDirector(
     }
   );
 
-  return response.data;
+  return response.data.data;
 }
 
 

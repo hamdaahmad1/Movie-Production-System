@@ -1,74 +1,68 @@
 import {
-    ExceptionFilter,
-    Catch,
-    ArgumentsHost,
-    HttpException,
-  } from '@nestjs/common';
-  
-  
-  @Catch(HttpException)
-  export class HttpExceptionFilter 
-  implements ExceptionFilter {
-  
-  
-    catch(
-      exception: HttpException,
-      host: ArgumentsHost,
-    ) {
-  
-  
-      const ctx = host.switchToHttp();
-  
-  
-      const response = ctx.getResponse();
-  
-  
-      const request = ctx.getRequest();
-  
-  
-      const status = exception.getStatus();
-  
-  
-      const exceptionResponse = exception.getResponse();
-  
-  
-      let message = exception.message;
-  
-  
-      if (
-        typeof exceptionResponse === 'object' &&
-        exceptionResponse !== null
-      ) {
-  
-        const responseMessage =
-          (exceptionResponse as any).message;
-  
-  
-        if (responseMessage) {
-  
-          message = Array.isArray(responseMessage)
-            ? responseMessage
-            : responseMessage;
-  
-        }
-  
-      }
-  
-  
-      response.status(status).json({
-  
-        success: false,
-  
-        message,
-  
-        statusCode: status,
-  
-        path: request.url,
-  
-        timestamp: new Date().toISOString(),
-  
-      });
-  
-    }
-  
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
+
+import { Request, Response } from 'express';
+
+
+@Catch()
+export class HttpExceptionFilter implements ExceptionFilter {
+
+  private readonly logger = new Logger(HttpExceptionFilter.name);
+
+
+  catch(exception: unknown, host: ArgumentsHost) {
+
+    const ctx = host.switchToHttp();
+
+    const response = ctx.getResponse<Response>();
+
+    const request = ctx.getRequest<Request>();
+
+
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
+
+
+    const exceptionResponse =
+      exception instanceof HttpException
+        ? exception.getResponse()
+        : "Internal server error";
+
+
+    const message =
+      typeof exceptionResponse === "object" &&
+      exceptionResponse !== null &&
+      "message" in exceptionResponse
+        ? exceptionResponse.message
+        : exceptionResponse;
+
+
+    this.logger.error(
+      `${request.method} ${request.url}`,
+      exception
+    );
+
+
+    response.status(status).json({
+
+      success:false,
+
+      statusCode:status,
+
+      message,
+
+      timestamp:new Date().toISOString(),
+
+      path:request.url,
+
+    });
   }
+}

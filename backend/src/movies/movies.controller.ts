@@ -95,6 +95,14 @@ export class MoviesController {
           example: 1,
         },
 
+        actorIds: {
+          type: 'array',
+          example: [1, 2, 3],
+          items: {
+            type: 'number',
+          },
+        },
+        
         description: {
           type: 'string',
           example:
