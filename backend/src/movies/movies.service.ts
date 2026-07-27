@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Logger
 } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
@@ -12,7 +13,10 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 
 @Injectable()
-export class MoviesService {
+export class MoviesService 
+{
+  private readonly logger = new Logger(MoviesService.name);
+
   constructor(private prisma: PrismaService,
     private cloudinaryService: CloudinaryService
   ) {}
@@ -76,14 +80,27 @@ export class MoviesService {
     let posterPath = null;
     if (file) {
 
-    const uploadResult:any =
-      await this.cloudinaryService.uploadImage(file);
+      try {
 
-    posterPath = uploadResult.secure_url;
+        const uploadResult:any =
+          await this.cloudinaryService.uploadImage(file);
+        posterPath = uploadResult.secure_url;
+        this.logger.log(
+          "Movie poster uploaded successfully"
+        );
+    
+      }
+      catch(error){
+        this.logger.error(
+          "Movie poster upload failed",
+          error.stack
+        );
+        throw error;
+      
+      }
 
   }
-
-    return this.prisma.movie.create({
+    const movie= await this.prisma.movie.create({
       data: {
         title: dto.title,
         description: dto.description,
@@ -113,6 +130,12 @@ export class MoviesService {
         actors: true,
       },
     });
+
+    this.logger.log(
+      `Movie created successfully. ID: ${movie.id}`
+    );
+    return movie;
+    
   }
 
 
@@ -251,6 +274,11 @@ export class MoviesService {
       });
 
     if (!movie) {
+
+      this.logger.warn(
+        `Movie not found. ID: ${id}`
+      );
+
       throw new NotFoundException(
         'Movie not found',
       );
@@ -284,9 +312,24 @@ export class MoviesService {
        if(file)
       {
 
-       const uploadResult:any =
-        await this.cloudinaryService.uploadImage(file);
-        posterPath = uploadResult.secure_url;
+        try {
+
+          const uploadResult:any =
+            await this.cloudinaryService.uploadImage(file);
+          posterPath = uploadResult.secure_url;
+          this.logger.log(
+            "Movie poster uploaded successfully"
+          );
+      
+        }
+        catch(error){
+          this.logger.error(
+            "Movie poster upload failed",
+            error.stack
+          );
+          throw error;
+        
+        }
 
       }
     
@@ -357,7 +400,7 @@ export class MoviesService {
 
 
 
-    return this.prisma.movie.update({
+    const updatedMovie= await this.prisma.movie.update({
       where: {
         id,
       },
@@ -391,6 +434,9 @@ export class MoviesService {
         actors: true,
       },
     });
+    this.logger.log("Movie updated successfully. ID: " + updatedMovie.id);
+
+    return updatedMovie;
   }
 
 
@@ -494,17 +540,30 @@ export class MoviesService {
    if(file)
    {
 
-     const uploadResult:any =
-      await this.cloudinaryService.uploadImage(file);
+    try {
 
-
-       posterPath = uploadResult.secure_url;
+      const uploadResult:any =
+        await this.cloudinaryService.uploadImage(file);
+      posterPath = uploadResult.secure_url;
+      this.logger.log(
+        "Movie poster uploaded successfully"
+      );
+  
+    }
+    catch(error){
+      this.logger.error(
+        "Movie poster upload failed",
+        error.stack
+      );
+      throw error;
+    
+    }
 
     }
 
     
 
-    return this.prisma.movie.update({
+    const updatedMovie= await this.prisma.movie.update({
       where: {
         id,
       },
@@ -539,6 +598,9 @@ export class MoviesService {
         actors: true,
       },
     });
+    this.logger.log("Movie partially updated successfully. ID: " + updatedMovie.id);
+
+    return updatedMovie;
   }
 
  
@@ -556,11 +618,14 @@ export class MoviesService {
       );
     }
 
-    return this.prisma.movie.delete({
+    const deletedMovies= await this.prisma.movie.delete({
       where: {
         id,
       },
     });
+
+    this.logger.log("Movie deleted successfully. ID: " + deletedMovies.id);
+    return deletedMovies;
   }
 
   async getGenres() {

@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 
 import * as bcrypt from 'bcrypt';
@@ -13,6 +14,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import{ UserQueryDto } from './dto/user-query.dto';
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
 
   constructor(
     private prisma: PrismaService,
@@ -58,7 +60,7 @@ export class UsersService {
       );
 
 
-    return this.prisma.user.create({
+    const user= await this.prisma.user.create({
 
       data:{
         username,
@@ -75,6 +77,8 @@ export class UsersService {
       },
 
     });
+    this.logger.log("User created successfully: " + user.username);
+    return user;
   }
 
   async findAll(query: UserQueryDto) {
@@ -224,6 +228,7 @@ export class UsersService {
 
 
     if(!user){
+      this.logger.warn(`User with ID ${id} not found`);
 
       throw new NotFoundException(
         "User not found",
@@ -241,11 +246,7 @@ export class UsersService {
     updateUserDto:UpdateUserDto,
   ){
 
-    const user =
-      await this.findOne(id);
-
-
-
+    await this.findOne(id);
     if(updateUserDto.username){
 
       const username =
@@ -309,7 +310,7 @@ export class UsersService {
 
     }
 
-    return this.prisma.user.update({
+    const updatedUser= await this.prisma.user.update({
 
       where:{
         id,
@@ -327,6 +328,8 @@ export class UsersService {
 
 
     });
+    this.logger.log(`User with ID ${id} updated successfully`);
+    return updatedUser;
 
   }
 
@@ -335,13 +338,15 @@ export class UsersService {
     await this.findOne(id);
 
 
-    return this.prisma.user.delete({
+    const deleteUser= await this.prisma.user.delete({
 
       where:{
         id,
       },
 
     });
+    this.logger.log(`User with ID ${id} deleted successfully`);
+    return deleteUser;
 
   }
 
