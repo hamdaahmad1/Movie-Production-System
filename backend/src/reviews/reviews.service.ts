@@ -4,12 +4,14 @@ import
     ConflictException,
     NotFoundException,
     ForbiddenException,
+    Logger
  } from '@nestjs/common';
  import { PrismaService } from '../prisma/prisma.service';
  import { CreateReviewDto } from './dto/create-review.dto';
  @Injectable()
  export class ReviewsService 
  {
+  private readonly logger = new Logger(ReviewsService.name);
     
     constructor(
    private prisma:PrismaService
@@ -19,13 +21,14 @@ import
     const movie =await this.prisma.movie.findUnique({
    
    where:{
-   id:movieId
+       id:movieId
    }
    
    });
    
    if(!movie){
    
+    this.logger.error("Movie not found");
    throw new NotFoundException(
    "Movie not found"
    );
@@ -42,13 +45,13 @@ import
    
    });
    if(existing){
-   
+   this.logger.error("You already reviewed this movie");
    throw new ConflictException(
    "You already reviewed this movie"
    );
    
    }
-   return this.prisma.review.create({
+   const review= await this.prisma.review.create({
    
    data:{
    
@@ -59,6 +62,8 @@ import
    }
    
    });
+   this.logger.log("Review created successfully");
+   return review;
    
    
    }
@@ -68,7 +73,7 @@ import
     id:number,
     dto:CreateReviewDto,
    ){
-    return this.prisma.review.update({
+    const updatedReview= await this.prisma.review.update({
       where:{
         id,
       },
@@ -77,6 +82,8 @@ import
         comment:dto.comment,
       },
     });
+    this.logger.log("Review updated successfully");
+    return updatedReview;
    }
 
    
@@ -86,6 +93,7 @@ import
     });
   
     if (!review) {
+      this.logger.error("Review not found");
       throw new NotFoundException("Review not found");
     }
   
@@ -98,14 +106,14 @@ import
    const review = await this.prisma.review.findUnique({
    
    where:{
-   id:reviewId
+        id:reviewId
    }
    
    });
    
    
    if(!review){
-   
+   this.logger.error("Review not found");
    throw new NotFoundException(
    "Review not found"
    );
@@ -116,18 +124,21 @@ import
     user.role !== "ADMIN" &&
     review.userId !== user.id
   ) {
+    this.logger.error("You can only delete your own review");
     throw new ForbiddenException(
       "You can only delete your own review"
     );
   }
 
-   return this.prisma.review.delete({
+   const deletedReview= await this.prisma.review.delete({
    
    where:{
-   id:reviewId
+       id:reviewId
    }
    
    });
+   this.logger.log("Review deleted successfully");
+   return deletedReview;
 
 }
    async findMovieReviews(movieId:number)

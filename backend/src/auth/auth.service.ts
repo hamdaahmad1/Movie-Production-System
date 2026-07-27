@@ -3,6 +3,7 @@ import {
     BadRequestException,
     Injectable,
     UnauthorizedException,
+    Logger
   } from '@nestjs/common';
   
   import * as bcrypt from 'bcrypt';
@@ -17,6 +18,7 @@ import {
   
   @Injectable()
   export class AuthService {
+    private readonly logger = new Logger(AuthService.name);
     constructor(
       private readonly usersService: UsersService,
       private readonly jwtService: JwtService,
@@ -109,6 +111,8 @@ import {
         role: UserRole.VIEWER,
       });
 
+      this.logger.log("User registered successfully:", user.username);
+
 
 
       return this.generateAuthResponse(
@@ -126,9 +130,11 @@ import {
         await this.usersService.findByUsernameOrEmail(
           loginDto.login,
         );
-        console.log("User found:", user);
+  
   
       if (!user) {
+        this.logger.warn("User not found for login:", loginDto.login);
+        
         throw new UnauthorizedException(
           'Invalid username/email or password',
         );
@@ -139,15 +145,16 @@ import {
           loginDto.password,
           user.password,
         );
-        console.log("Entered password:", loginDto.password);
-        console.log("Stored hash:", user.password);
-        console.log("Password match:", isPasswordCorrect);
-  
+       
+
       if (!isPasswordCorrect) {
+        this.logger.warn("Incorrect password for user:", loginDto.login);
+
         throw new UnauthorizedException(
           'Invalid username/email or password',
         );
       }
+      this.logger.log("User logged in successfully:", user.username);
 
 
       return this.generateAuthResponse(
@@ -159,6 +166,8 @@ import {
     async checkUsername(username: string) {
       const exists =
         await this.usersService.existsByUsername(username);
+
+        this.logger.debug("Checking username availability:", username, "Exists:", exists);
     
       return {
         available: !exists,
@@ -170,6 +179,8 @@ import {
     async checkEmail(email: string) {
       const exists =
         await this.usersService.existsByEmail(email);
+
+        this.logger.debug("Checking email availability:", email, "Exists:", exists);
     
       return {
         available: !exists,
@@ -181,6 +192,8 @@ import {
 
     async logout(res: Response) {
       res.clearCookie('access_token');
+
+      this.logger.log("User logged out successfully.");
     
       return {
         message: 'Logged out successfully.',
@@ -191,8 +204,13 @@ import {
       const user = await this.usersService.findOne(id);
 
       if (!user) {
+
+        this.logger.warn("User not found for profile retrieval:", id);
         throw new BadRequestException('User not found.');
+
+        
       }
+      this.logger.debug("Retrieved user profile:", user);
     
       return {
         id: user.id,

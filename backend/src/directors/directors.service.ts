@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Logger
 } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -12,6 +13,8 @@ import{ CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class DirectorsService {
+  private readonly logger = new Logger(DirectorsService.name);
+
   constructor(private prisma: PrismaService,private cloudinaryService: CloudinaryService) {}
 
   
@@ -45,15 +48,27 @@ export class DirectorsService {
 
 if(file){
 
- const uploadResult:any =
- await this.cloudinaryService.uploadImage(file);
+ try {
 
- imagePath =
- uploadResult.secure_url;
+    const uploadResult:any =
+      await this.cloudinaryService.uploadImage(file);
+    imagePath = uploadResult.secure_url;
+    this.logger.log(
+      "Director poster uploaded successfully"
+    );
+
+  }
+  catch(error){
+    this.logger.error(
+      "Director poster upload failed",
+      error.stack
+    );
+    throw error;
 
 }
+}
 
-    return this.prisma.director.create({
+    const updatedDirector= await this.prisma.director.create({
       data: {
         name: dto.name,
         dob: new Date(dto.dob),
@@ -64,6 +79,8 @@ if(file){
         imagePath,
       },
     });
+    this.logger.log("Director created successfully:", updatedDirector.name);
+    return updatedDirector;
   }
 
   
@@ -234,6 +251,7 @@ if(file){
       });
 
     if (!director) {
+      this.logger.warn(`Director with ID ${id} not found.`);
       throw new NotFoundException(
         'Director not found',
       );
@@ -255,6 +273,8 @@ if(file){
       });
 
     if (!director) {
+      this.logger.warn(`Director with ID ${id} not found for update.`);
+
       throw new NotFoundException(
         'Director not found',
       );
@@ -296,15 +316,28 @@ director.imagePath;
 
 if(file){
 
- const uploadResult:any =
- await this.cloudinaryService.uploadImage(file);
+ try {
 
- imagePath =
- uploadResult.secure_url;
+    const uploadResult:any =
+      await this.cloudinaryService.uploadImage(file);
+    imagePath = uploadResult.secure_url;
+    this.logger.log(
+      "Director poster uploaded successfully"
+    );
+
+  }
+  catch(error){
+    this.logger.error(
+      "Director poster upload failed",
+      error.stack
+    );
+    throw error;
 
 }
 
-    return this.prisma.director.update({
+}
+
+    const updatedDirector = await this.prisma.director.update({
       where: { id },
 
       data: {
@@ -315,6 +348,9 @@ if(file){
         imagePath,
       },
     });
+
+    this.logger.log(`Director with ID ${id} updated successfully.`);
+    return updatedDirector;
   }
 
   
@@ -329,6 +365,7 @@ if(file){
       });
 
     if (!director) {
+      this.logger.warn(`Director with ID ${id} not found for partial update.`);
       throw new NotFoundException(
         'Director not found',
       );
@@ -360,6 +397,8 @@ if(file){
         });
 
       if (existingDirector) {
+
+        this.logger.warn(`Duplicate director name detected during partial update for ID ${id}.`);
         throw new BadRequestException(
           'A director with this name already exists.',
         );
@@ -372,15 +411,28 @@ director.imagePath;
 
 if(file){
 
- const uploadResult:any =
- await this.cloudinaryService.uploadImage(file);
+  try {
 
- imagePath =
- uploadResult.secure_url;
+    const uploadResult:any =
+      await this.cloudinaryService.uploadImage(file);
+    imagePath = uploadResult.secure_url;
+    this.logger.log(
+      "Director poster uploaded successfully"
+    );
+
+  }
+  catch(error){
+    this.logger.error(
+      "Director poster upload failed",
+      error.stack
+    );
+    throw error;
 
 }
 
-    return this.prisma.director.update({
+}
+
+    const updatedDirector = await this.prisma.director.update({
       where: { id },
 
       data: {
@@ -397,6 +449,8 @@ if(file){
         imagePath,
       },
     });
+    this.logger.log(`Director with ID ${id} partially updated successfully.`);
+    return updatedDirector;
   }
 
  
@@ -412,19 +466,24 @@ if(file){
       });
 
     if (!director) {
+      this.logger.warn(`Director with ID ${id} not found for deletion.`);
       throw new NotFoundException(
         'Director not found',
       );
     }
 
     if (director.movies.length > 0) {
+      this.logger.warn(`Attempted to delete director with ID ${id} who is assigned to movies.`);
       throw new BadRequestException(
         'Cannot delete this director because they are assigned to one or more movies.',
       );
     }
 
-    return this.prisma.director.delete({
+    const deletedDirector= await this.prisma.director.delete({
       where: { id },
     });
+    this.logger.log(`Director with ID ${id} deleted successfully.`);
+    return deletedDirector;
+
   }
 }

@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Logger
 } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -12,6 +13,8 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class ActorsService {
+  private readonly logger = new Logger(ActorsService.name);
+
   constructor(
     private prisma: PrismaService,
     private cloudinaryService: CloudinaryService,
@@ -50,13 +53,28 @@ export class ActorsService {
     let imagePath = null;
 
 if (file) {
-  const uploadResult: any =
-    await this.cloudinaryService.uploadImage(file);
+  try {
 
-  imagePath = uploadResult.secure_url;
+    const uploadResult:any =
+      await this.cloudinaryService.uploadImage(file);
+    imagePath = uploadResult.secure_url;
+    this.logger.log(
+      "Actor poster uploaded successfully"
+    );
+
+  }
+  catch(error){
+    this.logger.error(
+      "Actor poster upload failed",
+      error.stack
+    );
+    throw error;
+  
+  }
+
 }
 
-    return this.prisma.actor.create({
+    const actor= await this.prisma.actor.create({
       data: {
         name: dto.name,
 
@@ -75,6 +93,9 @@ if (file) {
         imagePath,
       },
     });
+    this.logger.log("Actor created successfully: " + actor.id);
+
+    return actor;
   }
 
  
@@ -208,10 +229,17 @@ if (file) {
       });
 
     if (!actor) {
+
+      this.logger.warn(
+        `Actor not found. ID: ${id}`
+      );
+
       throw new NotFoundException(
         'Actor not found',
       );
+      
     }
+
 
     return actor;
   }
@@ -267,13 +295,27 @@ if (file) {
     let imagePath = actor.imagePath;
 
 if (file) {
-  const uploadResult: any =
-    await this.cloudinaryService.uploadImage(file);
+  try {
 
-  imagePath = uploadResult.secure_url;
+    const uploadResult:any =
+      await this.cloudinaryService.uploadImage(file);
+    imagePath = uploadResult.secure_url;
+    this.logger.log(
+      "Actor poster uploaded successfully"
+    );
+
+  }
+  catch(error){
+    this.logger.error(
+      "Actor poster upload failed",
+      error.stack
+    );
+    throw error;
+  
+  }
 }
 
-    return this.prisma.actor.update({
+    const updatedActor= await this.prisma.actor.update({
       where: {
         id,
       },
@@ -298,6 +340,9 @@ if (file) {
         imagePath,
       },
     });
+
+    this.logger.log("Actor updated successfully: " + updatedActor.id);
+    return updatedActor;
   }
 
   
@@ -353,13 +398,27 @@ if (file) {
     let imagePath = actor.imagePath;
 
 if (file) {
-  const uploadResult: any =
-    await this.cloudinaryService.uploadImage(file);
+  try {
 
-  imagePath = uploadResult.secure_url;
+    const uploadResult:any =
+      await this.cloudinaryService.uploadImage(file);
+    imagePath = uploadResult.secure_url;
+    this.logger.log(
+      "Actor poster uploaded successfully"
+    );
+
+  }
+  catch(error){
+    this.logger.error(
+      "actor poster upload failed",
+      error.stack
+    );
+    throw error;
+  
+  }
 }
 
-    return this.prisma.actor.update({
+    const updatedActor= await this.prisma.actor.update({
       where: {
         id,
       },
@@ -384,6 +443,10 @@ if (file) {
         imagePath,
       },
     });
+
+    this.logger.log("Actor partially updated successfully: " + updatedActor.id);
+    return updatedActor;
+
   }
 
   
@@ -401,6 +464,7 @@ if (file) {
       });
 
     if (!actor) {
+      this.logger.warn("Actor not found. ID: " + id);
       throw new NotFoundException(
         'Actor not found',
       );
@@ -414,10 +478,13 @@ if (file) {
       );
     }
 
-    return this.prisma.actor.delete({
+    const deletedActors= await this.prisma.actor.delete({
       where: {
         id,
       },
     });
+    
+    this.logger.log("Actor deleted successfully: " + id);
+    return deletedActors;
   }
 }
