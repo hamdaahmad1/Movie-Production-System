@@ -10,11 +10,15 @@ import cookieParser from 'cookie-parser';
 import { join } from 'path';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
 
   const app = await NestFactory.create<NestExpressApplication>(
     AppModule,
+  );
+  app.useGlobalFilters(
+    new HttpExceptionFilter()
   );
 
 
