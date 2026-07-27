@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 
 import { createUser } from "@/services/userService";
 import { authService } from "@/services/authService";
+import toast from "react-hot-toast";
 
 export default function CreateUserPage() {
   const router = useRouter();
@@ -28,7 +29,6 @@ export default function CreateUserPage() {
     role: "VIEWER",
   });
 
-  const [error, setError] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -98,30 +98,36 @@ export default function CreateUserPage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    setError("");
+    
+
     if (usernameAvailable === false) {
-      setError("Username already exists");
+      toast.error("Username already exists");
 
       return;
     }
 
     if (emailAvailable === false) {
-      setError("Email already exists");
+      toast.error("Email already exists");
 
       return;
     }
 
     setSubmitting(true);
+    const toastId = toast.loading("Creating user...");
 
     try {
       await createUser(form);
+      toast.dismiss(toastId);
 
-      alert("User created successfully");
+      toast.success("User created successfully");
 
       router.push("/admin/users");
-    } catch (error: any) {
-      setError(error.response?.data?.message || "Failed to create user");
-    } finally {
+    } catch (error: any)
+     {
+      toast.dismiss(toastId);
+      toast.error(error.response?.data?.message || "Failed to create user");
+    } 
+    finally {
       setSubmitting(false);
     }
   }
@@ -141,7 +147,7 @@ export default function CreateUserPage() {
       <div style={{ padding: "30px" }}>
         <h1>Create User</h1>
 
-        {error && <p>{error}</p>}
+    
 
         <form onSubmit={handleSubmit}>
           <label>First Name</label>

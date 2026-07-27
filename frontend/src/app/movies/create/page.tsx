@@ -10,6 +10,7 @@ import { createMovie } from "@/services/movieService";
 import { getDirectors } from "@/services/directorService";
 
 import { getActors } from "@/services/actorService";
+import toast from "react-hot-toast";
 
 export default function CreateMovie() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function CreateMovie() {
 
   const [actors, setActors] = useState<any[]>([]);
 
-  const [error, setError] = useState("");
+
 
   useEffect(() => {
     if (loading) return;
@@ -63,7 +64,7 @@ export default function CreateMovie() {
       } catch (error) {
         console.error(error);
 
-        setError("Failed to load directors and actors");
+        toast.error("Failed to load directors and actors");
       }
     }
 
@@ -215,14 +216,14 @@ export default function CreateMovie() {
     const validationError = validateForm();
 
     if (validationError) {
-      setError(validationError);
+      toast.error(validationError);
 
       return;
     }
 
-    setError("");
 
     try {
+      const toastId = toast.loading("Creating movie...");
       const formData = new FormData();
 
       formData.append("title", movie.title.trim());
@@ -252,17 +253,19 @@ export default function CreateMovie() {
       }
 
       await createMovie(formData);
+      toast.dismiss(toastId);
 
-      alert("Movie created successfully!");
+
+      toast.success("Movie created successfully!");
 
       router.push("/movies");
     } catch (error) {
       console.error(error);
 
       if (error instanceof Error) {
-        setError(error.message);
+        toast.error(error.message);
       } else {
-        setError("Failed to create movie.");
+        toast.error("Failed to create movie.");
       }
     }
   }
@@ -286,7 +289,6 @@ export default function CreateMovie() {
       <br />
       <br />
 
-      {error && <p>{error}</p>}
 
       <form onSubmit={handleSubmit}>
         <label>Movie Title</label>

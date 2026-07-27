@@ -11,6 +11,7 @@ import { getAdminDashboard } from "@/services/dashboardService";
 
 import { AdminDashboard } from "@/types/dashboard";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function AdminPage() {
 
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
 
-  const [error, setError] = useState("");
+ 
   const ITEMS_PER_PAGE = 5;
 
   const [moviePage, setMoviePage] = useState(1);
@@ -40,13 +41,18 @@ export default function AdminPage() {
     loadDashboard();
   }, [user, loading]);
 
-  async function loadDashboard() {
+  async function loadDashboard()
+   {
+    const toastId = toast.loading("Loading dashboard...");
     try {
       const data = await getAdminDashboard();
 
       setDashboard(data);
-    } catch {
-      setError("Failed to load dashboard");
+      toast.dismiss(toastId);
+    } catch(error)
+     {
+      toast.dismiss(toastId);
+      toast.error("Failed to load dashboard");
     }
   }
 
@@ -78,7 +84,6 @@ export default function AdminPage() {
       <br />
       <br />
 
-      {error && <p>{error}</p>}
 
       {dashboard && (
         <>

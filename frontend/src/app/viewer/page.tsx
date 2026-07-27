@@ -10,6 +10,7 @@ import { getFavorites, getWatchlist } from "@/services/movieInteractionService";
 
 import { getMyReviews } from "@/services/reviewService";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export default function ViewerPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function ViewerPage() {
   const [favorites, setFavorites] = useState<any[]>([]);
 
   const [watchlist, setWatchlist] = useState<any[]>([]);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
 
   const [reviews, setReviews] = useState<any[]>([]);
   const ITEMS_PER_PAGE = 5;
@@ -45,6 +47,7 @@ export default function ViewerPage() {
 
   async function loadDashboardData() {
     try {
+      setDashboardLoading(true);
       const favoritesData = await getFavorites();
 
       const watchlistData = await getWatchlist();
@@ -58,6 +61,10 @@ export default function ViewerPage() {
       setReviews(reviewsData);
     } catch (error) {
       console.error(error);
+      toast.error("Failed to load dashboard data.");
+    }
+    finally{
+      setDashboardLoading(false);
     }
   }
 

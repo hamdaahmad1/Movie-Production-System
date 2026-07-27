@@ -10,6 +10,8 @@ import { useAuth } from "@/context/AuthContext";
 
 import { createReview } from "@/services/reviewService";
 
+import toast from "react-hot-toast";
+
 export default function WriteReviewPage() {
   const params = useParams();
 
@@ -22,6 +24,8 @@ export default function WriteReviewPage() {
   const [rating, setRating] = useState<number>(5);
 
   const [comment, setComment] = useState("");
+
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -45,10 +49,14 @@ export default function WriteReviewPage() {
     e.preventDefault();
 
     if (!comment.trim()) {
-      alert("Please write a comment");
+      toast.error("Please write a comment");
 
       return;
     }
+
+    setSubmitting(true);
+
+    const loadingToast = toast.loading("Submitting review...");
 
     try {
       await createReview(movieId, {
@@ -56,13 +64,19 @@ export default function WriteReviewPage() {
         comment,
       });
 
-      alert("Review submitted successfully");
+      toast.dismiss(loadingToast);
+
+      toast.success("Review submitted successfully");
 
       router.push(`/movies/${movieId}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
 
-      alert("Failed to submit review");
+      toast.dismiss(loadingToast);
+
+      toast.error(error.response?.data?.message || "Failed to submit review");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -126,7 +140,9 @@ export default function WriteReviewPage() {
           <br />
           <br />
 
-          <button type="submit">Submit Review</button>
+          <button type="submit" disabled={submitting}>
+            {submitting ? "Submitting..." : "Submit Review"}
+          </button>
         </form>
       </div>
     </div>

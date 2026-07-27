@@ -8,6 +8,8 @@ import { getActors } from "@/services/actorService";
 import { getDirectors } from "@/services/directorService";
 import { useAuth } from "@/context/AuthContext";
 
+import toast from "react-hot-toast";
+
 export default function EditMovie() {
   const router = useRouter();
   const params = useParams();
@@ -37,8 +39,6 @@ export default function EditMovie() {
   const [directors, setDirectors] = useState<any[]>([]);
 
   const [actors, setActors] = useState<any[]>([]);
-
-  const [error, setError] = useState("");
 
   useEffect(() => {
     if (loading) return;
@@ -81,7 +81,7 @@ export default function EditMovie() {
 
           rating: String(movieData.rating),
 
-          poster: movieData.poster || "",
+          poster: movieData.posterPath || "",
 
           trailerId: movieData.trailerId,
 
@@ -90,11 +90,11 @@ export default function EditMovie() {
           actorIds: movieData.actors.map((actor: any) => actor.id),
         });
 
-        setImagePreview(movieData.poster || "");
+        setImagePreview(movieData.posterPath || "");
       } catch (error) {
         console.error(error);
 
-        setError("Failed to load movie data.");
+        toast.error("Failed to load movie data.");
       }
     }
 
@@ -251,13 +251,12 @@ export default function EditMovie() {
     const validationError = validateForm();
 
     if (validationError) {
-      setError(validationError);
+      toast.error(validationError);
       return;
     }
 
-    setError("");
-
     try {
+      const toastId = toast.loading("Updating movie...");
       const formData = new FormData();
 
       formData.append("title", movie.title.trim());
@@ -277,14 +276,15 @@ export default function EditMovie() {
       }
 
       await updateMovie(id, formData);
+      toast.dismiss(toastId);
 
-      alert("Movie updated successfully!");
+      toast.success("Movie updated successfully!");
 
       router.push("/movies");
     } catch (error: any) {
       console.error(error);
 
-      setError(error.message || "Failed to update movie.");
+      toast.error(error.response?.data?.message || "Failed to update movie");
     }
   }
 
@@ -306,8 +306,6 @@ export default function EditMovie() {
 
       <br />
       <br />
-
-      {error && <p>{error}</p>}
 
       <form onSubmit={handleSubmit}>
         <label>Title</label>

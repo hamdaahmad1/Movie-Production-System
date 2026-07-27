@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getActor, updateActor } from "@/services/actorService";
+import toast from "react-hot-toast";
 
 export default function EditActor() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function EditActor() {
     imagePath: "",
   });
 
-  const [error, setError] = useState("");
+  
 
   useEffect(() => {
     if (loading) return;
@@ -57,9 +58,10 @@ export default function EditActor() {
         });
         setImagePreview(data.imagePath || "");
 
-      } catch (error) {
+      } catch (error)
+       {
         console.error(error);
-        setError("Failed to load actor.");
+        toast.error("Failed to load actor.");
       }
     }
 
@@ -176,11 +178,12 @@ export default function EditActor() {
     const validationError = validateForm();
 
     if (validationError) {
-      setError(validationError);
+      toast.error(validationError);
       return;
     }
+    const toastId = toast.loading("Editing actor...");
 
-    setError("");
+   
 
     try {
       const formData = new FormData();
@@ -202,14 +205,17 @@ export default function EditActor() {
       }
 
       await updateActor(id, formData);
+      toast.dismiss(toastId);
 
-      alert("Actor updated successfully!");
+      toast.success("Actor updated successfully!");
 
       router.push("/actors");
     } catch (error: any) {
+
+      toast.dismiss(toastId);
       console.error(error);
 
-      setError(error.message || "Failed to update actor.");
+      toast.error(error.response?.data?.message || "Failed to update actor.");
     }
   }
 
@@ -232,7 +238,7 @@ export default function EditActor() {
       <br />
       <br />
 
-      {error && <p>{error}</p>}
+      
 
       <form onSubmit={handleSubmit}>
         <label>Name</label>

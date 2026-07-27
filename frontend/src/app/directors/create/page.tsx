@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { createDirector } from "@/services/directorService";
 import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
 
 export default function CreateDirector() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function CreateDirector() {
     biography: "",
   });
 
-  const [error, setError] = useState("");
+  
 
   useEffect(() => {
     if (loading) return;
@@ -122,11 +123,11 @@ export default function CreateDirector() {
     const validationError = validateForm();
 
     if (validationError) {
-      setError(validationError);
+      toast.error(validationError);
       return;
     }
 
-    setError("");
+    const toastId = toast.loading("Creating Director...");
 
     try {
       const formData = new FormData();
@@ -144,13 +145,16 @@ export default function CreateDirector() {
       }
 
       await createDirector(formData);
-      alert("Director created successfully!");
+      toast.dismiss(toastId);
+      toast.success("Director created successfully!");
 
       router.push("/directors");
-    } catch (error: any) {
+    } catch (error: any) 
+    {
+      toast.dismiss(toastId);
       console.error(error);
 
-      setError(error.message || "Failed to create director.");
+      toast.error(error.response?.data?.message || "Failed to create director.");
     }
   }
 
@@ -173,7 +177,7 @@ export default function CreateDirector() {
       <br />
       <br />
 
-      {error && <p>{error}</p>}
+     
 
       <form onSubmit={handleSubmit}>
         <label>Name</label>

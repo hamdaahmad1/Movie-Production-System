@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getDirector, updateDirector } from "@/services/directorService";
+import toast from "react-hot-toast";
 
 export default function EditDirector() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function EditDirector() {
   const { user, loading } = useAuth();
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const params = useParams();
 
@@ -23,8 +25,6 @@ export default function EditDirector() {
     biography: "",
     image: "",
   });
-
-  const [error, setError] = useState("");
 
   useEffect(() => {
     if (loading) return;
@@ -41,6 +41,7 @@ export default function EditDirector() {
 
   useEffect(() => {
     async function loadDirector() {
+      const toastId = toast.loading("Loading director...");
       try {
         const data = await getDirector(id);
 
@@ -49,12 +50,14 @@ export default function EditDirector() {
           dob: data.dob.split("T")[0],
           nationality: data.nationality,
           biography: data.biography,
-          image: data.image || "",
+          image: data.imagePath || "",
         });
-        setImagePreview(data.image || "");
+        setImagePreview(data.imagePath || "");
+        toast.dismiss(toastId);
       } catch (error) {
         console.error(error);
-        setError("Failed to load director.");
+        toast.dismiss(toastId);
+        toast.error("Failed to load director.");
       }
     }
 
@@ -147,13 +150,13 @@ export default function EditDirector() {
     const validationError = validateForm();
 
     if (validationError) {
-      setError(validationError);
+      toast.error(validationError);
       return;
     }
-
-    setError("");
+    const loadingToast = toast.loading("Updating director...");
 
     try {
+      setSaving(true);
       const formData = new FormData();
 
       formData.append("name", director.name.trim());
@@ -170,13 +173,18 @@ export default function EditDirector() {
 
       await updateDirector(id, formData);
 
-      alert("Director updated successfully!");
+      toast.success("Director updated successfully!");
 
       router.push("/directors");
     } catch (error: any) {
+      toast.dismiss(loadingToast);
       console.error(error);
 
-      setError(error.message || "Failed to update director.");
+      toast.error(
+        error.response?.data?.message || "Failed to update director."
+      );
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -199,7 +207,7 @@ export default function EditDirector() {
       <br />
       <br />
 
-      {error && <p>{error}</p>}
+
 
       <form onSubmit={handleSubmit}>
         <label>Name</label>

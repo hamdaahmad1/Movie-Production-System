@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createActor } from "@/services/actorService";
 import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
 
 export default function CreateActor() {
   const router = useRouter();
   const [image, setImage] = useState<File | null>(null);
-  
 
   const { user, loading } = useAuth();
 
@@ -21,7 +21,6 @@ export default function CreateActor() {
     awards: "",
   });
 
-  const [error, setError] = useState("");
 
   useEffect(() => {
     if (loading) return;
@@ -150,11 +149,11 @@ export default function CreateActor() {
     const validationError = validateForm();
 
     if (validationError) {
-      setError(validationError);
+  
+      toast.error(validationError);
       return;
     }
-
-    setError("");
+    const toastId = toast.loading("Creating actor...");
 
     try {
       const formData = new FormData();
@@ -175,20 +174,19 @@ export default function CreateActor() {
         formData.append("image", image);
       }
 
-      
-      
       await createActor(formData);
+      toast.dismiss(toastId);
 
-      alert("Actor created successfully!");
+      toast.success("Actor created successfully!");
 
       router.push("/actors");
     } catch (error: any) {
       console.error(error);
+      toast.dismiss(toastId);
+      toast.error(error.response?.data?.message || "Failed to create actor.");
 
-      setError(error.message || "Failed to create actor.");
-    } 
-    
-    
+
+    }
   }
 
   if (loading) {
@@ -210,8 +208,7 @@ export default function CreateActor() {
       <br />
       <br />
 
-      {error && <p>{error}</p>}
-
+      
       <form onSubmit={handleSubmit}>
         <label>Name</label>
 

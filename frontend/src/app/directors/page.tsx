@@ -11,6 +11,7 @@ import { getDirectors, deleteDirector } from "@/services/directorService";
 import { Director } from "@/types/director";
 
 import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
 
 export default function DirectorsPage() {
   const router = useRouter();
@@ -38,6 +39,8 @@ export default function DirectorsPage() {
   });
 
   async function loadDirectors() {
+    const toastId = toast.loading("Loading directors...");
+
     try {
       const response = await getDirectors({
         search: filters.search,
@@ -58,8 +61,12 @@ export default function DirectorsPage() {
       setDirectors(response.data);
 
       setTotalPages(response.totalPages);
+      toast.dismiss(toastId);
     } catch (error) {
       console.error(error);
+      toast.dismiss(toastId);
+
+      toast.error("Failed to load directors");
     }
   }
 
@@ -75,23 +82,28 @@ export default function DirectorsPage() {
     if (!confirmDelete) {
       return;
     }
+    const toastId = toast.loading("Deleting director...");
 
     try {
       const result = await deleteDirector(id);
 
       if (!result.success) {
-        alert(result.message || "Failed to delete director.");
+        toast.dismiss(toastId);
 
+        toast.error(result.message || "Failed to delete director.");
         return;
       }
 
-      alert("Director deleted successfully!");
+      toast.dismiss(toastId);
+      toast.success("Director deleted successfully!");
 
       loadDirectors();
     } catch (error) {
       console.error(error);
 
-      alert("Something went wrong. Please try again.");
+      toast.dismiss(toastId);
+
+      toast.error("Something went wrong. Please try again.");
     }
   }
 
@@ -116,7 +128,9 @@ export default function DirectorsPage() {
       <br />
       <br />
 
-      {(isAdmin || isEditor) && <Link href="/directors/create">Create Director</Link>}
+      {(isAdmin || isEditor) && (
+        <Link href="/directors/create">Create Director</Link>
+      )}
 
       <br />
       <br />
