@@ -1,12 +1,17 @@
 "use client";
+
 import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/authService";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const router = useRouter();
+
   const { refreshUser } = useAuth();
+
+  const [loggingIn, setLoggingIn] = useState(false);
 
   const [form, setForm] = useState({
     login: "",
@@ -23,14 +28,20 @@ export default function LoginPage() {
     switch (name) {
       case "login":
         if (!value.trim()) return "Email or Username is required";
+
         if (value.trim().length < 3) return "Must be at least 3 characters";
+
         if (value.length > 100) return "Cannot exceed 100 characters";
+
         return "";
 
       case "password":
         if (!value) return "Password is required";
+
         if (value.length < 8) return "Password must be at least 8 characters";
+
         if (value.length > 100) return "Password cannot exceed 100 characters";
+
         return "";
 
       default:
@@ -66,12 +77,26 @@ export default function LoginPage() {
         password: passwordError,
         general: "",
       });
+
+      toast.error("Please fix the validation errors.");
+
       return;
     }
 
+    let loadingToast;
+
     try {
+      setLoggingIn(true);
+
+      loadingToast = toast.loading("Logging in...");
+
       const response = await authService.login(form);
+
       await refreshUser();
+
+      toast.dismiss(loadingToast);
+
+      toast.success("Login successful!");
 
       if (response.user.role === "ADMIN") {
         router.replace("/admin");
@@ -83,10 +108,20 @@ export default function LoginPage() {
         router.replace("/");
       }
     } catch (error: any) {
+      if (loadingToast) {
+        toast.dismiss(loadingToast);
+      }
+
+      const message = error.response?.data?.message || "Login failed";
+
       setErrors((prev) => ({
         ...prev,
-        general: error.response?.data?.message || "Login failed",
+        general: message,
       }));
+
+      toast.error(message);
+    } finally {
+      setLoggingIn(false);
     }
   };
 
@@ -97,15 +132,22 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>Email or Username</label>
+
           <br />
 
-          <input name="login" value={form.login} onChange={handleChange} />
+          <input
+            name="login"
+            value={form.login}
+            onChange={handleChange}
+            disabled={loggingIn}
+          />
 
           <p style={{ color: "red" }}>{errors.login}</p>
         </div>
 
         <div>
           <label>Password</label>
+
           <br />
 
           <input
@@ -113,6 +155,7 @@ export default function LoginPage() {
             name="password"
             value={form.password}
             onChange={handleChange}
+            disabled={loggingIn}
           />
 
           <p style={{ color: "red" }}>{errors.password}</p>
@@ -120,7 +163,9 @@ export default function LoginPage() {
 
         <p style={{ color: "red" }}>{errors.general}</p>
 
-        <button type="submit">Login</button>
+        <button type="submit" disabled={loggingIn}>
+          {loggingIn ? "Logging in..." : "Login"}
+        </button>
 
         <br />
 

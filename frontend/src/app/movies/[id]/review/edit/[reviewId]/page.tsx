@@ -10,6 +10,8 @@ import { useAuth } from "@/context/AuthContext";
 
 import { getReview, updateReview } from "@/services/reviewService";
 
+import toast from "react-hot-toast";
+
 export default function EditReviewPage() {
   const params = useParams();
 
@@ -27,6 +29,8 @@ export default function EditReviewPage() {
 
   const [loadingReview, setLoadingReview] = useState(true);
 
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     if (loading) return;
 
@@ -43,6 +47,8 @@ export default function EditReviewPage() {
 
   useEffect(() => {
     async function loadReview() {
+      const toastId = toast.loading("Loading review...");
+
       try {
         const data = await getReview(reviewId);
 
@@ -52,8 +58,10 @@ export default function EditReviewPage() {
       } catch (error) {
         console.error(error);
 
-        alert("Failed to load review");
+        toast.error("Failed to load review");
       } finally {
+        toast.dismiss(toastId);
+
         setLoadingReview(false);
       }
     }
@@ -71,24 +79,34 @@ export default function EditReviewPage() {
     e.preventDefault();
 
     if (!comment.trim()) {
-      alert("Please write a comment");
+      toast.error("Please write a comment");
 
       return;
     }
 
+    const toastId = toast.loading("Updating review...");
+
     try {
+      setSaving(true);
+
       await updateReview(reviewId, {
         rating,
         comment,
       });
 
-      alert("Review updated successfully");
+      toast.dismiss(toastId);
+
+      toast.success("Review updated successfully");
 
       router.push(`/movies/${movieId}`);
-    } catch (error) {
+    } catch (error: any) {
+      toast.dismiss(toastId);
+
       console.error(error);
 
-      alert("Failed to update review");
+      toast.error(error.response?.data?.message || "Failed to update review");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -155,7 +173,9 @@ export default function EditReviewPage() {
           <br />
           <br />
 
-          <button type="submit">Update Review</button>
+          <button type="submit" disabled={saving}>
+            {saving ? "Updating..." : "Update Review"}
+          </button>
         </form>
       </div>
     </div>

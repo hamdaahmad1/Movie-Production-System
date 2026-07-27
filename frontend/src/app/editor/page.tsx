@@ -10,14 +10,14 @@ import { useAuth } from "@/context/AuthContext";
 
 import { getEditorDashboard } from "@/services/dashboardService";
 
+import toast from "react-hot-toast";
+
 export default function EditorPage() {
   const router = useRouter();
 
   const { user, loading } = useAuth();
 
   const [dashboard, setDashboard] = useState<any>(null);
-
-  const [error, setError] = useState("");
 
   useEffect(() => {
     if (loading) return;
@@ -36,14 +36,20 @@ export default function EditorPage() {
   }, [user, loading, router]);
 
   async function loadDashboard() {
+    const toastId = toast.loading("Loading dashboard...");
+
     try {
       const data = await getEditorDashboard();
 
       setDashboard(data);
+
+      toast.dismiss(toastId);
     } catch (error) {
       console.error(error);
 
-      setError("Failed to load dashboard data.");
+      toast.dismiss(toastId);
+
+      toast.error("Failed to load dashboard data.");
     }
   }
 
@@ -73,6 +79,8 @@ export default function EditorPage() {
         <ul>
           <li>View Movies, Actors and Directors</li>
 
+          <li>Create Movies, Actors and Directors</li>
+
           <li>Edit Movies, Actors and Directors</li>
 
           <li>Cannot Delete Movies, Actors or Directors</li>
@@ -81,8 +89,6 @@ export default function EditorPage() {
         <hr />
 
         <h2>Movie Statistics</h2>
-
-        {error && <p>{error}</p>}
 
         {dashboard && (
           <>
@@ -100,8 +106,11 @@ export default function EditorPage() {
                   key={movie.id}
                   style={{
                     border: "1px solid #ccc",
+
                     padding: "15px",
+
                     marginBottom: "15px",
+
                     borderRadius: "8px",
                   }}
                 >
@@ -115,7 +124,11 @@ export default function EditorPage() {
                       height="220"
                       style={{
                         objectFit: "cover",
+
                         borderRadius: "8px",
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
                       }}
                     />
                   )}

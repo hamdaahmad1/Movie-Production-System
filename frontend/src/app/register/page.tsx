@@ -14,6 +14,8 @@ import {
   validateConfirmPassword,
 } from "@/app/utils/validators";
 
+import toast from "react-hot-toast";
+
 export default function RegisterPage() {
   const router = useRouter();
 
@@ -26,15 +28,11 @@ export default function RegisterPage() {
     confirmPassword: "",
   });
 
-  const [error, setError] = useState("");
-
   const [loading, setLoading] = useState(false);
 
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
     null
   );
-
-
 
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
 
@@ -45,8 +43,6 @@ export default function RegisterPage() {
       ...prev,
       [name]: value,
     }));
-
-    setError("");
 
     if (name === "username") {
       checkUsername(value);
@@ -131,31 +127,30 @@ export default function RegisterPage() {
     const validationError = validateForm();
 
     if (validationError) {
-      setError(validationError);
+      toast.error(validationError);
       return;
     }
-
-    setError("");
 
     setLoading(true);
 
     try {
-      const response = await authService.register({
+      const toastId = toast.loading("Creating account...");
+      await authService.register({
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         username: form.username.trim(),
         email: form.email.trim(),
         password: form.password,
         confirmPassword: form.confirmPassword,
-
       });
 
-      alert("Registration successful!");
+      toast.dismiss(toastId);
+      toast.success("Registration successful!");
       router.push("/viewer");
 
-      
-    } catch (error: any) {
-      setError(error.response?.data?.message ?? "Registration failed.");
+    } catch (error: any) 
+    {
+      toast.error(error.response?.data?.message || "Registration failed.");
     } finally {
       setLoading(false);
     }
@@ -172,7 +167,6 @@ export default function RegisterPage() {
       <br />
       <br />
 
-      {error && <p>{error}</p>}
 
       <form onSubmit={handleSubmit}>
         <label>First Name</label>
@@ -263,8 +257,6 @@ export default function RegisterPage() {
           value={form.confirmPassword}
           onChange={handleChange}
         />
-
-        
 
         <br />
         <br />

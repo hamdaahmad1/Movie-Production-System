@@ -9,7 +9,10 @@ import Navbar from "@/app/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 
 import { getMovieReviews, deleteReview } from "@/services/reviewService";
+
 import Link from "next/link";
+
+import toast from "react-hot-toast";
 
 export default function MovieDetailsPage() {
   const params = useParams();
@@ -17,7 +20,6 @@ export default function MovieDetailsPage() {
   const router = useRouter();
 
   const movieId = Number(params.id);
-  
 
   const { user, loading } = useAuth();
 
@@ -30,6 +32,8 @@ export default function MovieDetailsPage() {
       setReviews(data);
     } catch (error) {
       console.error(error);
+
+      toast.error("Failed to load reviews");
     }
   }
 
@@ -40,22 +44,33 @@ export default function MovieDetailsPage() {
   }, [movieId]);
 
   async function handleDelete(id: number) {
-    const confirmDelete = confirm("Delete this review?");
+    const confirmDelete = confirm(
+      "Are you sure you want to delete this review?"
+    );
 
-    if (!confirmDelete) return;
+    if (!confirmDelete) {
+      return;
+    }
+
+    const toastId = toast.loading("Deleting review...");
 
     try {
       await deleteReview(id);
 
-      alert("Review deleted");
+      toast.dismiss(toastId);
+
+      toast.success("Review deleted successfully");
 
       loadReviews();
     } catch (error) {
       console.error(error);
 
-      alert("Failed to delete review");
+      toast.dismiss(toastId);
+
+      toast.error("Failed to delete review");
     }
   }
+
   function renderStars(rating: number) {
     return (
       <span style={{ fontSize: "25px" }}>

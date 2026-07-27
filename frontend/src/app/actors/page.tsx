@@ -12,10 +12,13 @@ import { Actor } from "@/types/actor";
 
 import { useAuth } from "@/context/AuthContext";
 
+import toast from "react-hot-toast";
+
 export default function ActorsPage() {
   const router = useRouter();
 
   const { user } = useAuth();
+  const [loadingActors, setLoadingActors] = useState(false);
 
   const isAdmin = user?.role === "ADMIN";
 
@@ -38,6 +41,9 @@ export default function ActorsPage() {
   });
 
   async function loadActors() {
+    const toastId = toast.loading("Loading actors...");
+
+    setLoadingActors(true);
     try {
       const response = await getActors({
         search: filters.search,
@@ -52,13 +58,18 @@ export default function ActorsPage() {
 
         limit: 10,
       });
-      console.log("ACTORS RESPONSE:", response);
 
       setActors(response.data);
 
       setTotalPages(response.totalPages);
+      toast.dismiss(toastId);
     } catch (error) {
       console.error(error);
+      toast.dismiss(toastId);
+
+      toast.error("Failed to load actors. Please try again.");
+    } finally {
+      setLoadingActors(false);
     }
   }
 
@@ -79,18 +90,18 @@ export default function ActorsPage() {
       const result = await deleteActor(id);
 
       if (!result.success) {
-        alert(result.message || "Failed to delete actor.");
+        toast.error(result.message || "Failed to delete actor.");
 
         return;
       }
 
-      alert("Actor deleted successfully!");
+      toast.success("Actor deleted successfully!");
 
       loadActors();
     } catch (error) {
       console.error(error);
 
-      alert("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     }
   }
 
@@ -171,7 +182,9 @@ export default function ActorsPage() {
       <br />
       <br />
 
-      {actors.length === 0 ? (
+      {loadingActors ? (
+        <p>Loading actors...</p>
+      ) : actors.length === 0 ? (
         <p>No actors found.</p>
       ) : (
         actors.map((actor) => (

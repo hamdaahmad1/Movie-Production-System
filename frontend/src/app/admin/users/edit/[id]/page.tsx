@@ -11,6 +11,8 @@ import { useAuth } from "@/context/AuthContext";
 import { getUser, updateUser } from "@/services/userService";
 import { authService } from "@/services/authService";
 
+import toast from "react-hot-toast";
+
 export default function EditUserPage() {
   const router = useRouter();
 
@@ -31,8 +33,6 @@ export default function EditUserPage() {
 
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
 
-  const [error, setError] = useState("");
-
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -52,6 +52,7 @@ export default function EditUserPage() {
   }, [user, loading]);
 
   async function loadUser() {
+    const toastId = toast.loading("Loading user...");
     try {
       const data = await getUser(id);
 
@@ -63,10 +64,12 @@ export default function EditUserPage() {
       });
 
       setOldEmail(data.email);
+      toast.dismiss(toastId);
     } catch (error) {
       console.error(error);
+      toast.dismiss(toastId);
 
-      setError("Failed to load user");
+      toast.error("Failed to load user");
     }
   }
 
@@ -79,8 +82,6 @@ export default function EditUserPage() {
       ...form,
       [name]: value,
     });
-
-    setError("");
 
     if (name === "email") {
       checkEmail(value);
@@ -111,21 +112,27 @@ export default function EditUserPage() {
     e.preventDefault();
 
     if (emailAvailable === false) {
-      setError("Email already exists");
+      toast.error("Email already exists");
 
       return;
     }
+    setSaving(true);
+    const toastId = toast.loading("Updating user...");
 
-    try {
-      setSaving(true);
+    try 
+    {
+    
 
       await updateUser(id, form);
+      toast.dismiss(toastId);
 
-      alert("User updated successfully");
+      toast.success("User updated successfully");
 
       router.push("/admin/users");
-    } catch (error: any) {
-      setError(error.response?.data?.message || "Failed to update user");
+    } catch (error: any) 
+    {
+      toast.dismiss(toastId);
+      toast.error(error.response?.data?.message || "Failed to update user");
     } finally {
       setSaving(false);
     }
@@ -146,7 +153,7 @@ export default function EditUserPage() {
       <div style={{ padding: "30px" }}>
         <h1>Edit User</h1>
 
-        {error && <p>{error}</p>}
+        
 
         <form onSubmit={handleSubmit}>
           <label>First Name</label>

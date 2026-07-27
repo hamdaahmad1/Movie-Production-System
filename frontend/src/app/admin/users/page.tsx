@@ -12,6 +12,8 @@ import { useAuth } from "@/context/AuthContext";
 
 import { getUsers, deleteUser } from "@/services/userService";
 
+import toast from "react-hot-toast";
+
 export default function UsersPage() {
   const router = useRouter();
 
@@ -44,7 +46,9 @@ export default function UsersPage() {
       setUsers(response.data);
 
       setTotalPages(response.totalPages);
-    } catch (error) {
+    } catch (error) 
+    {
+      toast.error("Failed to load users.");
       console.error(error);
     }
   }
@@ -79,17 +83,17 @@ export default function UsersPage() {
       const result = await deleteUser(id);
 
       if (!result.success) {
-        alert(result.message || "Failed to delete user.");
+       toast.error(result.message || "Failed to delete user.");
         return;
       }
 
-      alert("User deleted successfully!");
+      toast.success("User deleted successfully!");
 
       loadUsers();
     } catch (error) {
       console.error(error);
 
-      alert("Something went wrong.");
+      toast.error("Something went wrong.");
     }
   }
 

@@ -20,6 +20,8 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
+import toast from "react-hot-toast";
+
 export default function MoviesPage() {
   const router = useRouter();
 
@@ -59,7 +61,9 @@ export default function MoviesPage() {
     order: "desc" as "asc" | "desc",
   });
 
-  async function loadMovies() {
+  async function loadMovies() 
+  {
+    const toastId = toast.loading("Loading movies...");
     try {
       const response = await getMovies({
         search: filters.search,
@@ -80,12 +84,15 @@ export default function MoviesPage() {
 
         limit: 10,
       });
+      toast.dismiss(toastId);
 
       setMovies(response.data);
 
       setTotalPages(response.totalPages);
     } catch (error) {
       console.error(error);
+      toast.dismiss(toastId);
+      toast.error("Failed to load movies");
     }
   }
 
@@ -106,6 +113,7 @@ export default function MoviesPage() {
       setActors(actorsData.data || actorsData);
     } catch (error) {
       console.error(error);
+      toast.error("Failed to load filters");
     }
   }
   async function loadInteractions() {
@@ -119,6 +127,7 @@ export default function MoviesPage() {
       setWatchlist(watchlistData.map((item: any) => item.movie.id));
     } catch (error) {
       console.error(error);
+      toast.error("Failed to load favorites and watchlist");
     }
   }
 
@@ -157,17 +166,19 @@ export default function MoviesPage() {
     try {
       if (favorites.includes(movieId)) {
         await removeFavorite(movieId);
+        toast.success("Removed from favorites");
 
         setFavorites(favorites.filter((id) => id !== movieId));
       } else {
         await addFavorite(movieId);
+        toast.success("Added to favorites");
 
         setFavorites([...favorites, movieId]);
       }
     } catch (error) {
       console.error(error);
 
-      alert("Favorite operation failed");
+      toast.error("Favorite operation failed");
     }
   }
 
@@ -175,17 +186,19 @@ export default function MoviesPage() {
     try {
       if (watchlist.includes(movieId)) {
         await removeWatchlist(movieId);
+        toast.success("Removed from watchlist");
 
         setWatchlist(watchlist.filter((id) => id !== movieId));
       } else {
         await addWatchlist(movieId);
+        toast.success("Added to watchlist");
 
         setWatchlist([...watchlist, movieId]);
       }
     } catch (error) {
       console.error(error);
 
-      alert("Watchlist operation failed");
+      toast.error("Watchlist operation failed");
     }
   }
 
@@ -197,15 +210,17 @@ export default function MoviesPage() {
     if (!confirmDelete) return;
 
     try {
+      const toastId = toast.loading("Deleting movie...");
       await deleteMovie(id);
+      toast.dismiss(toastId);
 
-      alert("Movie deleted successfully!");
+      toast.success("Movie deleted successfully!");
 
       loadMovies();
     } catch (error) {
       console.error(error);
 
-      alert("Failed to delete movie.");
+      toast.error("Failed to delete movie");
     }
   }
 
@@ -362,6 +377,9 @@ export default function MoviesPage() {
                   width: "180px",
                   height: "260px",
                   objectFit: "cover",
+                }}
+                onError={(e)=>{
+                  e.currentTarget.style.display="none";
                 }}
               />
             )}
