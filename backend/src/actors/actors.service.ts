@@ -28,6 +28,7 @@ export class ActorsService {
       new Date(dto.dob) >
       new Date()
     ) {
+      this.logger.error("Date of birth cannot be in future")
       throw new BadRequestException(
         'Date of birth cannot be in the future',
       );
@@ -45,6 +46,7 @@ export class ActorsService {
       });
 
     if (existingActor) {
+      this.logger.error("An actor with this name already exist")
       throw new BadRequestException(
         'An actor with this name already exists.',
       );
@@ -254,6 +256,7 @@ if (file) {
       });
 
     if (!actor) {
+      this.logger.warn("Actor not found")
       throw new NotFoundException(
         'Actor not found',
       );
@@ -265,6 +268,7 @@ if (file) {
       new Date(dto.dob) >
         new Date()
     ) {
+      this.logger.error("Date of birth cannot be in future")
       throw new BadRequestException(
         'Date of birth cannot be in the future',
       );
@@ -287,6 +291,7 @@ if (file) {
         });
 
       if (existingActor) {
+        this.logger.warn("an actor with this name already exists")
         throw new BadRequestException(
           'An actor with this name already exists.',
         );
@@ -356,6 +361,7 @@ if (file) {
       });
 
     if (!actor) {
+      this.logger.error("Actor not found")
       throw new NotFoundException(
         'Actor not found',
       );
@@ -367,6 +373,7 @@ if (file) {
       new Date(dto.dob) >
         new Date()
     ) {
+      this.logger.warn("dob cannot be in future")
       throw new BadRequestException(
         'Date of birth cannot be in the future',
       );
@@ -388,7 +395,9 @@ if (file) {
           },
         });
 
-      if (existingActor) {
+      if (existingActor)
+         {
+          this.logger.error("an actor with this name already exists")
         throw new BadRequestException(
           'An actor with this name already exists.',
         );
@@ -473,6 +482,7 @@ if (file) {
     if (
       actor.movies.length > 0
     ) {
+      this.logger.warn("Cannot delete this actor because they are assigned to one or more movies.")
       throw new BadRequestException(
         'Cannot delete this actor because they are assigned to one or more movies.',
       );

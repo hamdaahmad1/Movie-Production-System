@@ -2,7 +2,8 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
-  Logger
+  Logger,
+  ConflictException
 } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -21,7 +22,9 @@ export class DirectorsService {
 
   async create(dto: CreateDirectorDto,file?: Express.Multer.File) {
     // Future DOB validation
-    if (new Date(dto.dob) > new Date()) {
+    if (new Date(dto.dob) > new Date()) 
+      {
+        this.logger.warn("DOB cannot be in future")
       throw new BadRequestException(
         'Date of birth cannot be in the future',
       );
@@ -38,8 +41,10 @@ export class DirectorsService {
         },
       });
 
-    if (existingDirector) {
-      throw new BadRequestException(
+    if (existingDirector)
+       {
+        this.logger.warn("A director with this name already exists")
+      throw new ConflictException(
         'A director with this name already exists.',
       );
     }
@@ -285,6 +290,7 @@ if(file){
       dto.dob &&
       new Date(dto.dob) > new Date()
     ) {
+      this.logger.warn("Date of birth cannot be in future")
       throw new BadRequestException(
         'Date of birth cannot be in the future',
       );
@@ -305,7 +311,8 @@ if(file){
       });
 
     if (existingDirector) {
-      throw new BadRequestException(
+      this.logger.warn("A director with this name already exists")
+      throw new ConflictException(
         'A director with this name already exists.',
       );
     }
@@ -376,6 +383,7 @@ if(file){
       dto.dob &&
       new Date(dto.dob) > new Date()
     ) {
+      this.logger.warn("Date of birth cannot be in future")
       throw new BadRequestException(
         'Date of birth cannot be in the future',
       );
@@ -399,7 +407,7 @@ if(file){
       if (existingDirector) {
 
         this.logger.warn(`Duplicate director name detected during partial update for ID ${id}.`);
-        throw new BadRequestException(
+        throw new ConflictException(
           'A director with this name already exists.',
         );
       }

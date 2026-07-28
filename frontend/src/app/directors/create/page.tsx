@@ -7,12 +7,14 @@ import { createDirector } from "@/services/directorService";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
 import ImageUpload from "@/app/components/ImageUpload";
+import { Director } from "@/types/director";
 
 export default function CreateDirector() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [directors, setDirectors] = useState<Director[]>([]);
 
   const [director, setDirector] = useState({
     name: "",
@@ -58,6 +60,15 @@ export default function CreateDirector() {
     if (/(.)\1{4,}/.test(name)) {
       return "Name contains too many repeated characters";
     }
+
+
+    const existingDirector = directors.find(
+      (d) => d.name.trim().toLowerCase() === name.toLowerCase()
+    );
+    if (existingDirector) {
+      return "A director with this name already exists";
+    }
+    
 
     if (!director.dob) {
       return "Date of birth is required";
