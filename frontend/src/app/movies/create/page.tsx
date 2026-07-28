@@ -11,10 +11,16 @@ import { getDirectors } from "@/services/directorService";
 
 import { getActors } from "@/services/actorService";
 import toast from "react-hot-toast";
+import { useRef } from "react";
+import ImageUpload from "@/app/components/ImageUpload";
 
 export default function CreateMovie() {
   const router = useRouter();
   const [poster, setPoster] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedActorId, setSelectedActorId] = useState("");
 
   const { user, loading } = useAuth();
 
@@ -440,34 +446,18 @@ export default function CreateMovie() {
         <br />
         <br />
 
-        <label>Movie Poster</label>
-
-        <br />
-
-        <input
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          onChange={(e) => {
-            const file = e.target.files?.[0] || null;
-
-            setPoster(file);
-          }}
+        <ImageUpload
+          label="Movie Poster"
+          file={poster}
+          preview={imagePreview}
+          setFile={setPoster}
+          setPreview={setImagePreview}
+          alt="Movie Poster"
+          removeButtonText="Remove Poster"
         />
 
         <br />
-
-        <small>Optional. JPG, PNG, WEBP only. Max size 5MB.</small>
-        {poster && (
-          <img
-            src={URL.createObjectURL(poster)}
-            alt="Poster preview"
-            width={160}
-            height={220}
-            style={{
-              objectFit: "cover",
-            }}
-          />
-        )}
+        <br />
 
         <label>Director</label>
 
@@ -498,35 +488,65 @@ export default function CreateMovie() {
 
         <br />
 
-        {actors.map((actor) => (
-          <div key={actor.id}>
-            <input
-              type="checkbox"
-              id={`actor-${actor.id}`}
-              value={actor.id}
-              checked={movie.actorIds.includes(actor.id)}
-              onChange={(e) => {
-                const actorId = Number(e.target.value);
+        <select
+          value={selectedActorId}
+          onChange={(e) => setSelectedActorId(e.target.value)}
+        >
+          <option value="">Select an actor</option>
 
-                if (e.target.checked) {
-                  setMovie((prev) => ({
-                    ...prev,
-                    actorIds: [...prev.actorIds, actorId],
-                  }));
-                } else {
-                  setMovie((prev) => ({
-                    ...prev,
-                    actorIds: prev.actorIds.filter((id) => id !== actorId),
-                  }));
-                }
-              }}
-            />
+          {actors
+            .filter((actor) => !movie.actorIds.includes(actor.id))
+            .map((actor) => (
+              <option key={actor.id} value={actor.id}>
+                {actor.name}
+              </option>
+            ))}
+        </select>
 
-            <label htmlFor={`actor-${actor.id}`}>{actor.name}</label>
-          </div>
-        ))}
+        <button
+          type="button"
+          onClick={() => {
+            if (!selectedActorId) return;
+
+            const actorId = Number(selectedActorId);
+
+            setMovie((prev) => ({
+              ...prev,
+              actorIds: [...prev.actorIds, actorId],
+            }));
+
+            setSelectedActorId("");
+          }}
+        >
+          Add Actor
+        </button>
 
         <br />
+        <br />
+
+        {movie.actorIds.map((actorId) => {
+          const actor = actors.find((a) => a.id === actorId);
+
+          if (!actor) return null;
+
+          return (
+            <div key={actor.id}>
+              <input
+                type="checkbox"
+                id={`actor-${actor.id}`}
+                checked={true}
+                onChange={() =>
+                  setMovie((prev) => ({
+                    ...prev,
+                    actorIds: prev.actorIds.filter((id) => id !== actor.id),
+                  }))
+                }
+              />
+
+              <label htmlFor={`actor-${actor.id}`}>{actor.name}</label>
+            </div>
+          );
+        })}
 
         <br />
         <br />

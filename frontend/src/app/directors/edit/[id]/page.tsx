@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getDirector, updateDirector } from "@/services/directorService";
 import toast from "react-hot-toast";
+import ImageUpload from "@/app/components/ImageUpload";
 
 export default function EditDirector() {
   const router = useRouter();
@@ -207,8 +208,6 @@ export default function EditDirector() {
       <br />
       <br />
 
-
-
       <form onSubmit={handleSubmit}>
         <label>Name</label>
 
@@ -286,38 +285,15 @@ export default function EditDirector() {
         <br />
         <br />
 
-        <label>Director Image</label>
-
-        <br />
-
-        <input
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-
-            if (file) {
-              setImage(file);
-
-              setImagePreview(URL.createObjectURL(file));
-            }
-          }}
+        <ImageUpload
+          label="Director Image"
+          file={image}
+          preview={imagePreview}
+          setFile={setImage}
+          setPreview={setImagePreview}
+          alt={director.name}
+          removeButtonText="Remove Image"
         />
-
-        <br />
-        <br />
-
-        {imagePreview && (
-          <img
-            src={imagePreview}
-            alt={director.name}
-            width={150}
-            height={200}
-            style={{
-              objectFit: "cover",
-            }}
-          />
-        )}
 
         <br />
         <br />

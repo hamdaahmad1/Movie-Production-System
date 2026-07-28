@@ -8,13 +8,17 @@ import { getActors } from "@/services/actorService";
 import { getDirectors } from "@/services/directorService";
 import { useAuth } from "@/context/AuthContext";
 
+
 import toast from "react-hot-toast";
+import ImageUpload from "@/app/components/ImageUpload";
 
 export default function EditMovie() {
   const router = useRouter();
   const params = useParams();
+  const [selectedActorId, setSelectedActorId] = useState("");
   const [imagePreview, setImagePreview] = useState("");
   const [poster, setPoster] = useState<File | null>(null);
+  
 
   const { user, loading } = useAuth();
 
@@ -443,45 +447,18 @@ export default function EditMovie() {
         <br />
         <br />
 
-        <label>Movie Poster</label>
-
-        <br />
-
-        <input
-          type="file"
-          accept="image/png,image/jpeg,image/jpg,image/webp"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-
-            if (file) {
-              setPoster(file);
-
-              setImagePreview(URL.createObjectURL(file));
-            }
-          }}
+        <ImageUpload
+          label="Movie Poster"
+          file={poster}
+          preview={imagePreview}
+          setFile={setPoster}
+          setPreview={setImagePreview}
+          alt={movie.title}
+          removeButtonText="Remove Poster"
         />
 
-        <br />
-
-        <small>Maximum size: 5MB. Allowed formats: JPG, PNG, WEBP</small>
-
-        {imagePreview && (
-          <>
-            <img
-              src={imagePreview}
-              alt={movie.title}
-              width={160}
-              height={220}
-              style={{
-                objectFit: "cover",
-                border: "1px solid #ccc",
-              }}
-            />
-
-            <br />
-            <br />
-          </>
-        )}
+        <br/>
+        <br/>
 
         <label>YouTube Trailer URL</label>
 
@@ -531,36 +508,65 @@ export default function EditMovie() {
 
         <br />
 
-        {actors.map((actor) => (
-          <div key={actor.id}>
-            <label>
-              <input
-                type="checkbox"
-                value={actor.id}
-                checked={movie.actorIds.includes(actor.id)}
-                onChange={(e) => {
-                  const actorId = Number(e.target.value);
+        <select
+          value={selectedActorId}
+          onChange={(e) => setSelectedActorId(e.target.value)}
+        >
+          <option value="">Select an actor</option>
 
-                  let updatedActorIds;
+          {actors
+            .filter((actor) => !movie.actorIds.includes(actor.id))
+            .map((actor) => (
+              <option key={actor.id} value={actor.id}>
+                {actor.name}
+              </option>
+            ))}
+        </select>
 
-                  if (e.target.checked) {
-                    updatedActorIds = [...movie.actorIds, actorId];
-                  } else {
-                    updatedActorIds = movie.actorIds.filter(
-                      (id) => id !== actorId
-                    );
+        <button
+          type="button"
+          onClick={() => {
+            if (!selectedActorId) return;
+
+            const actorId = Number(selectedActorId);
+
+            setMovie((prev) => ({
+              ...prev,
+              actorIds: [...prev.actorIds, actorId],
+            }));
+
+            setSelectedActorId("");
+          }}
+        >
+          Add Actor
+        </button>
+
+        <br />
+        <br />
+
+        {movie.actorIds.map((actorId) => {
+          const actor = actors.find((a) => a.id === actorId);
+
+          if (!actor) return null;
+
+          return (
+            <div key={actor.id}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={true}
+                  onChange={() =>
+                    setMovie((prev) => ({
+                      ...prev,
+                      actorIds: prev.actorIds.filter((id) => id !== actor.id),
+                    }))
                   }
-
-                  setMovie({
-                    ...movie,
-                    actorIds: updatedActorIds,
-                  });
-                }}
-              />{" "}
-              {actor.name}
-            </label>
-          </div>
-        ))}
+                />{" "}
+                {actor.name}
+              </label>
+            </div>
+          );
+        })}
 
         <br />
 

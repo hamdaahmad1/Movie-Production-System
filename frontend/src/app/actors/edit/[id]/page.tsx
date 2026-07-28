@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getActor, updateActor } from "@/services/actorService";
 import toast from "react-hot-toast";
+import ImageUpload from "@/app/components/ImageUpload";
 
 export default function EditActor() {
   const router = useRouter();
@@ -24,8 +25,6 @@ export default function EditActor() {
     nationality: "",
     imagePath: "",
   });
-
-  
 
   useEffect(() => {
     if (loading) return;
@@ -53,13 +52,9 @@ export default function EditActor() {
           awards: String(data.awards),
           nationality: data.nationality,
           imagePath: data.imagePath || "",
-
-
         });
         setImagePreview(data.imagePath || "");
-
-      } catch (error)
-       {
+      } catch (error) {
         console.error(error);
         toast.error("Failed to load actor.");
       }
@@ -183,8 +178,6 @@ export default function EditActor() {
     }
     const toastId = toast.loading("Editing actor...");
 
-   
-
     try {
       const formData = new FormData();
 
@@ -211,7 +204,6 @@ export default function EditActor() {
 
       router.push("/actors");
     } catch (error: any) {
-
       toast.dismiss(toastId);
       console.error(error);
 
@@ -237,8 +229,6 @@ export default function EditActor() {
 
       <br />
       <br />
-
-      
 
       <form onSubmit={handleSubmit}>
         <label>Name</label>
@@ -360,39 +350,15 @@ export default function EditActor() {
         <br />
         <br />
 
-        <label>Actor Image</label>
-
-        <br />
-
-        <input
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-
-            if (file) {
-              setImage(file);
-
-              setImagePreview(URL.createObjectURL(file));
-            }
-          }}
+        <ImageUpload
+          label="Actor Image"
+          file={image}
+          preview={imagePreview}
+          setFile={setImage}
+          setPreview={setImagePreview}
+          alt={actor.name}
+          removeButtonText="Remove Image"
         />
-
-        <br />
-        <br />
-
-        {imagePreview && (
-          <img
-            src={imagePreview}
-            alt={actor.name}
-            width={150}
-            height={200}
-            style={{
-              objectFit: "cover",
-            }}
-          />
-        )}
-
         <br />
         <br />
 
