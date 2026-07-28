@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { createActor } from "@/services/actorService";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
+import ImageUpload from "@/app/components/ImageUpload";
 
 export default function CreateActor() {
   const router = useRouter();
   const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
 
   const { user, loading } = useAuth();
 
@@ -20,7 +22,6 @@ export default function CreateActor() {
     nationality: "",
     awards: "",
   });
-
 
   useEffect(() => {
     if (loading) return;
@@ -149,7 +150,6 @@ export default function CreateActor() {
     const validationError = validateForm();
 
     if (validationError) {
-  
       toast.error(validationError);
       return;
     }
@@ -184,8 +184,6 @@ export default function CreateActor() {
       console.error(error);
       toast.dismiss(toastId);
       toast.error(error.response?.data?.message || "Failed to create actor.");
-
-
     }
   }
 
@@ -208,7 +206,6 @@ export default function CreateActor() {
       <br />
       <br />
 
-      
       <form onSubmit={handleSubmit}>
         <label>Name</label>
 
@@ -331,38 +328,19 @@ export default function CreateActor() {
         <br />
         <br />
 
-        <label>Actor Poster</label>
-
-        <br />
-
-        <input
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          onChange={(e) => {
-            const file = e.target.files?.[0] || null;
-
-            setImage(file);
-          }}
+        <ImageUpload
+          label="Actor Image"
+          file={image}
+          preview={imagePreview}
+          setFile={setImage}
+          setPreview={setImagePreview}
+          alt="Actor Image"
+          removeButtonText="Remove Image"
         />
 
-        <br />
-
-        <small>Optional. JPG, PNG, WEBP only. Max size 5MB.</small>
-        {image && (
-          <img
-            src={URL.createObjectURL(image)}
-            alt="Poster preview"
-            width={160}
-            height={220}
-            style={{
-              objectFit: "cover",
-            }}
-          />
-        )}
-
-        <br />
-        <br />
-
+        <br/>
+        <br/>
+        
         <button type="submit">Create Actor</button>
       </form>
     </div>

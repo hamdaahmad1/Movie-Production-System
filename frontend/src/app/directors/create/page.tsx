@@ -6,11 +6,13 @@ import { useEffect } from "react";
 import { createDirector } from "@/services/directorService";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
+import ImageUpload from "@/app/components/ImageUpload";
 
 export default function CreateDirector() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
 
   const [director, setDirector] = useState({
     name: "",
@@ -18,8 +20,6 @@ export default function CreateDirector() {
     nationality: "",
     biography: "",
   });
-
-  
 
   useEffect(() => {
     if (loading) return;
@@ -149,12 +149,13 @@ export default function CreateDirector() {
       toast.success("Director created successfully!");
 
       router.push("/directors");
-    } catch (error: any) 
-    {
+    } catch (error: any) {
       toast.dismiss(toastId);
       console.error(error);
 
-      toast.error(error.response?.data?.message || "Failed to create director.");
+      toast.error(
+        error.response?.data?.message || "Failed to create director."
+      );
     }
   }
 
@@ -176,8 +177,6 @@ export default function CreateDirector() {
 
       <br />
       <br />
-
-     
 
       <form onSubmit={handleSubmit}>
         <label>Name</label>
@@ -256,51 +255,15 @@ export default function CreateDirector() {
         <br />
         <br />
 
-        <label>Director Image</label>
-
-        <br />
-
-        <input
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-
-            if (file) {
-              setImage(file);
-            }
-          }}
+        <ImageUpload
+          label="Director Image"
+          file={image}
+          preview={imagePreview}
+          setFile={setImage}
+          setPreview={setImagePreview}
+          alt="Director Image"
+          removeButtonText="Remove Image"
         />
-
-        <br />
-        <br />
-
-        {image && (
-          <>
-            <img
-              src={URL.createObjectURL(image)}
-              alt="preview"
-              width={160}
-              height={220}
-              style={{
-                objectFit: "cover",
-              }}
-            />
-
-            <br />
-            <br />
-
-            <button
-              type="button"
-              onClick={() => {
-                setImage(null);
-              }}
-            >
-              Remove Image
-            </button>
-          </>
-        )}
-
         <br />
         <br />
 
