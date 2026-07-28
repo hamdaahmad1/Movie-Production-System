@@ -311,6 +311,45 @@ describe('UsersService', () => {
             );
 
         });
+        it("should use default pagination values", async () => {
+
+
+            mockPrismaService.user.findMany
+            .mockResolvedValue([]);
+            
+            mockPrismaService.user.count
+            .mockResolvedValue(0);
+            
+            
+            
+            const result = await service.findAll({} as any);
+            
+            
+            
+            expect(result.page)
+            .toBe(1);
+            
+            
+            expect(result.limit)
+            .toBe(10);
+            
+            
+            
+            expect(mockPrismaService.user.findMany)
+            .toHaveBeenCalledWith(
+            
+            expect.objectContaining({
+            
+            skip:0,
+            
+            take:10
+            
+            })
+            
+            );
+            
+            
+            });
 
     });
 
