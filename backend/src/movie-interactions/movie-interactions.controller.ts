@@ -24,11 +24,8 @@ import {
    @ApiBearerAuth('JWT-auth')
    
    @Controller("movie-interactions")
-   
-   @UseGuards(
-    JwtAuthGuard,
-    RolesGuard
-   )
+   @Roles("VIEWER")
+   @UseGuards(JwtAuthGuard,RolesGuard)
    
    export class MovieInteractionsController{
    
@@ -39,7 +36,6 @@ import {
    
    
    @Post("favorite/:movieId")
-   @Roles("VIEWER")
    @ApiOperation({
    summary:"Add movie to favorites"
    })
@@ -57,7 +53,6 @@ import {
    }
 
    @Delete("favorite/:movieId")
-   @Roles("VIEWER")
    removeFavorite(
    @Req() req:any,
    @Param("movieId") movieId:string
@@ -75,7 +70,6 @@ import {
    }
 
    @Get("favorites")
-   @Roles("VIEWER")
    getFavorites(
    @Req() req:any
    )
@@ -87,7 +81,6 @@ import {
    }
 
    @Post("watchlist/:movieId")
-@Roles("VIEWER")
 @ApiOperation({
  summary:"Add movie to watchlist"
 })
@@ -110,7 +103,6 @@ Number(movieId)
 }
 
 @Delete("watchlist/:movieId")
-@Roles("VIEWER")
 removeWatchlist(
 
 @Req() req:any,
@@ -128,7 +120,6 @@ Number(movieId)
 );
 }
 @Get("watchlist")
-@Roles("VIEWER")
 @ApiOperation({
  summary:"Get user watchlist"
 })

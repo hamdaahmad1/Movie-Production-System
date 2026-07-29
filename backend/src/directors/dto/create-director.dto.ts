@@ -5,12 +5,11 @@ import {
   MinLength,
   MaxLength,
   Matches,
-  IsUrl,
-  IsOptional,
 } from 'class-validator';
 
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+
 
 export class CreateDirectorDto {
   @ApiProperty({
