@@ -113,11 +113,6 @@ update(
     }
   
     @Get('movie/:movieId')
-    @Roles(
-      'ADMIN',
-      'EDITOR',
-      'VIEWER',
-    )
     @ApiOperation({
       summary: 'Get movie reviews',
     })
@@ -169,11 +164,6 @@ findOne(
 
   
     @Get('movie/:movieId/rating')
-    @Roles(
-      'ADMIN',
-      'EDITOR',
-      'VIEWER',
-    )
     @ApiOperation({
       summary: 'Get average movie rating',
     })
@@ -188,9 +178,6 @@ findOne(
         Number(movieId),
       );
     }
-
-
-
 
 
   }

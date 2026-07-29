@@ -31,10 +31,13 @@ import {
   ApiConsumes,
 } from '@nestjs/swagger';
 
-import { Roles } from 'src/auth/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { StandardCrudRoles } from 'src/auth/decorators/standard-crud-roles.decorator';
+
 
 @ApiTags('Directors')
+@ApiBearerAuth()
+@StandardCrudRoles()
 @Controller('directors')
 export class DirectorsController {
   constructor(
@@ -43,10 +46,8 @@ export class DirectorsController {
 
 
 
-  @ApiBearerAuth('JWT-auth')
   @Post()
-@Roles('ADMIN','EDITOR')
-@ApiOperation({
+  @ApiOperation({
   summary: 'Create a new director',
   description:
     'Creates a new director with optional profile image upload.',
@@ -130,8 +131,6 @@ create(
 
   
 
-  @ApiBearerAuth('JWT-auth')
-  @Roles('ADMIN', 'EDITOR', 'VIEWER')
   @Get()
   @ApiOperation({
     summary: 'Get all directors',
@@ -163,8 +162,7 @@ create(
 
  
 
-  @ApiBearerAuth('JWT-auth')
-  @Roles('ADMIN', 'EDITOR', 'VIEWER')
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get a director by ID',
@@ -208,8 +206,7 @@ create(
 
  
 
-  @ApiBearerAuth('JWT-auth')
-  @Roles('ADMIN', 'EDITOR')
+
   @Patch(':id')
   @ApiOperation({
     summary: 'Partially update a director',
@@ -263,11 +260,8 @@ create(
   }
 
 
-  @ApiBearerAuth('JWT-auth')
-@Roles('ADMIN', 'EDITOR')
 
 @Put(':id')
-
 @ApiOperation({
   summary: 'Fully update a director',
   description:
@@ -393,9 +387,7 @@ update(
 }
 
 
- 
-  @ApiBearerAuth('JWT-auth')
-  @Roles('ADMIN')
+
   @Delete(':id')
   @ApiOperation({
     summary: 'Delete a director',

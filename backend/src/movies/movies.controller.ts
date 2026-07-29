@@ -3,6 +3,7 @@ import { CreateMovieDto } from './dto/create-movie.dto';
 import { MoviesService } from './movies.service';
 import { Query } from '@nestjs/common';
 import { MovieQueryDto } from './dto/movie-query.dto';
+import { StandardCrudRoles } from 'src/auth/decorators/standard-crud-roles.decorator';
 
 import {
   Controller,
@@ -39,18 +40,16 @@ import { FileInterceptor } from '@nestjs/platform-express';
 
 
 @ApiTags('Movies')
-@Controller('movies')
 @ApiBearerAuth()
+@StandardCrudRoles()
+@Controller('movies')
+
 export class MoviesController {
 
   constructor(
     private moviesService: MoviesService,
   ) {}
 
-
-
-
-  @Roles('ADMIN','EDITOR')
   @Post()
   @ApiOperation({
     summary: 'Create a new movie',
@@ -204,9 +203,8 @@ export class MoviesController {
 
 
 
-  @Roles('ADMIN', 'EDITOR', 'VIEWER')
+  
   @Get()
-
   @ApiOperation({
     summary: 'Get all movies',
     description:
@@ -241,14 +239,7 @@ export class MoviesController {
 
 
 
-
-
-
-
-
-  @Roles('ADMIN', 'EDITOR', 'VIEWER')
   @Get('genres')
-
   @ApiOperation({
     summary: 'Get all movie genres',
     description:
@@ -274,15 +265,7 @@ export class MoviesController {
   }
 
 
-
-
-
-
-
-
-  @Roles('ADMIN', 'EDITOR', 'VIEWER')
   @Get(':id')
-
   @ApiOperation({
     summary: 'Get a movie by ID',
     description:
@@ -327,14 +310,7 @@ export class MoviesController {
 
 
 
-
-
-
-
-
-  @Roles('ADMIN','EDITOR')
   @Patch(':id')
-
   @ApiOperation({
     summary:'Partially update a movie',
     description:
@@ -411,11 +387,8 @@ export class MoviesController {
 
 
 
-  partialUpdate(
-
-
-    @Param('id', ParseIntPipe)
-    id:number,
+  partialUpdate(@Param('id', ParseIntPipe) 
+  id:number,
 
 
     @Body()
@@ -462,10 +435,7 @@ export class MoviesController {
 
 
   @ApiBearerAuth('JWT-auth')
-  @Roles('ADMIN', 'EDITOR')
-  
   @Put(':id')
-  
   @ApiOperation({
     summary: 'Fully update a movie',
     description:
@@ -635,11 +605,7 @@ export class MoviesController {
 
 
 
-  @Roles('ADMIN')
-
   @Delete(':id')
-
-
   @ApiOperation({
     summary:'Delete a movie',
     description:

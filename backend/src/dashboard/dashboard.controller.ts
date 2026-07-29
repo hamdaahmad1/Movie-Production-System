@@ -17,15 +17,17 @@ import {
   import { RolesGuard } from "../auth/guards/roles.guard";
   import { Roles } from "../auth/decorators/roles.decorator";
   
+  @ApiBearerAuth("JWT-auth")
   @ApiTags("Dashboard")
   @Controller("dashboard")
+  @UseGuards(JwtAuthGuard, RolesGuard)
   export class DashboardController {
     constructor(
       private dashboardService: DashboardService,
     ) {}
   
-    @ApiBearerAuth("JWT-auth")
-    @UseGuards(JwtAuthGuard, RolesGuard)
+    
+  
     @Roles("ADMIN")
     @Get("admin")
     @ApiOperation({
@@ -40,8 +42,7 @@ import {
 
     }
 
-    @ApiBearerAuth("JWT-auth")
-    @UseGuards(JwtAuthGuard, RolesGuard)
+    
     @Roles("EDITOR")
     @Get("editor")
     @ApiOperation({

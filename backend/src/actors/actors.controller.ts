@@ -3,6 +3,7 @@ import { CreateActorDto } from './dto/create-actor.dto';
 import { ActorsService } from './actors.service';
 import { Query } from '@nestjs/common';
 import { ActorQueryDto } from './dto/actor-query.dto';
+import { StandardCrudRoles } from 'src/auth/decorators/standard-crud-roles.decorator';
 
 import {
   Controller,
@@ -32,13 +33,12 @@ import {
 } from '@nestjs/swagger';
 
 
-import { Roles } from 'src/auth/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-
 @ApiTags('Actors')
-@Controller('actors')
 @ApiBearerAuth()
+@StandardCrudRoles()
+@Controller('actors')
 export class ActorsController {
   constructor(
     private actorService: ActorsService,
@@ -46,16 +46,14 @@ export class ActorsController {
 
   
 
-  @Roles('ADMIN','EDITOR')
   @Post()
-@ApiOperation({
+  @ApiOperation({
   summary: 'Create a new actor',
   description:
     'Creates a new actor with an optional profile image upload. ADMIN and EDITOR users can create actors.',
 })
 
 @ApiConsumes('multipart/form-data')
-
 @UseInterceptors(
   FileInterceptor('image')
 )
@@ -171,7 +169,7 @@ create(
 }
   
   
-  @Roles('ADMIN', 'EDITOR', 'VIEWER')
+
   @Get()
   @ApiOperation({
     summary: 'Get all actors',
@@ -202,7 +200,6 @@ create(
  
 
  
-  @Roles('ADMIN', 'EDITOR', 'VIEWER')
   @Get(':id')
   @ApiOperation({
     summary: 'Get an actor by ID',
@@ -238,7 +235,7 @@ create(
   
 
   
-  @Roles('ADMIN', 'EDITOR')
+
 @Patch(':id')
 @ApiOperation({
   summary: 'Partially update an actor',
@@ -339,8 +336,7 @@ partialUpdate(
 
   
 
-  
-@Roles('ADMIN', 'EDITOR')
+
 @Put(':id')
 @ApiOperation({
   summary: 'Fully update an actor',
@@ -452,7 +448,7 @@ update(
 
 
   
-  @Roles('ADMIN')
+  
   @Delete(':id')
   @ApiOperation({
     summary: 'Delete an actor',
