@@ -2,7 +2,8 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
-  Logger
+  Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -21,7 +22,7 @@ export class ActorsService {
   ) {}
 
   
-  async create(dto: CreateActorDto, file: Express.Multer.File | undefined,
+  async create(dto: CreateActorDto, user:any, file: Express.Multer.File | undefined,
   ) {
     // Future DOB validation
     if (
@@ -93,6 +94,11 @@ if (file) {
         awards: dto.awards,
 
         imagePath,
+        createdBy: {
+          connect: {
+            id: user.id,
+          },
+        },
       },
     });
     this.logger.log("Actor created successfully: " + actor.id);
@@ -460,7 +466,7 @@ if (file) {
 
   
 
-  async remove(id: number) {
+  async remove(id: number, user:any) {
     const actor =
       await this.prisma.actor.findUnique({
         where: {
@@ -476,6 +482,14 @@ if (file) {
       this.logger.warn("Actor not found. ID: " + id);
       throw new NotFoundException(
         'Actor not found',
+      );
+    }
+    if (
+      user.role === 'EDITOR' &&
+      actor.createdById !== user.id
+    ) {
+      throw new ForbiddenException(
+        'You can only delete actors that you created.',
       );
     }
 

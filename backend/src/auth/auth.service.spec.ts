@@ -96,9 +96,7 @@ describe('AuthService', () => {
     });
 
     afterEach(() => {
-
-      jest.clearAllMocks();
-
+      jest.resetAllMocks();
     });
 
     it("should be defined", () => {
@@ -212,8 +210,11 @@ describe('AuthService', () => {
             "mocked-jwt-token",
             expect.objectContaining({
               httpOnly: true,
-              sameSite: "lax",
+              secure: true,
+              sameSite: "none",
+              maxAge: 86400000,
             }),
+          
           );
 
           expect(result).toEqual({
@@ -281,7 +282,12 @@ describe('AuthService', () => {
             expect(mockResponse.cookie).toHaveBeenCalledWith(
               "access_token",
               "mocked-jwt-token",
-              expect.any(Object),
+              expect.objectContaining({
+                httpOnly: true,
+                secure: true,
+                sameSite: "none",
+                maxAge: 86400000,
+              }),
             );
 
             expect(result).toEqual({

@@ -4,8 +4,9 @@ import { DirectorsService } from './directors.service';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { CreateDirectorDto } from './dto/create-director.dto';
+import { mock } from 'node:test';
 
 describe('DirectorsService', () => {
 
@@ -37,6 +38,10 @@ describe('DirectorsService', () => {
       nationality: "British American",
       biography: "Christopher Nolan is a British-American filmmaker known for complex films.",
       imagePath: undefined,
+    };
+    const mockUser = {
+      id: 9,
+      role: "EDITOR",
     };
 
     beforeEach(async () => {
@@ -92,34 +97,11 @@ describe('DirectorsService', () => {
 
             await expect(
 
-                service.create(dto)
+                service.create(dto,mockUser)
 
             ).rejects.toThrow(BadRequestException);
 
         });
-        it("should create a director without uploading an image", async () => {
-
-            const dto = { ...mockCreateDirectorDto };
-          
-            mockPrismaService.director.findFirst.mockResolvedValue(null);
-          
-            const createdDirector = {
-              id: 1,
-              ...dto,
-              dob: new Date(dto.dob),
-              imagePath: null,
-            };
-          
-            mockPrismaService.director.create.mockResolvedValue(createdDirector);
-          
-            const result = await service.create(dto);
-          
-            expect(result).toEqual(createdDirector);
-          
-            expect(mockCloudinaryService.uploadImage).not.toHaveBeenCalled();
-          
-          });
-
         
         it("should throw ConflictException if director name already exists", async () => {
 
@@ -133,7 +115,7 @@ describe('DirectorsService', () => {
             });
 
             await expect(
-              service.create(dto)
+              service.create(dto,mockUser)
             ).rejects.toThrow(ConflictException);
 
             expect(mockPrismaService.director.findFirst).toHaveBeenCalledWith({
@@ -162,7 +144,7 @@ describe('DirectorsService', () => {
             );
 
             await expect(
-              service.create(dto, file)
+              service.create(dto,mockUser, file)
             ).rejects.toThrow("Cloudinary upload failed");
 
             expect(
@@ -210,7 +192,7 @@ describe('DirectorsService', () => {
 
             mockPrismaService.director.create.mockResolvedValue(createdDirector);
 
-            const result = await service.create(dto, file);
+            const result = await service.create(dto, mockUser,file);
 
             expect(result).toEqual(createdDirector);
 
@@ -234,6 +216,12 @@ describe('DirectorsService', () => {
 
                     imagePath: "https://cloudinary.com/director.jpg",
 
+                    createdBy: {
+                      connect: {
+                        id: mockUser.id,
+                      },
+                    },
+
                 },
 
             });
@@ -254,7 +242,7 @@ describe('DirectorsService', () => {
           
             mockPrismaService.director.create.mockResolvedValue(createdDirector);
           
-            const result = await service.create(dto);
+            const result = await service.create(dto,mockUser);
           
             expect(result).toEqual(createdDirector);
           
@@ -787,7 +775,7 @@ describe('DirectorsService', () => {
         mockPrismaService.director.findUnique.mockResolvedValue(null);
 
         await expect(
-          service.remove(1)
+          service.remove(1,mockUser)
         ).rejects.toThrow(NotFoundException);
 
         expect(mockPrismaService.director.delete).not.toHaveBeenCalled();
@@ -801,10 +789,11 @@ describe('DirectorsService', () => {
           movies: [
             { id: 1, title: "Inception" },
           ],
+          createdById: 9,
         });
 
         await expect(
-          service.remove(1)
+          service.remove(1,mockUser)
         ).rejects.toThrow(BadRequestException);
 
         expect(mockPrismaService.director.delete).not.toHaveBeenCalled();
@@ -816,26 +805,92 @@ describe('DirectorsService', () => {
         const deletedDirector = {
           id: 1,
           name: "Christopher Nolan",
+          createdById: 9,
         };
-
+      
+      
         mockPrismaService.director.findUnique.mockResolvedValue({
           id: 1,
           name: "Christopher Nolan",
+          createdById: 9,
           movies: [],
         });
-
-        mockPrismaService.director.delete.mockResolvedValue(deletedDirector);
-
-        const result = await service.remove(1);
-
+      
+      
+        mockPrismaService.director.delete.mockResolvedValue(
+          deletedDirector
+        );
+      
+      
+        const result = await service.remove(
+          1,
+          mockUser
+        );
+      
+      
         expect(result).toEqual(deletedDirector);
-
-        expect(mockPrismaService.director.delete).toHaveBeenCalledWith({
-          where: {
-            id: 1,
+      
+      
+        expect(
+          mockPrismaService.director.delete
+        ).toHaveBeenCalledWith({
+          where:{
+            id:1,
           },
         });
+      
+      });
+      it("should allow editor to delete own director", async () => {
 
+        mockPrismaService.director.findUnique.mockResolvedValue({
+          id: 1,
+          movies: [],
+          createdById: 9,
+        });
+      
+        mockPrismaService.director.delete.mockResolvedValue({
+          id: 1,
+        });
+      
+        const result = await service.remove(1, mockUser);
+      
+        expect(result.id).toBe(1);
+      
+      });
+      it("should throw ForbiddenException if editor deletes another user's director", async () => {
+
+        mockPrismaService.director.findUnique.mockResolvedValue({
+          id: 1,
+          movies: [],
+          createdById: 1,
+        });
+      
+        await expect(
+          service.remove(1, mockUser),
+        ).rejects.toThrow(ForbiddenException);
+      
+      });
+      it("should allow admin to delete any director", async () => {
+
+        const admin = {
+          id: 1,
+          role: "ADMIN",
+        };
+      
+        mockPrismaService.director.findUnique.mockResolvedValue({
+          id: 1,
+          movies: [],
+          createdById: 9,
+        });
+      
+        mockPrismaService.director.delete.mockResolvedValue({
+          id: 1,
+        });
+      
+        await service.remove(1, admin);
+      
+        expect(mockPrismaService.director.delete).toHaveBeenCalled();
+      
       });
 
     });

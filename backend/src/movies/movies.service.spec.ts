@@ -4,8 +4,9 @@ import { MoviesService } from './movies.service';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { CreateMovieDto } from './dto/create-movie.dto';
+import { mock } from 'node:test';
 
 describe('MoviesService', () => {
 
@@ -55,6 +56,10 @@ describe('MoviesService', () => {
       directorId: 1,
       actorIds: [1, 2],
       posterPath: undefined
+    };
+    const mockUser = {
+      id: 9,
+      role: "EDITOR",
     };
   
     beforeEach(async () => {
@@ -114,7 +119,7 @@ describe('MoviesService', () => {
     
             await expect(
     
-                service.create(dto)
+                service.create(dto,mockUser)
     
             ).rejects.toThrow(BadRequestException);
     
@@ -132,7 +137,7 @@ describe('MoviesService', () => {
             });
           
             await expect(
-              service.create(dto)
+              service.create(dto,mockUser)
             ).rejects.toThrow(BadRequestException);
           
             expect(mockPrismaService.movie.findFirst).toHaveBeenCalledWith({
@@ -159,7 +164,7 @@ describe('MoviesService', () => {
             mockPrismaService.director.findUnique.mockResolvedValue(null);
           
             await expect(
-              service.create(dto)
+              service.create(dto,mockUser)
             ).rejects.toThrow(NotFoundException);
           
             expect(
@@ -196,7 +201,7 @@ describe('MoviesService', () => {
             mockPrismaService.director.findUnique.mockResolvedValue(null);
           
             await expect(
-              service.create(dto)
+              service.create(dto,mockUser)
             ).rejects.toThrow(NotFoundException);
           
             expect(
@@ -240,7 +245,7 @@ describe('MoviesService', () => {
             ]);
           
             await expect(
-              service.create(dto)
+              service.create(dto,mockUser)
             ).rejects.toThrow(BadRequestException);
           
             expect(mockPrismaService.movie.findFirst).toHaveBeenCalled();
@@ -283,7 +288,7 @@ describe('MoviesService', () => {
             );
           
             await expect(
-              service.create(dto, file)
+              service.create(dto,mockUser, file)
             ).rejects.toThrow("Cloudinary upload failed");
           
             expect(
@@ -363,12 +368,17 @@ describe('MoviesService', () => {
                         name: "Tom Hardy",
                     },
                 ],
+                createdBy: {
+                  connect: {
+                    id: mockUser.id,
+                  },
+                },
         
             };
         
             mockPrismaService.movie.create.mockResolvedValue(createdMovie);
         
-            const result = await service.create(dto, file);
+            const result = await service.create(dto,mockUser,file);
         
             expect(result).toEqual(createdMovie);
         
@@ -410,6 +420,11 @@ describe('MoviesService', () => {
                         connect: dto.actorIds.map((id) => ({
                             id,
                         })),
+                    },
+                    createdBy: {
+                      connect: {
+                        id: mockUser.id,
+                      },
                     },
         
                 },
@@ -1051,47 +1066,173 @@ describe('MoviesService', () => {
     describe("remove", () => {
 
       it("should throw NotFoundException if movie does not exist", async () => {
-
+    
         mockPrismaService.movie.findUnique.mockResolvedValue(null);
     
+    
         await expect(
-          service.remove(1)
+          service.remove(1, mockUser)
         ).rejects.toThrow(NotFoundException);
     
-        expect(mockPrismaService.movie.findUnique).toHaveBeenCalledWith({
+    
+        expect(
+          mockPrismaService.movie.findUnique
+        ).toHaveBeenCalledWith({
           where: {
             id: 1,
           },
         });
     
-        expect(mockPrismaService.movie.delete).not.toHaveBeenCalled();
+    
+        expect(
+          mockPrismaService.movie.delete
+        ).not.toHaveBeenCalled();
     
       });
-
-      it("should delete movie successfully", async () => {
-
-        const deletedMovie = {
+    
+    
+    
+      it("should allow editor to delete his own movie", async () => {
+    
+        const movie = {
           id: 1,
           title: "Inception",
+          createdById: 9,
         };
     
-        mockPrismaService.movie.findUnique.mockResolvedValue(deletedMovie);
     
-        mockPrismaService.movie.delete.mockResolvedValue(deletedMovie);
+        mockPrismaService.movie.findUnique
+          .mockResolvedValue(movie);
     
-        const result = await service.remove(1);
     
-        expect(result).toEqual(deletedMovie);
+        mockPrismaService.movie.delete
+          .mockResolvedValue(movie);
     
-        expect(mockPrismaService.movie.delete).toHaveBeenCalledWith({
+    
+    
+        const result = await service.remove(
+          1,
+          mockUser
+        );
+    
+    
+        expect(result).toEqual(movie);
+    
+    
+        expect(
+          mockPrismaService.movie.delete
+        ).toHaveBeenCalledWith({
           where: {
             id: 1,
           },
         });
     
       });
-
-
+    
+    
+    
+      it("should throw ForbiddenException if editor tries to delete another user's movie", async () => {
+    
+        const movie = {
+          id: 1,
+          title: "Inception",
+          createdById: 20,
+        };
+    
+    
+        mockPrismaService.movie.findUnique
+          .mockResolvedValue(movie);
+    
+    
+    
+        await expect(
+          service.remove(1, mockUser)
+        ).rejects.toThrow(ForbiddenException);
+    
+    
+    
+        expect(
+          mockPrismaService.movie.delete
+        ).not.toHaveBeenCalled();
+    
+      });
+    
+    
+    
+      it("should allow admin to delete any movie", async () => {
+    
+        const adminUser = {
+          id: 1,
+          role: "ADMIN",
+        };
+    
+    
+        const movie = {
+          id: 1,
+          title: "Inception",
+          createdById: 20,
+        };
+    
+    
+        mockPrismaService.movie.findUnique
+          .mockResolvedValue(movie);
+    
+    
+        mockPrismaService.movie.delete
+          .mockResolvedValue(movie);
+    
+    
+    
+        const result = await service.remove(
+          1,
+          adminUser
+        );
+    
+    
+        expect(result).toEqual(movie);
+    
+    
+        expect(
+          mockPrismaService.movie.delete
+        ).toHaveBeenCalledWith({
+          where: {
+            id: 1,
+          },
+        });
+    
+      });
+    
+    
+    
+      it("should delete movie successfully and return deleted movie", async () => {
+    
+        const movie = {
+          id: 1,
+          title: "Inception",
+          createdById: 9,
+        };
+    
+    
+        mockPrismaService.movie.findUnique
+          .mockResolvedValue(movie);
+    
+    
+        mockPrismaService.movie.delete
+          .mockResolvedValue(movie);
+    
+    
+    
+        const result = await service.remove(
+          1,
+          mockUser
+        );
+    
+    
+        expect(result).toEqual(movie);
+    
+      });
+    
+    
     });
     describe("getGenres", () => {
 

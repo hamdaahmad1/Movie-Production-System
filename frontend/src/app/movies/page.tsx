@@ -21,6 +21,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
 import toast from "react-hot-toast";
+import Swal from "sweetalert2";
 
 export default function MoviesPage() {
   const router = useRouter();
@@ -61,8 +62,7 @@ export default function MoviesPage() {
     order: "desc" as "asc" | "desc",
   });
 
-  async function loadMovies() 
-  {
+  async function loadMovies() {
     const toastId = toast.loading("Loading movies...");
     try {
       const response = await getMovies({
@@ -203,11 +203,18 @@ export default function MoviesPage() {
   }
 
   async function handleDelete(id: number) {
-    const confirmDelete = confirm(
-      "Are you sure you want to delete this movie?"
-    );
-
-    if (!confirmDelete) return;
+    const result = await Swal.fire({
+      title: "Delete Actor?",
+      text: "Are you sure you want to delete this actor?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+    });
+    
+    if (!result.isConfirmed) {
+      return;
+    }
 
     try {
       const toastId = toast.loading("Deleting movie...");
@@ -217,9 +224,17 @@ export default function MoviesPage() {
       toast.success("Movie deleted successfully!");
 
       loadMovies();
-    } catch (error) {
+    } catch (error: any) 
+    {
       console.error(error);
-
+    
+      if (error.response?.status === 403) {
+        toast.error(
+          "You can only delete movies that you created."
+        );
+        return;
+      }
+    
       toast.error("Failed to delete movie");
     }
   }
@@ -378,8 +393,8 @@ export default function MoviesPage() {
                   height: "260px",
                   objectFit: "cover",
                 }}
-                onError={(e)=>{
-                  e.currentTarget.style.display="none";
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
                 }}
               />
             )}
@@ -446,7 +461,7 @@ export default function MoviesPage() {
             {(isAdmin || isEditor) && (
               <Link href={`/movies/edit/${movie.id}`}>Edit</Link>
             )}{" "}
-            {isAdmin && (
+            {(isAdmin || movie.createdById === user?.id) && (
               <button onClick={() => handleDelete(movie.id)}>Delete</button>
             )}
           </div>

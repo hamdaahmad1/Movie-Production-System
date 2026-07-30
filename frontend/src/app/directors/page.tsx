@@ -12,6 +12,7 @@ import { Director } from "@/types/director";
 
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
+import Swal from "sweetalert2";
 
 export default function DirectorsPage() {
   const router = useRouter();
@@ -75,11 +76,16 @@ export default function DirectorsPage() {
   }, [page, filters]);
 
   async function handleDelete(id: number) {
-    const confirmDelete = confirm(
-      "Are you sure you want to delete this director?"
-    );
-
-    if (!confirmDelete) {
+    const result = await Swal.fire({
+      title: "Delete Director?",
+      text: "Are you sure you want to delete this director?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+    });
+    
+    if (!result.isConfirmed) {
       return;
     }
     const toastId = toast.loading("Deleting director...");
@@ -98,12 +104,15 @@ export default function DirectorsPage() {
       toast.success("Director deleted successfully!");
 
       loadDirectors();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
 
-      toast.dismiss(toastId);
+      if (error.response?.status === 403) {
+        toast.error("You can only delete directors that you created.");
+        return;
+      }
 
-      toast.error("Something went wrong. Please try again.");
+      toast.error("Failed to delete director");
     }
   }
 
@@ -257,7 +266,7 @@ export default function DirectorsPage() {
 
             {" | "}
 
-            {isAdmin && (
+            {(isAdmin || director.createdById === user?.id) && (
               <button onClick={() => handleDelete(director.id)}>Delete</button>
             )}
           </div>

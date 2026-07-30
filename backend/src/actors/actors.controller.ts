@@ -19,7 +19,8 @@ import {
    UseInterceptors,
     ParseFilePipe,
    MaxFileSizeValidator,
-   FileTypeValidator
+   FileTypeValidator,
+   Req
 } from '@nestjs/common';
 
 import {
@@ -134,6 +135,7 @@ export class ActorsController {
 create(
   @Body()
   dto: CreateActorDto,
+  @Req() req: any,
 
   @UploadedFile(
     new ParseFilePipe({
@@ -154,7 +156,9 @@ create(
 
     })
   )
+  
   file?: Express.Multer.File,
+ 
 
 
   
@@ -163,6 +167,7 @@ create(
 
   return this.actorService.create(
     dto,
+    req.user,
     file,
   );
 
@@ -483,7 +488,8 @@ update(
   })
   remove(
     @Param('id', ParseIntPipe) id: number,
+    @Req() req: any,
   ) {
-    return this.actorService.remove(id);
+    return this.actorService.remove(id,req.user);
   }
 }

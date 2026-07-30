@@ -2,14 +2,16 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-  Logger
+  Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { MovieQueryDto } from './dto/movie-query.dto';
-import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service'
+
 
 
 @Injectable()
@@ -21,7 +23,7 @@ export class MoviesService
     private cloudinaryService: CloudinaryService
   ) {}
 
-  async create(dto: CreateMovieDto, file?: Express.Multer.File) {
+  async create(dto: CreateMovieDto, user: any, file?: Express.Multer.File) {
 
     if (new Date(dto.releaseDate) > new Date()) {
       throw new BadRequestException(
@@ -111,6 +113,12 @@ export class MoviesService
         rating: dto.rating,
         trailerId: dto.trailerId,
         posterPath: posterPath,
+
+        createdBy: {
+          connect: {
+            id: user.id,
+          },
+        },
 
         director: {
           connect: {
@@ -604,7 +612,7 @@ export class MoviesService
   }
 
  
-  async remove(id: number) {
+  async remove(id: number, user:any) {
     const movie =
       await this.prisma.movie.findUnique({
         where: {
@@ -615,6 +623,14 @@ export class MoviesService
     if (!movie) {
       throw new NotFoundException(
         'Movie not found',
+      );
+    }
+    if (
+      user.role === 'EDITOR' &&
+      movie.createdById !== user.id
+    ) {
+      throw new ForbiddenException(
+        'You can only delete movies that you created.',
       );
     }
 
