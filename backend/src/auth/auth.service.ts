@@ -46,8 +46,8 @@ import {
 
   res.cookie('access_token', accessToken, {
     httpOnly: true,
-    secure: false, // true when deploying with HTTPS
-    sameSite: 'lax',
+    secure: true,        // required since you're on HTTPS now
+    sameSite: 'none',    // required for cross-site (Vercel <-> Railway) cookies
     maxAge: 1000 * 60 * 60 * 24, // 1 day
   });
 
