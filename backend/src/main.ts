@@ -45,10 +45,15 @@ async function bootstrap() {
 
 
   // Allow frontend communication
-  app.enableCors({
-    origin: "http://localhost:3000",
-    credentials: true,
-  });
+ // Allow frontend communication
+app.enableCors({
+  origin: [
+    'http://localhost:3000',
+    'https://movie-production-system.vercel.app',
+    /\.vercel\.app$/, // allows all Vercel preview deployment URLs too
+  ],
+  credentials: true,
+});
 
 
   // Swagger Configuration
