@@ -1,4 +1,5 @@
 export interface Director {
+    createdById: number | undefined;
     id: number;
     name: string;
     dob: string;

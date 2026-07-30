@@ -19,6 +19,7 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
+  Req,
 } from '@nestjs/common';
 
 import {
@@ -105,6 +106,7 @@ export class DirectorsController {
 })
 create(
   @Body() dto: CreateDirectorDto,
+  @Req() req: any,
 
   @UploadedFile(
     new ParseFilePipe({
@@ -120,11 +122,14 @@ create(
       ],
     }),
   )
+  
   file?: Express.Multer.File,
 )
 {
+  console.log(req.user);
   return this.directorService.create(
     dto,
+    req.user,
     file,
   );
 }
@@ -428,9 +433,12 @@ update(
   })
   remove(
     @Param('id', ParseIntPipe) id: number,
+    @Req() req: any,
+    
   ) {
     return this.directorService.remove(
       id,
+      req.user,
     );
   }
 }

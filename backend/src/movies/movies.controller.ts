@@ -4,6 +4,8 @@ import { MoviesService } from './movies.service';
 import { Query } from '@nestjs/common';
 import { MovieQueryDto } from './dto/movie-query.dto';
 import { StandardCrudRoles } from 'src/auth/decorators/standard-crud-roles.decorator';
+import * as express from 'express'; 
+import { Request } from 'express';
 
 import {
   Controller,
@@ -19,7 +21,8 @@ import {
   UseInterceptors,
   ParseFilePipe,
   MaxFileSizeValidator,
-  FileTypeValidator
+  FileTypeValidator,
+  Req,
 } from '@nestjs/common';
 
 
@@ -34,7 +37,7 @@ import {
 } from '@nestjs/swagger';
 
 
-import { Roles } from 'src/auth/decorators/roles.decorator';
+
 import { FileInterceptor } from '@nestjs/platform-express';
 
 
@@ -164,6 +167,7 @@ export class MoviesController {
 
     @Body()
     dto: CreateMovieDto,
+    @Req() req: any,
 
 
     @UploadedFile(
@@ -186,6 +190,7 @@ export class MoviesController {
       })
     )
 
+  
     file?: Express.Multer.File,
 
 
@@ -193,6 +198,7 @@ export class MoviesController {
 
     return this.moviesService.create(
       dto,
+      req.user,
       file,
     );
 
@@ -653,9 +659,10 @@ export class MoviesController {
 
   remove(
     @Param('id', ParseIntPipe) id:number,
+    @Req() req: any,
   ) {
 
-    return this.moviesService.remove(id);
+    return this.moviesService.remove(id, req.user);
 
   }
 

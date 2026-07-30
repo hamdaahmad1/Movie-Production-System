@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/app/components/Navbar";
 
 import { getActors, deleteActor } from "@/services/actorService";
+import Swal from "sweetalert2";
 
 import { Actor } from "@/types/actor";
 
@@ -78,11 +79,16 @@ export default function ActorsPage() {
   }, [page, filters]);
 
   async function handleDelete(id: number) {
-    const confirmDelete = confirm(
-      "Are you sure you want to delete this actor?"
-    );
-
-    if (!confirmDelete) {
+    const result = await Swal.fire({
+      title: "Delete Actor?",
+      text: "Are you sure you want to delete this actor?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+    });
+    
+    if (!result.isConfirmed) {
       return;
     }
 
@@ -98,10 +104,15 @@ export default function ActorsPage() {
       toast.success("Actor deleted successfully!");
 
       loadActors();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
 
-      toast.error("Something went wrong. Please try again.");
+      if (error.response?.status === 403) {
+        toast.error("You can only delete actors that you created.");
+        return;
+      }
+
+      toast.error("Failed to delete actor");
     }
   }
 
@@ -263,7 +274,7 @@ export default function ActorsPage() {
 
             {" | "}
 
-            {isAdmin && (
+            {(isAdmin || actor.createdById === user?.id) && (
               <button onClick={() => handleDelete(actor.id)}>Delete</button>
             )}
           </div>

@@ -63,8 +63,8 @@ export class RolesGuard implements CanActivate{
             case 'PATCH':
               return ['ADMIN', 'EDITOR'].includes(user.role);
       
-            case 'DELETE':
-              return user.role === 'ADMIN';
+              case 'DELETE':
+                return ['ADMIN', 'EDITOR'].includes(user.role);
       
             default:
               return false;

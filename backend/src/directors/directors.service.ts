@@ -3,7 +3,8 @@ import {
   BadRequestException,
   NotFoundException,
   Logger,
-  ConflictException
+  ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -20,7 +21,7 @@ export class DirectorsService {
 
   
 
-  async create(dto: CreateDirectorDto,file?: Express.Multer.File) {
+  async create(dto: CreateDirectorDto,user:any,file?: Express.Multer.File) {
     // Future DOB validation
     if (new Date(dto.dob) > new Date()) 
       {
@@ -82,6 +83,11 @@ if(file){
 
         // Save URL directly
         imagePath,
+        createdBy: {
+          connect: {
+            id: user.id,
+          },
+        },
       },
     });
     this.logger.log("Director created successfully:", updatedDirector.name);
@@ -463,7 +469,7 @@ if(file){
 
  
 
-  async remove(id: number) {
+  async remove(id: number, user: any) {
     const director =
       await this.prisma.director.findUnique({
         where: { id },
@@ -479,6 +485,17 @@ if(file){
         'Director not found',
       );
     }
+    
+
+    if (
+      user.role === 'EDITOR' &&
+      director.createdById !== user.id
+    ) {
+      throw new ForbiddenException(
+        'You can only delete movies that you created.',
+      );
+    }
+
 
     if (director.movies.length > 0) {
       this.logger.warn(`Attempted to delete director with ID ${id} who is assigned to movies.`);

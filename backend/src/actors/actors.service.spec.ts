@@ -4,7 +4,7 @@ import { ActorsService } from './actors.service';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { CreateActorDto } from './dto/create-actor.dto';
 
 describe('ActorsService', () => {
@@ -42,6 +42,10 @@ describe('ActorsService', () => {
       gender: "Male",
       biography: "An American actor and film producer known for his work in biopics.",
       awards: 5,
+    };
+    const mockUser = {
+      id: 9,
+      role: "EDITOR",
     };
 
     beforeEach(async () => {
@@ -92,144 +96,213 @@ describe('ActorsService', () => {
 
     describe("create", () => {
 
-        it("should throw BadRequestException if dob is in the future", async () => {
-
-            const dto = {
-              ...mockCreateActorDto,
-              dob: "2099-01-01",
-
-            }
-
-            await expect(
-
-                service.create(dto, undefined)
-
-            ).rejects.toThrow(BadRequestException);
-
+      it("should throw BadRequestException if dob is in the future", async () => {
+    
+        const dto = {
+          ...mockCreateActorDto,
+          dob: "2099-01-01",
+        };
+    
+    
+        await expect(
+          service.create(dto, mockUser, undefined)
+        ).rejects.toThrow(BadRequestException);
+    
+      });
+    
+    
+    
+      it("should throw BadRequestException if actor name already exists", async () => {
+    
+        const dto = {
+          ...mockCreateActorDto,
+        };
+    
+    
+        mockPrismaService.actor.findFirst.mockResolvedValue({
+          id: 1,
+          name: "Leonardo DiCaprio",
         });
-
-        it("should throw BadRequestException if actor name already exists", async () => {
-
-          const dto = {
-            ...mockCreateActorDto,
-          }
-
-            mockPrismaService.actor.findFirst.mockResolvedValue({
-              id: 1,
-              name: "Leonardo DiCaprio",
-            });
-
-            await expect(
-              service.create(dto, undefined)
-            ).rejects.toThrow(BadRequestException);
-
-            expect(mockPrismaService.actor.findFirst).toHaveBeenCalledWith({
-              where: {
-                name: {
-                  equals: dto.name,
-                  mode: "insensitive",
-                },
-              },
-            });
-
-            expect(mockPrismaService.actor.create).not.toHaveBeenCalled();
-
-          });
-
-          it("should throw an error if Cloudinary upload fails", async () => {
-
-            const dto = { ...mockCreateActorDto };
-
-            const file = {} as Express.Multer.File;
-
-            mockPrismaService.actor.findFirst.mockResolvedValue(null);
-
-            mockCloudinaryService.uploadImage.mockRejectedValue(
-              new Error("Cloudinary upload failed"),
-            );
-
-            await expect(
-              service.create(dto, file)
-            ).rejects.toThrow("Cloudinary upload failed");
-
-            expect(
-              mockCloudinaryService.uploadImage
-            ).toHaveBeenCalledWith(file);
-
-            expect(
-              mockPrismaService.actor.create
-            ).not.toHaveBeenCalled();
-
-          });
-
-          it("should create an actor successfully", async () => {
-
-            const dto = { ...mockCreateActorDto };
-
-            const file = {} as Express.Multer.File;
-
-            mockPrismaService.actor.findFirst.mockResolvedValue(null);
-
-            mockCloudinaryService.uploadImage.mockResolvedValue({
-                secure_url: "https://cloudinary.com/actor.jpg",
-            });
-
-            const createdActor = {
-
-                id: 1,
-
-                name: dto.name,
-
-                dob: new Date(dto.dob),
-
-                nationality: dto.nationality,
-
-                gender: dto.gender,
-
-                biography: dto.biography,
-
-                awards: dto.awards,
-
-                imagePath: "https://cloudinary.com/actor.jpg",
-
-            };
-
-            mockPrismaService.actor.create.mockResolvedValue(createdActor);
-
-            const result = await service.create(dto, file);
-
-            expect(result).toEqual(createdActor);
-
-            expect(
-                mockCloudinaryService.uploadImage
-            ).toHaveBeenCalledWith(file);
-
-            expect(
-                mockPrismaService.actor.create
-            ).toHaveBeenCalledWith({
-
-                data: {
-
-                    name: dto.name,
-
-                    dob: new Date(dto.dob),
-
-                    nationality: dto.nationality,
-
-                    gender: dto.gender,
-
-                    biography: dto.biography,
-
-                    awards: dto.awards,
-
-                    imagePath: "https://cloudinary.com/actor.jpg",
-
-                },
-
-            });
-
+    
+    
+        await expect(
+          service.create(dto, mockUser, undefined)
+        ).rejects.toThrow(BadRequestException);
+    
+    
+    
+        expect(
+          mockPrismaService.actor.findFirst
+        ).toHaveBeenCalledWith({
+          where: {
+            name: {
+              equals: dto.name,
+              mode: "insensitive",
+            },
+          },
         });
+    
+    
+    
+        expect(
+          mockPrismaService.actor.create
+        ).not.toHaveBeenCalled();
+    
+      });
+    
+    
+    
+      it("should throw an error if Cloudinary upload fails", async () => {
+    
+        const dto = {
+          ...mockCreateActorDto,
+        };
+    
+    
+        const file = {} as Express.Multer.File;
+    
+    
+        mockPrismaService.actor.findFirst
+          .mockResolvedValue(null);
+    
+    
+    
+        mockCloudinaryService.uploadImage
+          .mockRejectedValue(
+            new Error("Cloudinary upload failed")
+          );
+    
+    
+    
+        await expect(
+          service.create(dto, mockUser, file)
+        ).rejects.toThrow(
+          "Cloudinary upload failed"
+        );
+    
+    
+    
+        expect(
+          mockCloudinaryService.uploadImage
+        ).toHaveBeenCalledWith(file);
+    
+    
+    
+        expect(
+          mockPrismaService.actor.create
+        ).not.toHaveBeenCalled();
+    
+      });
+    
+    
+    
+      it("should create an actor successfully", async () => {
+    
+        const dto = {
+          ...mockCreateActorDto,
+        };
+    
+    
+        const file = {} as Express.Multer.File;
+    
+    
+    
+        mockPrismaService.actor.findFirst
+          .mockResolvedValue(null);
+    
+    
+    
+        mockCloudinaryService.uploadImage
+          .mockResolvedValue({
+            secure_url:
+              "https://cloudinary.com/actor.jpg",
+          });
+    
+    
+    
+        const createdActor = {
+    
+          id: 1,
+    
+          name: dto.name,
+    
+          dob: new Date(dto.dob),
+    
+          nationality: dto.nationality,
+    
+          gender: dto.gender,
+    
+          biography: dto.biography,
+    
+          awards: dto.awards,
+    
+          imagePath:
+            "https://cloudinary.com/actor.jpg",
+    
+          createdById: 9,
+    
+        };
+    
+    
+    
+        mockPrismaService.actor.create
+          .mockResolvedValue(createdActor);
+    
+    
+    
+        const result = await service.create(
+          dto,
+          mockUser,
+          file
+        );
+    
+    
+    
+        expect(result).toEqual(createdActor);
+    
+    
+    
+        expect(
+          mockCloudinaryService.uploadImage
+        ).toHaveBeenCalledWith(file);
+    
+    
+    
+        expect(
+          mockPrismaService.actor.create
+        ).toHaveBeenCalledWith({
+    
+          data: {
+    
+            name: dto.name,
+    
+            dob: new Date(dto.dob),
+    
+            nationality: dto.nationality,
+    
+            gender: dto.gender,
+    
+            biography: dto.biography,
+    
+            awards: dto.awards,
+    
+            imagePath:
+              "https://cloudinary.com/actor.jpg",
+    
+             createdBy: {
+      connect: {
+        id: 9,
+      },
+    },
 
+    
+          },
+    
+        });
+    
+      });
+    
+    
     });
 
     describe("findOne", () => {
@@ -560,61 +633,242 @@ describe('ActorsService', () => {
     describe("remove", () => {
 
       it("should throw NotFoundException if actor does not exist", async () => {
-
-        mockPrismaService.actor.findUnique.mockResolvedValue(null);
-
+    
+        mockPrismaService.actor.findUnique
+          .mockResolvedValue(null);
+    
+    
+    
         await expect(
-          service.remove(1)
+          service.remove(1, mockUser)
         ).rejects.toThrow(NotFoundException);
-
-        expect(mockPrismaService.actor.delete).not.toHaveBeenCalled();
-
+    
+    
+    
+        expect(
+          mockPrismaService.actor.delete
+        ).not.toHaveBeenCalled();
+    
       });
-
+    
+    
+    
       it("should throw BadRequestException if actor is assigned to movies", async () => {
-
-        mockPrismaService.actor.findUnique.mockResolvedValue({
-          id: 1,
-          movies: [
-            { id: 1, title: "Inception" },
-          ],
-        });
-
+    
+        mockPrismaService.actor.findUnique
+          .mockResolvedValue({
+    
+            id: 1,
+    
+            name: "Leonardo DiCaprio",
+    
+            createdById: 9,
+    
+            movies: [
+              {
+                id: 1,
+                title: "Inception",
+              },
+            ],
+    
+          });
+    
+    
+    
         await expect(
-          service.remove(1)
+          service.remove(1, mockUser)
         ).rejects.toThrow(BadRequestException);
-
-        expect(mockPrismaService.actor.delete).not.toHaveBeenCalled();
-
+    
+    
+    
+        expect(
+          mockPrismaService.actor.delete
+        ).not.toHaveBeenCalled();
+    
       });
-
-      it("should delete actor successfully", async () => {
-
-        const deletedActor = {
+    
+    
+    
+      it("should throw ForbiddenException if editor tries to delete another user's actor", async () => {
+    
+        mockPrismaService.actor.findUnique
+          .mockResolvedValue({
+    
+            id: 1,
+    
+            name: "Leonardo DiCaprio",
+    
+            createdById: 20,
+    
+            movies: [],
+    
+          });
+    
+    
+    
+        await expect(
+          service.remove(1, mockUser)
+        ).rejects.toThrow(ForbiddenException);
+    
+    
+    
+        expect(
+          mockPrismaService.actor.delete
+        ).not.toHaveBeenCalled();
+    
+      });
+    
+    
+    
+      it("should allow editor to delete his own actor", async () => {
+    
+        const actor = {
+    
           id: 1,
+    
           name: "Leonardo DiCaprio",
-        };
-
-        mockPrismaService.actor.findUnique.mockResolvedValue({
-          id: 1,
-          name: "Leonardo DiCaprio",
+    
+          createdById: 9,
+    
           movies: [],
-        });
-
-        mockPrismaService.actor.delete.mockResolvedValue(deletedActor);
-
-        const result = await service.remove(1);
-
-        expect(result).toEqual(deletedActor);
-
-        expect(mockPrismaService.actor.delete).toHaveBeenCalledWith({
+    
+        };
+    
+    
+        mockPrismaService.actor.findUnique
+          .mockResolvedValue(actor);
+    
+    
+    
+        mockPrismaService.actor.delete
+          .mockResolvedValue(actor);
+    
+    
+    
+        const result = await service.remove(
+          1,
+          mockUser
+        );
+    
+    
+    
+        expect(result).toEqual(actor);
+    
+    
+    
+        expect(
+          mockPrismaService.actor.delete
+        ).toHaveBeenCalledWith({
+    
           where: {
             id: 1,
           },
+    
         });
-
+    
       });
-
+    
+    
+    
+      it("should allow admin to delete any actor", async () => {
+    
+        const adminUser = {
+    
+          id: 1,
+    
+          role: "ADMIN",
+    
+        };
+    
+    
+    
+        const actor = {
+    
+          id: 1,
+    
+          name: "Leonardo DiCaprio",
+    
+          createdById: 20,
+    
+          movies: [],
+    
+        };
+    
+    
+    
+        mockPrismaService.actor.findUnique
+          .mockResolvedValue(actor);
+    
+    
+    
+        mockPrismaService.actor.delete
+          .mockResolvedValue(actor);
+    
+    
+    
+        const result = await service.remove(
+          1,
+          adminUser
+        );
+    
+    
+    
+        expect(result).toEqual(actor);
+    
+    
+    
+        expect(
+          mockPrismaService.actor.delete
+        ).toHaveBeenCalledWith({
+    
+          where: {
+            id: 1,
+          },
+    
+        });
+    
+      });
+    
+    
+    
+      it("should return deleted actor after successful deletion", async () => {
+    
+        const deletedActor = {
+    
+          id: 1,
+    
+          name: "Leonardo DiCaprio",
+    
+          createdById: 9,
+    
+          movies: [],
+    
+        };
+    
+    
+    
+        mockPrismaService.actor.findUnique
+          .mockResolvedValue(deletedActor);
+    
+    
+    
+        mockPrismaService.actor.delete
+          .mockResolvedValue(deletedActor);
+    
+    
+    
+        const result = await service.remove(
+          1,
+          mockUser
+        );
+    
+    
+    
+        expect(result).toEqual(deletedActor);
+    
+      });
+    
+    
     });
 
   })
