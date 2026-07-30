@@ -28,6 +28,8 @@ model Director {
   movies      Movie[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
+  createdById Int?
+createdBy   User? @relation("DirectorCreator", fields: [createdById], references: [id])
 }
 
 model Actor {
@@ -42,6 +44,8 @@ model Actor {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
   movies      Movie[]  @relation("ActorToMovie")
+  createdById Int?
+createdBy   User? @relation("ActorCreator", fields: [createdById], references: [id])
 }
 
 model Movie {
@@ -64,6 +68,8 @@ model Movie {
 
   interactions MovieInteraction[]
   reviews      Review[]
+  createdById Int?
+  createdBy   User? @relation("MovieCreator", fields: [createdById], references: [id])
 }
 
 model User {
@@ -81,6 +87,9 @@ model User {
 
   interactions MovieInteraction[]
   reviews      Review[]
+  createdMovies Movie[] @relation("MovieCreator")
+  createdActors    Actor[]    @relation("ActorCreator")
+  createdDirectors Director[] @relation("DirectorCreator")
 }
 
 model MovieInteraction {
