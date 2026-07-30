@@ -46,15 +46,20 @@ async function bootstrap() {
 
   // Allow frontend communication
  // Allow frontend communication
-app.enableCors({
-  origin: [
-    'http://localhost:3000',
-    'https://movie-production-system.vercel.app',
-    /\.vercel\.app$/, // allows all Vercel preview deployment URLs too
-  ],
+ app.enableCors({
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://movie-production-system.vercel.app',
+    ];
+    if (!origin || allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 });
-
 
   // Swagger Configuration
   const config = new DocumentBuilder()
