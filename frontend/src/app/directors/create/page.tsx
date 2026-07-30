@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { createDirector } from "@/services/directorService";
 import { useAuth } from "@/context/AuthContext";
@@ -11,9 +11,10 @@ import { Director } from "@/types/director";
 
 export default function CreateDirector() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const fromMovie = searchParams.get("from") === "movie";
+  const [fromMovie, setFromMovie] = useState(false);
+  useEffect(() => {
+    setFromMovie(sessionStorage.getItem("returnToMovie") === "true");
+  }, []);
   const { user, loading } = useAuth();
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -165,6 +166,8 @@ export default function CreateDirector() {
       if (fromMovie) {
         sessionStorage.setItem("newDirectorId", String(createdDirector.id));
 
+        sessionStorage.removeItem("returnToMovie");
+
         router.push("/movies/create");
       } else {
         router.push("/directors");
@@ -196,7 +199,13 @@ export default function CreateDirector() {
       <button onClick={() => router.push("/directors")}>Directors List</button>
       {fromMovie && (
         <>
-          <button type="button" onClick={() => router.push("/movies/create")}>
+          <button
+            type="button"
+            onClick={() => {
+              sessionStorage.removeItem("returnToMovie");
+              router.push("/movies/create");
+            }}
+          >
             ← Continue Creating Movie
           </button>
 

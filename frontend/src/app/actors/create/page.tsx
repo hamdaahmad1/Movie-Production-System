@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createActor } from "@/services/actorService";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
@@ -9,9 +9,11 @@ import ImageUpload from "@/app/components/ImageUpload";
 
 export default function CreateActor() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [fromMovie, setFromMovie] = useState(false);
 
-  const fromMovie = searchParams.get("from") === "movie";
+  useEffect(() => {
+    setFromMovie(sessionStorage.getItem("returnToMovie") === "true");
+  }, []);
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
 
@@ -184,10 +186,9 @@ export default function CreateActor() {
       toast.success("Actor created successfully!");
 
       if (fromMovie) {
-        sessionStorage.setItem(
-          "newActorId",
-          String(createdActor.id)
-        );
+        sessionStorage.setItem("newActorId", String(createdActor.id));
+
+        sessionStorage.removeItem("returnToMovie");
 
         router.push("/movies/create");
       } else {
@@ -216,11 +217,16 @@ export default function CreateActor() {
 
       <button onClick={() => router.push("/actors")}>Actors List</button>
       {fromMovie && (
-        <button onClick={() => router.push("/movies/create")}>
-          Back to Create Movie
+        <button
+          type="button"
+          onClick={() => {
+            sessionStorage.removeItem("returnToMovie");
+            router.push("/movies/create");
+          }}
+        >
+          ← Continue Creating Movie
         </button>
       )}
-
       <br />
       <br />
 

@@ -535,7 +535,10 @@ export default function CreateMovie() {
 
         <button
           type="button"
-          onClick={() => router.push("/directors/create?from=movie")}
+          onClick={() => {
+            sessionStorage.setItem("returnToMovie", "true");
+            router.push("/directors/create");
+          }}
         >
           + Create New Director
         </button>
@@ -589,7 +592,10 @@ export default function CreateMovie() {
 
         <button
           type="button"
-          onClick={() => router.push("/actors/create?from=movie")}
+          onClick={() => {
+            sessionStorage.setItem("returnToMovie", "true");
+            router.push("/actors/create");
+          }}
         >
           + Create New Actor
         </button>
