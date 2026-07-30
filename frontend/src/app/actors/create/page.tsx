@@ -9,6 +9,11 @@ import ImageUpload from "@/app/components/ImageUpload";
 
 export default function CreateActor() {
   const router = useRouter();
+  const [fromMovie, setFromMovie] = useState(false);
+
+  useEffect(() => {
+    setFromMovie(sessionStorage.getItem("returnToMovie") === "true");
+  }, []);
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
 
@@ -174,12 +179,21 @@ export default function CreateActor() {
         formData.append("image", image);
       }
 
-      await createActor(formData);
+      const createdActor = await createActor(formData);
+
       toast.dismiss(toastId);
 
       toast.success("Actor created successfully!");
 
-      router.push("/actors");
+      if (fromMovie) {
+        sessionStorage.setItem("newActorId", String(createdActor.id));
+
+        sessionStorage.removeItem("returnToMovie");
+
+        router.push("/movies/create");
+      } else {
+        router.push("/actors");
+      }
     } catch (error: any) {
       console.error(error);
       toast.dismiss(toastId);
@@ -202,7 +216,17 @@ export default function CreateActor() {
       <button onClick={() => router.push("/")}>Home</button>
 
       <button onClick={() => router.push("/actors")}>Actors List</button>
-
+      {fromMovie && (
+        <button
+          type="button"
+          onClick={() => {
+            sessionStorage.removeItem("returnToMovie");
+            router.push("/movies/create");
+          }}
+        >
+          ← Continue Creating Movie
+        </button>
+      )}
       <br />
       <br />
 
@@ -338,9 +362,9 @@ export default function CreateActor() {
           removeButtonText="Remove Image"
         />
 
-        <br/>
-        <br/>
-        
+        <br />
+        <br />
+
         <button type="submit">Create Actor</button>
       </form>
     </div>

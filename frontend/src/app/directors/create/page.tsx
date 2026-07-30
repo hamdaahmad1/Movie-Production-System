@@ -11,6 +11,10 @@ import { Director } from "@/types/director";
 
 export default function CreateDirector() {
   const router = useRouter();
+  const [fromMovie, setFromMovie] = useState(false);
+  useEffect(() => {
+    setFromMovie(sessionStorage.getItem("returnToMovie") === "true");
+  }, []);
   const { user, loading } = useAuth();
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -61,14 +65,12 @@ export default function CreateDirector() {
       return "Name contains too many repeated characters";
     }
 
-
     const existingDirector = directors.find(
       (d) => d.name.trim().toLowerCase() === name.toLowerCase()
     );
     if (existingDirector) {
       return "A director with this name already exists";
     }
-    
 
     if (!director.dob) {
       return "Date of birth is required";
@@ -155,11 +157,21 @@ export default function CreateDirector() {
         formData.append("image", image);
       }
 
-      await createDirector(formData);
+      const createdDirector = await createDirector(formData);
+
       toast.dismiss(toastId);
+
       toast.success("Director created successfully!");
 
-      router.push("/directors");
+      if (fromMovie) {
+        sessionStorage.setItem("newDirectorId", String(createdDirector.id));
+
+        sessionStorage.removeItem("returnToMovie");
+
+        router.push("/movies/create");
+      } else {
+        router.push("/directors");
+      }
     } catch (error: any) {
       toast.dismiss(toastId);
       console.error(error);
@@ -185,6 +197,22 @@ export default function CreateDirector() {
       <button onClick={() => router.push("/")}>Home</button>
 
       <button onClick={() => router.push("/directors")}>Directors List</button>
+      {fromMovie && (
+        <>
+          <button
+            type="button"
+            onClick={() => {
+              sessionStorage.removeItem("returnToMovie");
+              router.push("/movies/create");
+            }}
+          >
+            ← Continue Creating Movie
+          </button>
+
+          <br />
+          <br />
+        </>
+      )}
 
       <br />
       <br />

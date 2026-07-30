@@ -19,8 +19,8 @@ export default function CreateMovie() {
   const [poster, setPoster] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedActorId, setSelectedActorId] = useState("");
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
   const { user, loading } = useAuth();
 
@@ -37,9 +37,58 @@ export default function CreateMovie() {
     actorIds: [] as number[],
   });
 
+  useEffect(() => {
+    if (!draftLoaded) return;
+
+    sessionStorage.setItem("movieDraft", JSON.stringify(movie));
+  }, [movie, draftLoaded]);
+
   const [directors, setDirectors] = useState<any[]>([]);
 
   const [actors, setActors] = useState<any[]>([]);
+
+  useEffect(() => {
+    const draft = sessionStorage.getItem("movieDraft");
+
+    if (draft) {
+      setMovie(JSON.parse(draft));
+    }
+
+    setDraftLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    const newDirectorId = sessionStorage.getItem("newDirectorId");
+
+    if (!newDirectorId) return;
+
+    setMovie((prev) => ({
+      ...prev,
+      directorId: newDirectorId,
+    }));
+
+    sessionStorage.removeItem("newDirectorId");
+
+    loadData();
+  }, []);
+  useEffect(() => {
+    const newActorId = sessionStorage.getItem("newActorId");
+
+    if (!newActorId) return;
+
+    const id = Number(newActorId);
+
+    setMovie((prev) => ({
+      ...prev,
+      actorIds: prev.actorIds.includes(id)
+        ? prev.actorIds
+        : [...prev.actorIds, id],
+    }));
+
+    sessionStorage.removeItem("newActorId");
+
+    loadData();
+  }, []);
 
   useEffect(() => {
     if (loading) return;
@@ -55,23 +104,23 @@ export default function CreateMovie() {
     }
   }, [user, loading, router]);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const directorsData = await getDirectors();
+  async function loadData() {
+    try {
+      const directorsData = await getDirectors();
 
-        const actorsData = await getActors();
+      const actorsData = await getActors();
 
-        setDirectors(directorsData.data || directorsData);
+      setDirectors(directorsData.data || directorsData);
 
-        setActors(actorsData.data || actorsData);
-      } catch (error) {
-        console.error(error);
+      setActors(actorsData.data || actorsData);
+    } catch (error) {
+      console.error(error);
 
-        toast.error("Failed to load directors and actors");
-      }
+      toast.error("Failed to load directors and actors");
     }
+  }
 
+  useEffect(() => {
     loadData();
   }, []);
 
@@ -256,6 +305,7 @@ export default function CreateMovie() {
       }
 
       await createMovie(formData);
+      sessionStorage.removeItem("movieDraft");
       toast.dismiss(toastId);
 
       toast.success("Movie created successfully!");
@@ -480,6 +530,18 @@ export default function CreateMovie() {
             </option>
           ))}
         </select>
+        <p>Don't see the director you need?</p>
+        <br/>
+
+        <button
+          type="button"
+          onClick={() => {
+            sessionStorage.setItem("returnToMovie", "true");
+            router.push("/directors/create");
+          }}
+        >
+          + Create New Director
+        </button>
 
         <br />
         <br />
@@ -512,13 +574,30 @@ export default function CreateMovie() {
 
             setMovie((prev) => ({
               ...prev,
-              actorIds: [...prev.actorIds, actorId],
+              actorIds: prev.actorIds.includes(actorId)
+                ? prev.actorIds
+                : [...prev.actorIds, actorId],
             }));
 
             setSelectedActorId("");
           }}
         >
           Add Actor
+          <br />
+        </button>
+        <br />
+        <p>Don't see the actor you need?</p>
+        <br/>
+
+
+        <button
+          type="button"
+          onClick={() => {
+            sessionStorage.setItem("returnToMovie", "true");
+            router.push("/actors/create");
+          }}
+        >
+          + Create New Actor
         </button>
 
         <br />
