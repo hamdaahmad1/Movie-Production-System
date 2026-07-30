@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createActor } from "@/services/actorService";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
@@ -9,6 +9,9 @@ import ImageUpload from "@/app/components/ImageUpload";
 
 export default function CreateActor() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const fromMovie = searchParams.get("from") === "movie";
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
 
@@ -174,12 +177,22 @@ export default function CreateActor() {
         formData.append("image", image);
       }
 
-      await createActor(formData);
+      const createdActor = await createActor(formData);
+
       toast.dismiss(toastId);
 
       toast.success("Actor created successfully!");
 
-      router.push("/actors");
+      if (fromMovie) {
+        sessionStorage.setItem(
+          "newActorId",
+          String(createdActor.id)
+        );
+
+        router.push("/movies/create");
+      } else {
+        router.push("/actors");
+      }
     } catch (error: any) {
       console.error(error);
       toast.dismiss(toastId);
@@ -202,6 +215,11 @@ export default function CreateActor() {
       <button onClick={() => router.push("/")}>Home</button>
 
       <button onClick={() => router.push("/actors")}>Actors List</button>
+      {fromMovie && (
+        <button onClick={() => router.push("/movies/create")}>
+          Back to Create Movie
+        </button>
+      )}
 
       <br />
       <br />
@@ -338,9 +356,9 @@ export default function CreateActor() {
           removeButtonText="Remove Image"
         />
 
-        <br/>
-        <br/>
-        
+        <br />
+        <br />
+
         <button type="submit">Create Actor</button>
       </form>
     </div>
