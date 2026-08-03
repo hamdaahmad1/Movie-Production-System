@@ -31,6 +31,9 @@ export default function ActorsPage() {
   const [page, setPage] = useState(1);
 
   const [totalPages, setTotalPages] = useState(1);
+  const GOLD = "#F4C430";
+const CRIMSON = "#C1121F";
+const INK = "#05070F";
 
   const [filters, setFilters] = useState({
     search: "",
@@ -169,9 +172,16 @@ export default function ActorsPage() {
           {(isAdmin || isEditor) && (
             <Link
               href="/actors/create"
-              className="rounded-full bg-gradient-to-r from-accent to-accent-2 px-5 py-2 text-sm font-semibold text-white hover:opacity-90"
+              className="group inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-lg transition-all duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+              style={{
+                background: `linear-gradient(90deg, ${GOLD}, ${CRIMSON})`,
+                color: INK,
+              }}
             >
               + Create Actor
+              <span className="transition-transform group-hover:translate-x-0.5">
+                →
+              </span>
             </Link>
           )}
         </div>
@@ -233,7 +243,7 @@ export default function ActorsPage() {
                     >
                       View Details
                     </Link>
-                    
+
                     {(isAdmin || isEditor) && (
                       <Link
                         href={`/actors/edit/${actor.id}`}

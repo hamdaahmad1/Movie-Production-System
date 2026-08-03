@@ -16,6 +16,9 @@ import { Director } from "@/types/director";
 
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
+const GOLD = "#F4C430";
+const CRIMSON = "#C1121F";
+const INK = "#05070F";
 
 export default function DirectorsPage() {
   const router = useRouter();
@@ -26,6 +29,7 @@ export default function DirectorsPage() {
   const isEditor = user?.role === "EDITOR";
 
   const [directors, setDirectors] = useState<Director[]>([]);
+
 
   const [page, setPage] = useState(1);
 
@@ -162,10 +166,17 @@ export default function DirectorsPage() {
 
           {(isAdmin || isEditor) && (
             <Link
-              href="/directors/create"
-              className="rounded-full bg-gradient-to-r from-accent to-accent-2 px-5 py-2 text-sm font-semibold text-white hover:opacity-90"
+              href="/movies/create"
+              className="group inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-lg transition-all duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+              style={{
+                background: `linear-gradient(90deg, ${GOLD}, ${CRIMSON})`,
+                color: INK,
+              }}
             >
-              + Create Director
+              + Create Movie
+              <span className="transition-transform group-hover:translate-x-0.5">
+                →
+              </span>
             </Link>
           )}
         </div>
@@ -227,7 +238,7 @@ export default function DirectorsPage() {
                     >
                       View Details
                     </Link>
-                    
+
                     {(isAdmin || isEditor) && (
                       <Link
                         href={`/directors/edit/${director.id}`}

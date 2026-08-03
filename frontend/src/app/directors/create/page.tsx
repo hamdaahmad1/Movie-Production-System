@@ -219,17 +219,21 @@ export default function CreateDirector() {
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label className={labelClass}>Date of Birth</label>
+
               <input
                 type="date"
                 value={director.dob}
-                max={new Date().toISOString().split("T")[0]}
+                max={new Date().toISOString().slice(0, 10)}
                 onChange={(e) =>
-                  setDirector({ ...director, dob: e.target.value })
+                  setDirector({
+                    ...director,
+                    dob: e.target.value,
+                  })
                 }
-                className={inputClass}
+                className={`${inputClass} date-input`}
               />
             </div>
-
+            
             <div>
               <label className={labelClass}>Nationality</label>
               <input

@@ -54,3 +54,13 @@ a {
   transform: translateY(-6px);
   box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.6);
 }
+
+.date-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 1;
+  cursor: pointer;
+}
+
+.date-input {
+  color-scheme: dark;
+}

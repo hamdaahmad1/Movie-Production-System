@@ -635,8 +635,8 @@ export class MoviesController {
     return this.moviesService.update(
       id,
       dto,
-      files.poster?.[0],
-      files.banner?.[0],
+      files?.poster?.[0],
+      files?.banner?.[0],
     );
   
   }

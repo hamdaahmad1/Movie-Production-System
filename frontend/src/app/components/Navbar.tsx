@@ -6,12 +6,9 @@ import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/movies", label: "Movies" },
-  { href: "/actors", label: "Actors" },
-  { href: "/directors", label: "Directors" },
-];
+const GOLD = "#F4C430";
+const CRIMSON = "#C1121F";
+const INK = "#05070F";
 
 export default function Navbar() {
   const router = useRouter();
@@ -23,6 +20,34 @@ export default function Navbar() {
     await logout();
     router.replace("/login");
   }
+
+  const navLinks = user
+    ? user.role === "ADMIN"
+      ? [
+          { href: "/admin", label: "Admin Dashboard" },
+          { href: "/admin/users", label: "Users" },
+          { href: "/movies", label: "Movies" },
+          { href: "/actors", label: "Actors" },
+          { href: "/directors", label: "Directors" },
+        ]
+      : user.role === "EDITOR"
+      ? [
+          { href: "/editor", label: "Editor Dashboard" },
+          { href: "/movies", label: "Movies" },
+          { href: "/actors", label: "Actors" },
+          { href: "/directors", label: "Directors" },
+        ]
+      : [
+          { href: "/viewer", label: "Viewer Dashboard" },
+          { href: "/movies", label: "Movies" },
+          { href: "/actors", label: "Actors" },
+          { href: "/directors", label: "Directors" },
+        ]
+    : [
+        { href: "/movies", label: "Movies" },
+        { href: "/actors", label: "Actors" },
+        { href: "/directors", label: "Directors" },
+      ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-navy-950/80 backdrop-blur-xl shadow-xl">
@@ -41,7 +66,7 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Navigation */}
+        {/* Desktop Navigation */}
         <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-2 backdrop-blur-lg md:flex">
           {navLinks.map((link) => {
             const active =
@@ -63,39 +88,10 @@ export default function Navbar() {
               </Link>
             );
           })}
-
-          {user?.role === "ADMIN" && (
-            <Link
-              href="/admin"
-              className="rounded-full px-5 py-2 text-sm font-semibold text-ink-200 transition hover:bg-white/10 hover:text-white"
-            >
-              Admin
-            </Link>
-          )}
-
-          {user?.role === "EDITOR" && (
-            <Link
-              href="/editor"
-              className="rounded-full px-5 py-2 text-sm font-semibold text-ink-200 transition hover:bg-white/10 hover:text-white"
-            >
-              Editor
-            </Link>
-          )}
-
-          {user?.role === "VIEWER" && (
-            <Link
-              href="/viewer"
-              className="rounded-full px-5 py-2 text-sm font-semibold text-ink-200 transition hover:bg-white/10 hover:text-white"
-            >
-              Viewer
-            </Link>
-          )}
         </div>
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
-          {/* Desktop */}
-
           <div className="hidden md:flex items-center gap-4">
             {user && (
               <span className="rounded-full border border-accent/30 bg-accent/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-accent">
@@ -106,9 +102,16 @@ export default function Navbar() {
             {user ? (
               <button
                 onClick={handleLogout}
-                className="rounded-full bg-gradient-to-r from-red-500 to-rose-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-red-500/30"
+                className="group inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-lg transition-all duration-200 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                style={{
+                  background: `linear-gradient(90deg, ${GOLD}, ${CRIMSON})`,
+                  color: INK,
+                }}
               >
                 Logout
+                <span className="transition-transform group-hover:translate-x-0.5">
+                  →
+                </span>
               </button>
             ) : (
               <>
@@ -129,8 +132,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Button */}
-
+          {/* Mobile Menu Button */}
           <button
             className="md:hidden rounded-xl border border-white/10 bg-white/5 p-2 text-white"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -139,9 +141,11 @@ export default function Navbar() {
           </button>
         </div>
       </nav>
+
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/10 bg-navy-950/95 backdrop-blur-xl">
-          <div className="flex flex-col px-6 py-5 space-y-3">
+        <div className="border-t border-white/10 bg-navy-950/95 backdrop-blur-xl md:hidden">
+          <div className="flex flex-col space-y-3 px-6 py-5">
             {navLinks.map((link) => {
               const active =
                 link.href === "/"
@@ -164,36 +168,6 @@ export default function Navbar() {
               );
             })}
 
-            {user?.role === "ADMIN" && (
-              <Link
-                href="/admin"
-                onClick={() => setMobileMenuOpen(false)}
-                className="rounded-xl px-4 py-3 text-ink-200 hover:bg-white/10"
-              >
-                Admin Dashboard
-              </Link>
-            )}
-
-            {user?.role === "EDITOR" && (
-              <Link
-                href="/editor"
-                onClick={() => setMobileMenuOpen(false)}
-                className="rounded-xl px-4 py-3 text-ink-200 hover:bg-white/10"
-              >
-                Editor Dashboard
-              </Link>
-            )}
-
-            {user?.role === "VIEWER" && (
-              <Link
-                href="/viewer"
-                onClick={() => setMobileMenuOpen(false)}
-                className="rounded-xl px-4 py-3 text-ink-200 hover:bg-white/10"
-              >
-                Viewer Dashboard
-              </Link>
-            )}
-
             {user && (
               <div className="pt-2">
                 <div className="mb-3 rounded-full border border-accent/30 bg-accent/10 px-4 py-2 text-center text-xs font-semibold uppercase tracking-wider text-accent">
@@ -205,9 +179,16 @@ export default function Navbar() {
                     setMobileMenuOpen(false);
                     await handleLogout();
                   }}
-                  className="w-full rounded-xl bg-gradient-to-r from-red-500 to-rose-500 px-4 py-3 font-semibold text-white"
+                  className="group inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold shadow-lg transition-all duration-200 hover:scale-[1.03]"
+                  style={{
+                    background: `linear-gradient(90deg, ${GOLD}, ${CRIMSON})`,
+                    color: INK,
+                  }}
                 >
                   Logout
+                  <span className="transition-transform group-hover:translate-x-0.5">
+                    →
+                  </span>
                 </button>
               </div>
             )}

@@ -37,7 +37,10 @@ export class DashboardService {
   async getEditorDashboard() {
 
     const totalMovies = await this.prisma.movie.count();
-  
+
+    const totalActors = await this.prisma.actor.count();
+
+    const totalDirectors = await this.prisma.director.count();
   
     const recentMovies = await this.prisma.movie.findMany({
       take: 5,
@@ -56,6 +59,8 @@ export class DashboardService {
     return {
       totalMovies,
       recentMovies,
+      totalActors,
+      totalDirectors,
     };
   }
 
@@ -90,6 +95,10 @@ export class DashboardService {
     });
   
     return {
+      totalFavorites: favorites.length,
+      totalWatchlist: watchlist.length,
+      totalReviews: reviews.length,
+  
       favorites: favorites.map((item) => item.movie),
       watchlist: watchlist.map((item) => item.movie),
       reviews,
