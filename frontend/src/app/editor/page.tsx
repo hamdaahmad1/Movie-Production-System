@@ -238,53 +238,86 @@ export default function EditorPage() {
 
         {dashboard && (
           <>
-            {/* STAT */}
-            <div className="mb-14">
-              <div
-                className="group relative w-full max-w-xs overflow-hidden rounded-2xl border border-white/5 p-6 pl-8 shadow-lg transition duration-200 hover:-translate-y-1"
-                style={{ backgroundColor: PANEL }}
-              >
-                <div className="absolute left-4 top-0 h-full border-l border-dashed border-white/10" />
+            {/* STATS */}
+            <div className="mb-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  label: "Total Movies",
+                  value: dashboard.totalMovies,
+                  icon: "🎬",
+                  badge: "Catalog",
+                  number: "01",
+                },
+                {
+                  label: "Total Actors",
+                  value: dashboard.totalActors,
+                  icon: "🎭",
+                  badge: "Cast",
+                  number: "02",
+                },
+                {
+                  label: "Total Directors",
+                  value: dashboard.totalDirectors,
+                  icon: "🎥",
+                  badge: "Crew",
+                  number: "03",
+                },
+              ].map((stat) => (
                 <div
-                  className="absolute -left-2 -top-2 h-4 w-4 rounded-full border border-white/5"
-                  style={{ backgroundColor: INK }}
-                />
-                <div
-                  className="absolute -bottom-2 left-2.5 h-4 w-4 rounded-full border border-white/5"
-                  style={{ backgroundColor: INK }}
-                />
+                  key={stat.label}
+                  className="group relative overflow-hidden rounded-2xl border border-white/5 p-6 pl-8 shadow-lg transition duration-200 hover:-translate-y-1"
+                  style={{ backgroundColor: PANEL }}
+                >
+                  <div className="absolute left-4 top-0 h-full border-l border-dashed border-white/10" />
 
-                <div className="mb-5 flex items-center justify-between">
                   <div
-                    className="flex h-11 w-11 items-center justify-center rounded-xl text-xl"
-                    style={{ backgroundColor: `${GOLD}22` }}
-                  >
-                    🎬
+                    className="absolute -left-2 -top-2 h-4 w-4 rounded-full border border-white/5"
+                    style={{ backgroundColor: INK }}
+                  />
+
+                  <div
+                    className="absolute -bottom-2 left-2.5 h-4 w-4 rounded-full border border-white/5"
+                    style={{ backgroundColor: INK }}
+                  />
+
+                  <div className="mb-5 flex items-center justify-between">
+                    <div
+                      className="flex h-11 w-11 items-center justify-center rounded-xl text-xl"
+                      style={{ backgroundColor: `${GOLD}22` }}
+                    >
+                      {stat.icon}
+                    </div>
+
+                    <span
+                      className={`${mono.className} text-[10px] tracking-widest`}
+                      style={{ color: MUTED }}
+                    >
+                      NO. {stat.number}
+                    </span>
                   </div>
-                  <span
-                    className={`${mono.className} text-[10px] tracking-widest`}
-                    style={{ color: MUTED }}
+
+                  <p className="text-sm" style={{ color: MUTED }}>
+                    {stat.label}
+                  </p>
+
+                  <h3
+                    className={`${mono.className} mt-1 text-4xl font-semibold`}
+                    style={{ color: PAPER }}
                   >
-                    NO. 01
+                    {stat.value}
+                  </h3>
+
+                  <span
+                    className="mt-3 inline-block rounded-full px-2 py-0.5 text-[11px] font-medium"
+                    style={{
+                      backgroundColor: `${GOLD}1A`,
+                      color: GOLD,
+                    }}
+                  >
+                    {stat.badge}
                   </span>
                 </div>
-
-                <p className="text-sm" style={{ color: MUTED }}>
-                  Total Movies
-                </p>
-                <h3
-                  className={`${mono.className} mt-1 text-4xl font-semibold`}
-                  style={{ color: PAPER }}
-                >
-                  {dashboard.totalMovies}
-                </h3>
-                <span
-                  className="mt-3 inline-block rounded-full px-2 py-0.5 text-[11px] font-medium"
-                  style={{ backgroundColor: `${GOLD}1A`, color: GOLD }}
-                >
-                  Catalog
-                </span>
-              </div>
+              ))}
             </div>
 
             {/* RECENT MOVIES */}

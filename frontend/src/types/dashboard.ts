@@ -12,11 +12,16 @@ export interface AdminDashboard {
 
 export interface EditorDashboard {
   totalMovies: number;
+  totalActors: number;
+  totalDirectors: number;
 
   recentMovies: Movie[];
 }
 
 export interface ViewerDashboard {
+  totalFavorites: number;
+  totalWatchlist: number;
+  totalReviews: number;
   favorites: Movie[];
   watchlist: Movie[];
   reviews: Review[];

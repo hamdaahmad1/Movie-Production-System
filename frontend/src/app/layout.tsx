@@ -13,7 +13,7 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "MovieVerse",
   description: "The ultimate destination for movie lovers. Explore now.",
-  icons: { icon: "/favicon.png" },
+  icons: { icon: "/favicon.ico" },
 };
 
 export default function RootLayout({

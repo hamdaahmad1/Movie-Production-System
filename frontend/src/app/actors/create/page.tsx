@@ -9,6 +9,7 @@ import Navbar from "@/app/components/Navbar";
 import ImageUpload from "@/app/components/ImageUpload";
 import CustomSelect from "@/app/components/CustomSelect";
 
+
 const inputClass =
   "w-full rounded-lg bg-navy-700 border border-navy-600 px-3 py-2.5 text-sm text-white placeholder:text-ink-400 focus:outline-none focus:border-accent";
 const labelClass = "mb-1.5 block text-sm font-medium text-ink-200";
@@ -231,12 +232,18 @@ export default function CreateActor() {
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label className={labelClass}>Date of Birth</label>
+
               <input
                 type="date"
                 value={actor.dob}
-                max={new Date().toISOString().split("T")[0]}
-                onChange={(e) => setActor({ ...actor, dob: e.target.value })}
-                className={inputClass}
+                max={new Date().toISOString().slice(0, 10)}
+                onChange={(e) =>
+                  setActor({
+                    ...actor,
+                    dob: e.target.value,
+                  })
+                }
+                className={`${inputClass} date-input`}
               />
             </div>
 

@@ -347,14 +347,18 @@ export default function EditMovie() {
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label className={labelClass}>Release Date</label>
+
               <input
                 type="date"
                 value={movie.releaseDate}
                 max={new Date().toISOString().split("T")[0]}
                 onChange={(e) =>
-                  setMovie({ ...movie, releaseDate: e.target.value })
+                  setMovie({
+                    ...movie,
+                    releaseDate: e.target.value,
+                  })
                 }
-                className={inputClass}
+                className={`${inputClass} date-input`}
               />
             </div>
 

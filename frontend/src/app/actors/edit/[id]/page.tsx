@@ -225,12 +225,18 @@ export default function EditActor() {
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label className={labelClass}>Date of Birth</label>
+
               <input
                 type="date"
                 value={actor.dob}
                 max={new Date().toISOString().split("T")[0]}
-                onChange={(e) => setActor({ ...actor, dob: e.target.value })}
-                className={inputClass}
+                onChange={(e) =>
+                  setActor({
+                    ...actor,
+                    dob: e.target.value,
+                  })
+                }
+                className={`${inputClass} date-input`}
               />
             </div>
 

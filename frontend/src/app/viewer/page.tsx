@@ -9,7 +9,6 @@ import { Playfair_Display, JetBrains_Mono } from "next/font/google";
 
 import { useAuth } from "@/context/AuthContext";
 
-
 import { ViewerDashboard } from "@/types/dashboard";
 import { getViewerDashboard } from "@/services/dashboardService";
 import toast from "react-hot-toast";
@@ -34,8 +33,6 @@ const PAPER = "#F3EFE7"; // primary text
 const MUTED = "#8B90A0"; // secondary text
 
 const ITEMS_PER_PAGE = 5;
-
-
 
 function SectionHeader({
   accent,
@@ -122,7 +119,6 @@ export default function ViewerPage() {
   const [dashboard, setDashboard] = useState<ViewerDashboard | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
 
- 
   const [favoritePage, setFavoritePage] = useState(1);
 
   const [watchlistPage, setWatchlistPage] = useState(1);
@@ -130,9 +126,9 @@ export default function ViewerPage() {
   const [reviewPage, setReviewPage] = useState(1);
   const favorites = dashboard?.favorites ?? [];
 
-const watchlist = dashboard?.watchlist ?? [];
+  const watchlist = dashboard?.watchlist ?? [];
 
-const reviews = dashboard?.reviews ?? [];
+  const reviews = dashboard?.reviews ?? [];
 
   const paginatedFavorites = favorites.slice(
     (favoritePage - 1) * ITEMS_PER_PAGE,
@@ -161,20 +157,21 @@ const reviews = dashboard?.reviews ?? [];
 
   async function loadDashboardData() {
     const toastId = toast.loading("Loading dashboard...");
-  
+
     try {
       setDashboardLoading(true);
-  
+
       const data = await getViewerDashboard();
-  
+      console.log(data);
+
       setDashboard(data);
-  
+
       toast.dismiss(toastId);
     } catch (error) {
       console.error(error);
-  
+
       toast.dismiss(toastId);
-  
+
       toast.error("Failed to load dashboard data.");
     } finally {
       setDashboardLoading(false);
@@ -299,6 +296,88 @@ const reviews = dashboard?.reviews ?? [];
           </div>
         ) : (
           <>
+            {/* STATS */}
+            <div className="mb-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  label: "Total Favorites",
+                  value: dashboard?.totalFavorites ?? 0,
+                  icon: "❤️",
+                  badge: "Favorites",
+                  number: "01",
+                },
+                {
+                  label: "Total Watchlist",
+                  value: dashboard?.totalWatchlist ?? 0,
+                  icon: "🎞️",
+                  badge: "Watchlist",
+                  number: "02",
+                },
+                {
+                  label: "Total Reviews",
+                  value: dashboard?.totalReviews ?? 0,
+                  icon: "⭐",
+                  badge: "Reviews",
+                  number: "03",
+                },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="group relative overflow-hidden rounded-2xl border border-white/5 p-6 pl-8 shadow-lg transition duration-200 hover:-translate-y-1"
+                  style={{ backgroundColor: PANEL }}
+                >
+                  <div className="absolute left-4 top-0 h-full border-l border-dashed border-white/10" />
+
+                  <div
+                    className="absolute -left-2 -top-2 h-4 w-4 rounded-full border border-white/5"
+                    style={{ backgroundColor: INK }}
+                  />
+
+                  <div
+                    className="absolute -bottom-2 left-2.5 h-4 w-4 rounded-full border border-white/5"
+                    style={{ backgroundColor: INK }}
+                  />
+
+                  <div className="mb-5 flex items-center justify-between">
+                    <div
+                      className="flex h-11 w-11 items-center justify-center rounded-xl text-xl"
+                      style={{ backgroundColor: `${GOLD}22` }}
+                    >
+                      {stat.icon}
+                    </div>
+
+                    <span
+                      className={`${mono.className} text-[10px] tracking-widest`}
+                      style={{ color: MUTED }}
+                    >
+                      NO. {stat.number}
+                    </span>
+                  </div>
+
+                  <p className="text-sm" style={{ color: MUTED }}>
+                    {stat.label}
+                  </p>
+
+                  <h3
+                    className={`${mono.className} mt-1 text-4xl font-semibold`}
+                    style={{ color: PAPER }}
+                  >
+                    {stat.value}
+                  </h3>
+
+                  <span
+                    className="mt-3 inline-block rounded-full px-2 py-0.5 text-[11px] font-medium"
+                    style={{
+                      backgroundColor: `${GOLD}1A`,
+                      color: GOLD,
+                    }}
+                  >
+                    {stat.badge}
+                  </span>
+                </div>
+              ))}
+            </div>
+
             {/* FAVORITES */}
             <section className="mb-14">
               <SectionHeader
