@@ -18,6 +18,7 @@ import {
   Param,
   ParseIntPipe,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
   ParseFilePipe,
   MaxFileSizeValidator,
@@ -38,7 +39,7 @@ import {
 
 
 
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 
 
 
@@ -63,7 +64,10 @@ export class MoviesController {
   @ApiConsumes('multipart/form-data')
 
   @UseInterceptors(
-    FileInterceptor('poster')
+    FileFieldsInterceptor([
+      { name: "poster", maxCount: 1 },
+      { name: "banner", maxCount: 1 },
+    ])
   )
 
   @ApiBody({
@@ -135,6 +139,12 @@ export class MoviesController {
             'Movie poster image (optional)',
         },
 
+        banner: {
+          type: "string",
+          format: "binary",
+          description: "Movie banner image",
+        },
+
       },
     },
   })
@@ -171,6 +181,7 @@ export class MoviesController {
 
 
     @UploadedFile(
+
       new ParseFilePipe({
 
         fileIsRequired:false,
@@ -190,16 +201,19 @@ export class MoviesController {
       })
     )
 
-  
-    file?: Express.Multer.File,
-
+    files: {
+      poster?: Express.Multer.File[];
+      banner?: Express.Multer.File[];
+    },
+    
 
   ) {
 
     return this.moviesService.create(
       dto,
       req.user,
-      file,
+      files.poster?.[0],
+      files.banner?.[0],
     );
 
   }
@@ -327,7 +341,10 @@ export class MoviesController {
 
 
   @UseInterceptors(
-    FileInterceptor('poster'),
+    FileFieldsInterceptor([
+      { name: "poster", maxCount: 1 },
+      { name: "banner", maxCount: 1 },
+    ])
   )
 
 
@@ -371,6 +388,11 @@ export class MoviesController {
           format:'binary',
           description:
             'Movie poster image (optional)',
+        },
+
+        banner: {
+          type: "string",
+          format: "binary",
         },
 
       },
@@ -421,7 +443,10 @@ export class MoviesController {
       })
     )
 
-    file?:Express.Multer.File,
+    files: {
+      poster?: Express.Multer.File[];
+      banner?: Express.Multer.File[];
+    },
 
 
   ) {
@@ -430,7 +455,8 @@ export class MoviesController {
     return this.moviesService.partialUpdate(
       id,
       dto,
-      file,
+      files.poster?.[0],
+      files.banner?.[0],
     );
 
 
@@ -451,7 +477,10 @@ export class MoviesController {
   @ApiConsumes('multipart/form-data')
   
   @UseInterceptors(
-    FileInterceptor('poster'),
+    FileFieldsInterceptor([
+      { name: "poster", maxCount: 1 },
+      { name: "banner", maxCount: 1 },
+    ])
   )
   
   @ApiParam({
@@ -513,6 +542,11 @@ export class MoviesController {
           type: 'string',
           example:
             'old-cloudinary-url',
+        },
+        banner: {
+          type: "string",
+          format: "binary",
+          description: "Movie banner image",
         },
   
         directorId: {
@@ -591,14 +625,18 @@ export class MoviesController {
   
       }),
     )
-    file?: Express.Multer.File,
+    files: {
+      poster?: Express.Multer.File[];
+      banner?: Express.Multer.File[];
+    },
   
   ) {
   
     return this.moviesService.update(
       id,
       dto,
-      file,
+      files.poster?.[0],
+      files.banner?.[0],
     );
   
   }

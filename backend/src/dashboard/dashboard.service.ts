@@ -58,4 +58,41 @@ export class DashboardService {
       recentMovies,
     };
   }
+
+  async getViewerDashboard(userId: number) {
+    const favorites = await this.prisma.movieInteraction.findMany({
+      where: {
+        userId,
+        type: "FAVORITE",
+      },
+      include: {
+        movie: true,
+      },
+    });
+  
+    const watchlist = await this.prisma.movieInteraction.findMany({
+      where: {
+        userId,
+        type: "WATCHLIST",
+      },
+      include: {
+        movie: true,
+      },
+    });
+  
+    const reviews = await this.prisma.review.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        movie: true,
+      },
+    });
+  
+    return {
+      favorites: favorites.map((item) => item.movie),
+      watchlist: watchlist.map((item) => item.movie),
+      reviews,
+    };
+  }
 }

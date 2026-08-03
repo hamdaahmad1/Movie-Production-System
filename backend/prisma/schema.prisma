@@ -7,29 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  EDITOR
-  VIEWER
-}
-
-enum InteractionType {
-  FAVORITE
-  WATCHLIST
-}
-
 model Director {
   id          Int      @id @default(autoincrement())
   name        String   @unique
   dob         DateTime
   biography   String
-  imagePath   String?
   nationality String
-  movies      Movie[]
+  imagePath   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
   createdById Int?
-createdBy   User? @relation("DirectorCreator", fields: [createdById], references: [id])
+  createdBy   User?    @relation("DirectorCreator", fields: [createdById], references: [id])
+  movies      Movie[]
 }
 
 model Actor {
@@ -43,88 +32,85 @@ model Actor {
   imagePath   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
-  movies      Movie[]  @relation("ActorToMovie")
   createdById Int?
-createdBy   User? @relation("ActorCreator", fields: [createdById], references: [id])
+  createdBy   User?    @relation("ActorCreator", fields: [createdById], references: [id])
+  movies      Movie[]  @relation("ActorToMovie")
 }
 
 model Movie {
-  id          Int      @id @default(autoincrement())
-  title       String
-  duration    Int
-  genre       String
-  rating      Float
-  directorId  Int
-  description String
-  language    String
-  posterPath  String?
-  releaseDate DateTime
-  trailerId   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
-
-  director Director @relation(fields: [directorId], references: [id])
-  actors   Actor[]  @relation("ActorToMovie")
-
+  id           Int                @id @default(autoincrement())
+  title        String
+  duration     Int
+  genre        String
+  rating       Float
+  directorId   Int
+  description  String
+  language     String
+  releaseDate  DateTime
+  trailerId    String
+  posterPath   String?
+  bannerPath    String?     
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @default(now()) @updatedAt
+  createdById  Int?
+  createdBy    User?              @relation("MovieCreator", fields: [createdById], references: [id])
+  director     Director           @relation(fields: [directorId], references: [id])
   interactions MovieInteraction[]
   reviews      Review[]
-  createdById Int?
-  createdBy   User? @relation("MovieCreator", fields: [createdById], references: [id])
+  actors       Actor[]            @relation("ActorToMovie")
 }
 
 model User {
-  id        Int    @id @default(autoincrement())
-  username  String @unique
-  email     String @unique
-  password  String
-  firstName String
-  lastName  String
-  role      Role   @default(VIEWER)
-
-  ISActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-
-  interactions MovieInteraction[]
-  reviews      Review[]
-  createdMovies Movie[] @relation("MovieCreator")
-  createdActors    Actor[]    @relation("ActorCreator")
-  createdDirectors Director[] @relation("DirectorCreator")
+  id               Int                @id @default(autoincrement())
+  username         String             @unique
+  email            String             @unique
+  password         String
+  firstName        String
+  lastName         String
+  role             Role               @default(VIEWER)
+  ISActive         Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @default(now()) @updatedAt
+  createdActors    Actor[]            @relation("ActorCreator")
+  createdDirectors Director[]         @relation("DirectorCreator")
+  createdMovies    Movie[]            @relation("MovieCreator")
+  interactions     MovieInteraction[]
+  reviews          Review[]
 }
 
 model MovieInteraction {
-  id     Int @id @default(autoincrement())
-  userId Int
-
+  id        Int             @id @default(autoincrement())
+  userId    Int
   movieId   Int
   type      InteractionType
   createdAt DateTime        @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  movie     Movie           @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, movieId, type])
 }
 
 model Review {
-  id Int @id @default(autoincrement())
-
-  rating Int
-
-  comment String?
-
-  userId Int
-
-  movieId Int
-
+  id        Int      @id @default(autoincrement())
+  rating    Int
+  comment   String?
+  userId    Int
+  movieId   Int
   createdAt DateTime @default(now())
-
   updatedAt DateTime @default(now()) @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, movieId])
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum InteractionType {
+  FAVORITE
+  WATCHLIST
 }

@@ -17,3 +17,11 @@ export async function getEditorDashboard(){
     return response.data.data;
    
    }
+
+   export async function getViewerDashboard() {
+    const response = await API.get("/dashboard/viewer", {
+      withCredentials: true,
+    });
+  
+    return response.data.data;
+  }

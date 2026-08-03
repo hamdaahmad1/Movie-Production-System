@@ -2,6 +2,7 @@ import {
     Controller,
     Get,
     UseGuards,
+    Req
   } from "@nestjs/common";
   
   import {
@@ -16,6 +17,7 @@ import {
   import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
   import { RolesGuard } from "../auth/guards/roles.guard";
   import { Roles } from "../auth/decorators/roles.decorator";
+  import { Request } from "express";
   
   @ApiBearerAuth("JWT-auth")
   @ApiTags("Dashboard")
@@ -52,7 +54,23 @@ import {
       status: 200,
       description: "Dashboard data",
     })
-    getEditorDashboard() {
+    getEditorDashboard() 
+    {
       return this.dashboardService.getEditorDashboard();
     }
-  }
+
+    @Roles("VIEWER")
+@Get("viewer")
+@ApiOperation({
+  summary: "Viewer dashboard",
+})
+@ApiResponse({
+  status: 200,
+  description: "Dashboard data",
+})
+getViewerDashboard(@Req() req:any) {
+  return this.dashboardService.getViewerDashboard(req.user["id"]);
+}
+
+    
+}

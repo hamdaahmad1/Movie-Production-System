@@ -55,7 +55,8 @@ describe('MoviesService', () => {
       trailerId: "abc123",
       directorId: 1,
       actorIds: [1, 2],
-      posterPath: undefined
+      posterPath: undefined,
+      bannerPath: undefined,
     };
     const mockUser = {
       id: 9,
@@ -301,7 +302,87 @@ describe('MoviesService', () => {
           
           });
 
+          it("should upload banner successfully while creating a movie", async () => {
 
+            const mockBanner = {
+              originalname: "banner.jpg",
+              buffer: Buffer.from("banner"),
+            } as Express.Multer.File;
+          
+            mockPrismaService.movie.findFirst.mockResolvedValue(null);
+          
+            mockPrismaService.director.findUnique.mockResolvedValue({
+              id: 1,
+            });
+          
+            mockPrismaService.actor.findMany.mockResolvedValue([
+              { id: 1 },
+              { id: 2 },
+            ]);
+          
+            mockCloudinaryService.uploadImage
+              .mockResolvedValueOnce({
+                secure_url: "poster-url",
+              })
+              .mockResolvedValueOnce({
+                secure_url: "banner-url",
+              });
+          
+            mockPrismaService.movie.create.mockResolvedValue({
+              id: 1,
+              posterPath: "poster-url",
+              bannerPath: "banner-url",
+            });
+          
+            const result = await service.create(
+              mockCreateMovieDto,
+              mockUser,
+              {} as Express.Multer.File,
+              mockBanner,
+            );
+          
+            expect(mockCloudinaryService.uploadImage).toHaveBeenCalledTimes(2);
+          
+            expect(result.bannerPath).toBe("banner-url");
+          });
+
+          it("should throw if banner upload fails while creating movie", async () => {
+
+            const mockPoster = {} as Express.Multer.File;
+          
+            const mockBanner = {
+              originalname: "banner.jpg",
+              buffer: Buffer.from("banner"),
+            } as Express.Multer.File;
+          
+            mockPrismaService.movie.findFirst.mockResolvedValue(null);
+          
+            mockPrismaService.director.findUnique.mockResolvedValue({
+              id: 1,
+            });
+          
+            mockPrismaService.actor.findMany.mockResolvedValue([
+              { id: 1 },
+              { id: 2 },
+            ]);
+          
+            mockCloudinaryService.uploadImage
+              .mockResolvedValueOnce({
+                secure_url: "poster-url",
+              })
+              .mockRejectedValueOnce(
+                new Error("Banner upload failed"),
+              );
+          
+            await expect(
+              service.create(
+                mockCreateMovieDto,
+                mockUser,
+                mockPoster,
+                mockBanner,
+              ),
+            ).rejects.toThrow("Banner upload failed");
+          });
 
           it("should create a movie successfully", async () => {
 
@@ -409,6 +490,7 @@ describe('MoviesService', () => {
                     trailerId: dto.trailerId,
         
                     posterPath: "https://cloudinary.com/movie.jpg",
+                    bannerPath: null,
         
                     director: {
                         connect: {
@@ -823,6 +905,76 @@ describe('MoviesService', () => {
         });
       
       });
+      it("should upload banner while updating movie", async () => {
+
+        const mockBanner = {
+          originalname: "banner.jpg",
+          buffer: Buffer.from("banner"),
+        } as Express.Multer.File;
+      
+        mockPrismaService.movie.findUnique.mockResolvedValue({
+          id: 1,
+          posterPath: "old-poster",
+          bannerPath: "old-banner",
+        });
+      
+        mockPrismaService.movie.findFirst.mockResolvedValue(null);
+      
+        mockPrismaService.director.findUnique.mockResolvedValue({
+          id: 1,
+        });
+      
+        mockPrismaService.actor.findMany.mockResolvedValue([
+          { id: 1 },
+          { id: 2 },
+        ]);
+      
+        mockCloudinaryService.uploadImage.mockResolvedValue({
+          secure_url: "new-banner",
+        });
+      
+        mockPrismaService.movie.update.mockResolvedValue({
+          id: 1,
+          bannerPath: "new-banner",
+        });
+      
+        const result = await service.update(
+          1,
+          mockCreateMovieDto,
+          undefined,
+          mockBanner,
+        );
+      
+        expect(result.bannerPath).toBe("new-banner");
+      });
+
+      it("should throw if banner upload fails while updating", async () => {
+
+        const mockBanner = {
+          originalname: "banner.jpg",
+          buffer: Buffer.from("banner"),
+        } as Express.Multer.File;
+      
+        mockPrismaService.movie.findUnique.mockResolvedValue({
+          id: 1,
+          posterPath: "old-poster",
+          bannerPath: "old-banner",
+        });
+      
+        mockCloudinaryService.uploadImage.mockRejectedValue(
+          new Error("Banner upload failed"),
+        );
+      
+        await expect(
+          service.update(
+            1,
+            mockCreateMovieDto,
+            undefined,
+            mockBanner,
+          ),
+        ).rejects.toThrow("Banner upload failed");
+      });
+
       it("should update a movie successfully", async () => {
 
         const dto = { ...mockCreateMovieDto };
@@ -1035,6 +1187,62 @@ describe('MoviesService', () => {
         );
       
       });
+      it("should upload banner during partial update", async () => {
+
+        const mockBanner = {
+          originalname: "banner.jpg",
+          buffer: Buffer.from("banner"),
+        } as Express.Multer.File;
+      
+        mockPrismaService.movie.findUnique.mockResolvedValue({
+          id: 1,
+          bannerPath: "old-banner",
+        });
+      
+        mockCloudinaryService.uploadImage.mockResolvedValue({
+          secure_url: "new-banner",
+        });
+      
+        mockPrismaService.movie.update.mockResolvedValue({
+          id: 1,
+          bannerPath: "new-banner",
+        });
+      
+        const result = await service.partialUpdate(
+          1,
+          {},
+          undefined,
+          mockBanner,
+        );
+      
+        expect(result.bannerPath).toBe("new-banner");
+      });
+      it("should throw if banner upload fails during partial update", async () => {
+
+        const mockBanner = {
+          originalname: "banner.jpg",
+          buffer: Buffer.from("banner"),
+        } as Express.Multer.File;
+      
+        mockPrismaService.movie.findUnique.mockResolvedValue({
+          id: 1,
+          bannerPath: "old-banner",
+        });
+      
+        mockCloudinaryService.uploadImage.mockRejectedValue(
+          new Error("Banner upload failed"),
+        );
+      
+        await expect(
+          service.partialUpdate(
+            1,
+            {},
+            undefined,
+            mockBanner,
+          ),
+        ).rejects.toThrow("Banner upload failed");
+      });
+
       it("should partially update a movie successfully", async () => {
 
         const updatedMovie = {
