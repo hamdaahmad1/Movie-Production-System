@@ -490,6 +490,7 @@ describe('MoviesService', () => {
                     trailerId: dto.trailerId,
         
                     posterPath: "https://cloudinary.com/movie.jpg",
+                    bannerPath: null,
         
                     director: {
                         connect: {
