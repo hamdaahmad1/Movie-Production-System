@@ -9,6 +9,7 @@ import Navbar from "@/app/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import { getMovie } from "@/services/movieService";
 import { Movie } from "@/types/movie";
+import StarRating from "@/app/components/StarRating";
 
 import { getMovieReviews, deleteReview } from "@/services/reviewService";
 
@@ -171,9 +172,17 @@ export default function MovieDetailsPage() {
                 {movie.description}
               </p>
 
-              <div className="mt-6 flex flex-wrap gap-5 text-white">
+              <div className="mt-6 flex flex-wrap items-center gap-5 text-white">
                 <span>{movie.duration} min</span>
-                <span>⭐ {movie.rating}/10</span>
+
+                <div className="flex items-center gap-2">
+                  <StarRating value={movie.averageRating} readOnly size={16} />
+
+                  <span className="font-semibold">
+                    {movie.averageRating.toFixed(1)}/5.0
+                  </span>
+                </div>
+
                 <span>{movie.language}</span>
               </div>
 
@@ -215,7 +224,7 @@ export default function MovieDetailsPage() {
               </p>
 
               <p className="mt-2 text-xl font-semibold text-yellow-400">
-                ⭐ {movie.rating}/10
+                ⭐ {movie.rating}/5
               </p>
             </div>
 

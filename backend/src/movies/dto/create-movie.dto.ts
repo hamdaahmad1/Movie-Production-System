@@ -99,9 +99,9 @@ export class CreateMovieDto {
     message:
       'Rating must be at least 1',
   })
-  @Max(10, {
+  @Max(5, {
     message:
-      'Rating cannot exceed 10',
+      'Rating cannot exceed 5',
   })
   rating: number;
 

@@ -47,7 +47,7 @@ export default function MoviesPage() {
     directorId: "",
     actorId: "",
     year: "",
-    sortBy: "",
+    sortBy: "rating",
     order: "desc" as "asc" | "desc",
   });
 
@@ -239,7 +239,7 @@ export default function MoviesPage() {
   const sortOptions = [
     { value: "", label: "Sort By" },
     { value: "title", label: "Title" },
-    { value: "rating", label: "Rating Score" },
+    { value: "rating", label: "Highest Rated" },
     { value: "year", label: "Release Year" },
   ];
 

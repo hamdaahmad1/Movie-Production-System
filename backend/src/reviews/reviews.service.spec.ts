@@ -333,42 +333,6 @@ describe('ReviewsService', () => {
 
     });
 
-    describe("getAverageRating", () => {
-
-        it("should return the average rating and total review count", async () => {
-
-            mockPrismaService.review.aggregate.mockResolvedValue({
-              _avg: { rating: 4.5 },
-              _count: { rating: 2 },
-            });
-
-            const result = await service.getAverageRating(1);
-
-            expect(result).toEqual({
-              averageRating: 4.5,
-              totalReviews: 2,
-            });
-
-        });
-
-        it("should return 0 average rating if the movie has no reviews", async () => {
-
-            mockPrismaService.review.aggregate.mockResolvedValue({
-              _avg: { rating: null },
-              _count: { rating: 0 },
-            });
-
-            const result = await service.getAverageRating(1);
-
-            expect(result).toEqual({
-              averageRating: 0,
-              totalReviews: 0,
-            });
-
-        });
-
-    });
-
     describe("getMyReviews", () => {
 
         it("should return all reviews made by the user", async () => {

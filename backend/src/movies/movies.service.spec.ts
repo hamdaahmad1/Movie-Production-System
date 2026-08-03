@@ -6,6 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { CreateMovieDto } from './dto/create-movie.dto';
+import { ReviewsService } from 'src/reviews/reviews.service';
 import { mock } from 'node:test';
 
 describe('MoviesService', () => {
@@ -51,7 +52,7 @@ describe('MoviesService', () => {
       duration: 148,
       genre: "Sci-Fi",
       language: "English",
-      rating: 9,
+      rating: 5,
       trailerId: "abc123",
       directorId: 1,
       actorIds: [1, 2],
@@ -529,129 +530,164 @@ describe('MoviesService', () => {
 
     describe("findOne", () => {
 
-
       it("should throw NotFoundException if movie does not exist", async () => {
-
+    
         const id = 1;
     
         mockPrismaService.movie.findUnique.mockResolvedValue(null);
     
         await expect(
-            service.findOne(id)
+          service.findOne(id)
         ).rejects.toThrow(NotFoundException);
     
         expect(
-            mockPrismaService.movie.findUnique
+          mockPrismaService.movie.findUnique
         ).toHaveBeenCalledWith({
     
-            where:{
-                id,
-            },
+          where: {
+            id,
+          },
     
-            include:{
-                director:true,
-                actors:true,
-            },
+          include: {
+            director: true,
+            actors: true,
+            reviews: true,
+          },
     
-          });
         });
-  
-        it("should return a movie if it exists", async () => {
-
-          const movie = {
-      
-              id:1,
-      
-              title:"Inception",
-      
-              director:{
-                  id:1,
-                  name:"Christopher Nolan",
-              },
-      
-              actors:[
-                  {
-                      id:1,
-                      name:"Leonardo DiCaprio",
-                  }
-              ],
-      
-          };
-      
-          mockPrismaService.movie.findUnique.mockResolvedValue(movie);
-      
-          const result =
-              await service.findOne(1);
-      
-          expect(result).toEqual(movie);
-      
-          expect(
-              mockPrismaService.movie.findUnique
-          ).toHaveBeenCalledWith({
-      
-              where:{
-                  id:1,
-              },
-      
-              include:{
-                  director:true,
-                  actors:true,
-              },
-      
-          });
-
-
     
       });
+    
+      it("should return a movie if it exists", async () => {
+    
+        const movie = {
+    
+          id: 1,
+    
+          title: "Inception",
+          rating: 5,
+    
+          director: {
+            id: 1,
+            name: "Christopher Nolan",
+          },
+    
+          actors: [
+            {
+              id: 1,
+              name: "Leonardo DiCaprio",
+            },
+          ],
+    
+          reviews: [
+            {
+              id: 1,
+              rating: 5,
+              comment: "Great movie!",
+            },
+          ],
+    
+        };
+    
+        mockPrismaService.movie.findUnique.mockResolvedValue(movie);
+    
+        const result = await service.findOne(1);
+    
+        expect(result).toEqual({
+          ...movie,
+          averageRating: 5,
+          totalRatings: 2,
+          popularityScore: 5 * Math.log10(3), // 5 × log10(totalRatings + 1)
+        });
+    
+        expect(
+          mockPrismaService.movie.findUnique
+        ).toHaveBeenCalledWith({
+    
+          where: {
+            id: 1,
+          },
+    
+          include: {
+            director: true,
+            actors: true,
+            reviews: true,
+          },
+    
+        });
+    
+      });
+    
     });
 
 
     describe("findAll", () => {
 
       it("should return paginated movies", async () => {
-
+    
         const movies = [
-          { id: 1, title: "Inception" },
-          { id: 2, title: "Interstellar" },
+          {
+            id: 1,
+            title: "Inception",
+            rating: 5,
+            reviews: [],
+          },
+          {
+            id: 2,
+            title: "Interstellar",
+            rating: 4,
+            reviews: [],
+          },
         ];
-      
+    
         mockPrismaService.movie.findMany.mockResolvedValue(movies);
         mockPrismaService.movie.count.mockResolvedValue(2);
-      
+    
         const result = await service.findAll({});
-      
+    
+        const expectedMovies = [
+          {
+            ...movies[0],
+            averageRating: 5,
+            totalRatings: 1,
+            popularityScore: 5 * Math.log10(2),
+          },
+          {
+            ...movies[1],
+            averageRating: 4,
+            totalRatings: 1,
+            popularityScore: 4 * Math.log10(2),
+          },
+        ];
+    
         expect(result).toEqual({
-          data: movies,
+          data: expectedMovies,
           total: 2,
           page: 1,
           limit: 10,
           totalPages: 1,
         });
-      
+    
         expect(mockPrismaService.movie.findMany).toHaveBeenCalledWith({
           where: {},
           include: {
             director: true,
             actors: true,
+            reviews: true,
           },
-          orderBy: {
-            createdAt: "desc",
-          },
-          skip: 0,
-          take: 10,
         });
-      
+    
         expect(mockPrismaService.movie.count).toHaveBeenCalledWith({
           where: {},
         });
-      
+    
       });
-
+    
       it("should apply all filters correctly", async () => {
-
+    
         mockPrismaService.movie.findMany.mockResolvedValue([]);
         mockPrismaService.movie.count.mockResolvedValue(0);
-      
+    
         await service.findAll({
           search: "Inception",
           genre: "Sci-Fi",
@@ -659,116 +695,147 @@ describe('MoviesService', () => {
           actorId: 2,
           year: 2010,
         });
-      
+    
         expect(mockPrismaService.movie.findMany).toHaveBeenCalledWith({
-      
+    
           where: {
-      
+    
             title: {
               contains: "Inception",
               mode: "insensitive",
             },
-      
+    
             genre: {
               contains: "Sci-Fi",
               mode: "insensitive",
             },
-      
+    
             directorId: 1,
-      
+    
             actors: {
               some: {
                 id: 2,
               },
             },
-      
+    
             releaseDate: {
               gte: new Date("2010-01-01"),
               lt: new Date("2011-01-01"),
             },
-      
+    
           },
-      
+    
           include: {
             director: true,
             actors: true,
+            reviews: true,
           },
-      
-          orderBy: {
-            createdAt: "desc",
-          },
-      
-          skip: 0,
-      
-          take: 10,
-      
+    
         });
-      
+    
       });
-
-      it("should sort movies by rating in ascending order", async () => {
-
-        mockPrismaService.movie.findMany.mockResolvedValue([]);
-        mockPrismaService.movie.count.mockResolvedValue(0);
-      
-        await service.findAll({
+    
+      it("should sort movies by popularity score in ascending order", async () => {
+    
+        const movies = [
+          {
+            id: 1,
+            title: "Titanic",
+            rating: 5,
+            reviews: [],
+          },
+          {
+            id: 2,
+            title: "Inception",
+            rating: 5,
+            reviews: [
+              {
+                rating: 5,
+              },
+            ],
+          },
+        ];
+    
+        mockPrismaService.movie.findMany.mockResolvedValue(movies);
+        mockPrismaService.movie.count.mockResolvedValue(2);
+    
+        const result = await service.findAll({
           sortBy: "rating",
           order: "asc",
         });
-      
-        expect(mockPrismaService.movie.findMany).toHaveBeenCalledWith({
-      
-          where: {},
-      
-          include: {
-            director: true,
-            actors: true,
-          },
-      
-          orderBy: {
-            rating: "asc",
-          },
-      
-          skip: 0,
-      
-          take: 10,
-      
-        });
-      
+    
+        expect(result.data[0].title).toBe("Titanic");
+        expect(result.data[1].title).toBe("Inception");
+    
       });
-
+    
+      it("should sort movies by popularity score in descending order", async () => {
+    
+        const movies = [
+          {
+            id: 1,
+            title: "Titanic",
+            rating: 5,
+            reviews: [],
+          },
+          {
+            id: 2,
+            title: "Inception",
+            rating: 5,
+            reviews: [
+              {
+                rating: 5,
+              },
+            ],
+          },
+        ];
+    
+        mockPrismaService.movie.findMany.mockResolvedValue(movies);
+        mockPrismaService.movie.count.mockResolvedValue(2);
+    
+        const result = await service.findAll({
+          sortBy: "rating",
+          order: "desc",
+        });
+    
+        expect(result.data[0].title).toBe("Inception");
+        expect(result.data[1].title).toBe("Titanic");
+    
+      });
+    
       it("should apply pagination correctly", async () => {
-
-        mockPrismaService.movie.findMany.mockResolvedValue([]);
-        mockPrismaService.movie.count.mockResolvedValue(0);
-      
-        await service.findAll({
+    
+        const movies = Array.from({ length: 15 }, (_, i) => ({
+          id: i + 1,
+          title: `Movie ${i + 1}`,
+          rating: 5,
+          reviews: [],
+        }));
+    
+        mockPrismaService.movie.findMany.mockResolvedValue(movies);
+        mockPrismaService.movie.count.mockResolvedValue(15);
+    
+        const result = await service.findAll({
           page: 3,
           limit: 5,
         });
-      
+    
+        expect(result.data).toHaveLength(5);
+        expect(result.page).toBe(3);
+        expect(result.limit).toBe(5);
+        expect(result.total).toBe(15);
+        expect(result.totalPages).toBe(3);
+    
         expect(mockPrismaService.movie.findMany).toHaveBeenCalledWith({
-      
           where: {},
-      
           include: {
             director: true,
             actors: true,
+            reviews: true,
           },
-      
-          orderBy: {
-            createdAt: "desc",
-          },
-      
-          skip: 10,
-      
-          take: 5,
-      
         });
-      
+    
       });
-
-      
     
     });
 

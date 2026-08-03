@@ -13,6 +13,8 @@ export interface Movie {
     duration: number;
     genre: string;
     rating: number;
+    averageRating: number;   // Calculated average
+    totalRatings: number;    // Number of ratings
 
     directorId: number;
 

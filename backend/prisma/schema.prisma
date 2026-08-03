@@ -42,7 +42,7 @@ model Movie {
   title        String
   duration     Int
   genre        String
-  rating       Float
+  rating       Int
   directorId   Int
   description  String
   language     String
