@@ -23,7 +23,7 @@ export class MoviesService
     private cloudinaryService: CloudinaryService
   ) {}
 
-  async create(dto: CreateMovieDto, user: any, file?: Express.Multer.File) {
+  async create(dto: CreateMovieDto, user: any, poster?: Express.Multer.File,banner?: Express.Multer.File,) {
 
     if (new Date(dto.releaseDate) > new Date()) {
       throw new BadRequestException(
@@ -80,12 +80,14 @@ export class MoviesService
 
 
     let posterPath = null;
-    if (file) {
+    let bannerPath = null;
+
+if (poster) {
 
       try {
 
         const uploadResult:any =
-          await this.cloudinaryService.uploadImage(file);
+        await this.cloudinaryService.uploadImage(poster);
         posterPath = uploadResult.secure_url;
         this.logger.log(
           "Movie poster uploaded successfully"
@@ -101,7 +103,27 @@ export class MoviesService
       
       }
 
+
   }
+
+  if (banner) {
+    try {
+      const uploadResult: any =
+        await this.cloudinaryService.uploadImage(banner);
+  
+      bannerPath = uploadResult.secure_url;
+  
+      this.logger.log("Movie banner uploaded successfully");
+    } catch (error) {
+      this.logger.error(
+        "Movie banner upload failed",
+        error.stack,
+      );
+  
+      throw error;
+    }
+  }
+
     const movie= await this.prisma.movie.create({
       data: {
         title: dto.title,
@@ -113,6 +135,7 @@ export class MoviesService
         rating: dto.rating,
         trailerId: dto.trailerId,
         posterPath: posterPath,
+        bannerPath,
 
         createdBy: {
           connect: {
@@ -299,7 +322,8 @@ export class MoviesService
   async update(
     id: number,
     dto: CreateMovieDto,
-    file?: Express.Multer.File,
+    poster?: Express.Multer.File,
+    banner?: Express.Multer.File,
   ) {
   
 
@@ -317,13 +341,15 @@ export class MoviesService
     }
 
     let posterPath = movie.posterPath;
-       if(file)
-      {
+let bannerPath = movie.bannerPath;
+
+if (poster)
+   {
 
         try {
 
           const uploadResult:any =
-            await this.cloudinaryService.uploadImage(file);
+            await this.cloudinaryService.uploadImage(poster);
           posterPath = uploadResult.secure_url;
           this.logger.log(
             "Movie poster uploaded successfully"
@@ -339,6 +365,25 @@ export class MoviesService
         
         }
 
+      }
+      if (banner) {
+        try {
+          const uploadResult: any =
+            await this.cloudinaryService.uploadImage(banner);
+      
+          bannerPath = uploadResult.secure_url;
+      
+          this.logger.log(
+            "Movie banner uploaded successfully",
+          );
+        } catch (error) {
+          this.logger.error(
+            "Movie banner upload failed",
+            error.stack,
+          );
+      
+          throw error;
+        }
       }
     
     if (
@@ -423,6 +468,7 @@ export class MoviesService
         rating: dto.rating,
         trailerId: dto.trailerId,
         posterPath,
+        bannerPath,
 
         director: {
           connect: {
@@ -449,7 +495,7 @@ export class MoviesService
 
 
 
-  async partialUpdate(id: number, dto: UpdateMovieDto, file?: Express.Multer.File) {
+  async partialUpdate(id: number, dto: UpdateMovieDto, poster?: Express.Multer.File, banner?: Express.Multer.File,) {
     
     const movie =
       await this.prisma.movie.findUnique({
@@ -543,15 +589,15 @@ export class MoviesService
       ...movieData
     } = dto;
     let posterPath = movie.posterPath;
+let bannerPath = movie.bannerPath;
 
-
-   if(file)
+if (poster)
    {
 
     try {
 
       const uploadResult:any =
-        await this.cloudinaryService.uploadImage(file);
+        await this.cloudinaryService.uploadImage(poster);
       posterPath = uploadResult.secure_url;
       this.logger.log(
         "Movie poster uploaded successfully"
@@ -566,9 +612,26 @@ export class MoviesService
       throw error;
     
     }
-
+  }
+  if (banner) {
+    try {
+      const uploadResult: any =
+        await this.cloudinaryService.uploadImage(banner);
+  
+      bannerPath = uploadResult.secure_url;
+  
+      this.logger.log(
+        "Movie banner uploaded successfully",
+      );
+    } catch (error) {
+      this.logger.error(
+        "Movie banner upload failed",
+        error.stack,
+      );
+  
+      throw error;
     }
-
+  }
     
 
     const updatedMovie= await this.prisma.movie.update({
@@ -579,6 +642,7 @@ export class MoviesService
       data: {
         ...movieData,
         posterPath,
+        bannerPath,
 
         releaseDate: releaseDate
           ? new Date(releaseDate)

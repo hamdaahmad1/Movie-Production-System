@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Navbar from "@/app/components/Navbar";
+import MovieCard from "@/app/components/MovieCard";
 
 import { getMovies, deleteMovie } from "@/services/movieService";
 import { getGenres } from "@/services/filterService";
 import { getDirectors } from "@/services/directorService";
 import { getActors } from "@/services/actorService";
+import CustomSelect from "@/app/components/CustomSelect";
 import {
   addFavorite,
   removeFavorite,
@@ -25,7 +27,6 @@ import Swal from "sweetalert2";
 
 export default function MoviesPage() {
   const router = useRouter();
-
   const { user, loading } = useAuth();
 
   const isAdmin = user?.role === "ADMIN";
@@ -33,32 +34,20 @@ export default function MoviesPage() {
 
   const [movies, setMovies] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<number[]>([]);
-
   const [watchlist, setWatchlist] = useState<number[]>([]);
-
   const [genres, setGenres] = useState<string[]>([]);
-
   const [directors, setDirectors] = useState<any[]>([]);
-
   const [actors, setActors] = useState<any[]>([]);
-
   const [page, setPage] = useState(1);
-
   const [totalPages, setTotalPages] = useState(1);
 
   const [filters, setFilters] = useState({
     search: "",
-
     genre: "",
-
     directorId: "",
-
     actorId: "",
-
     year: "",
-
     sortBy: "",
-
     order: "desc" as "asc" | "desc",
   });
 
@@ -67,27 +56,17 @@ export default function MoviesPage() {
     try {
       const response = await getMovies({
         search: filters.search,
-
         genre: filters.genre,
-
         directorId: filters.directorId ? Number(filters.directorId) : undefined,
-
         actorId: filters.actorId ? Number(filters.actorId) : undefined,
-
         year: filters.year ? Number(filters.year) : undefined,
-
         sortBy: filters.sortBy,
-
         order: filters.order,
-
         page,
-
         limit: 10,
       });
       toast.dismiss(toastId);
-
       setMovies(response.data);
-
       setTotalPages(response.totalPages);
     } catch (error) {
       console.error(error);
@@ -100,30 +79,23 @@ export default function MoviesPage() {
     try {
       const [genresData, directorsData, actorsData] = await Promise.all([
         getGenres(),
-
         getDirectors(),
-
         getActors(),
       ]);
-
       setGenres(genresData);
-
       setDirectors(directorsData.data || directorsData);
-
       setActors(actorsData.data || actorsData);
     } catch (error) {
       console.error(error);
       toast.error("Failed to load filters");
     }
   }
+
   async function loadInteractions() {
     try {
       const favoritesData = await getFavorites();
-
       const watchlistData = await getWatchlist();
-
       setFavorites(favoritesData.map((item: any) => item.movie.id));
-
       setWatchlist(watchlistData.map((item: any) => item.movie.id));
     } catch (error) {
       console.error(error);
@@ -138,6 +110,7 @@ export default function MoviesPage() {
   useEffect(() => {
     loadFilters();
   }, []);
+
   useEffect(() => {
     if (user?.role === "VIEWER") {
       loadInteractions();
@@ -146,13 +119,10 @@ export default function MoviesPage() {
 
   useEffect(() => {
     if (loading) return;
-
     if (!user) {
       router.replace("/login");
-
       return;
     }
-
     if (
       user.role !== "ADMIN" &&
       user.role !== "EDITOR" &&
@@ -167,17 +137,14 @@ export default function MoviesPage() {
       if (favorites.includes(movieId)) {
         await removeFavorite(movieId);
         toast.success("Removed from favorites");
-
         setFavorites(favorites.filter((id) => id !== movieId));
       } else {
         await addFavorite(movieId);
         toast.success("Added to favorites");
-
         setFavorites([...favorites, movieId]);
       }
     } catch (error) {
       console.error(error);
-
       toast.error("Favorite operation failed");
     }
   }
@@ -187,300 +154,249 @@ export default function MoviesPage() {
       if (watchlist.includes(movieId)) {
         await removeWatchlist(movieId);
         toast.success("Removed from watchlist");
-
         setWatchlist(watchlist.filter((id) => id !== movieId));
       } else {
         await addWatchlist(movieId);
         toast.success("Added to watchlist");
-
         setWatchlist([...watchlist, movieId]);
       }
     } catch (error) {
       console.error(error);
-
       toast.error("Watchlist operation failed");
     }
   }
 
   async function handleDelete(id: number) {
     const result = await Swal.fire({
-      title: "Delete Actor?",
-      text: "Are you sure you want to delete this actor?",
+      title: "Delete Movie?",
+      text: "Are you sure you want to delete this movie?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Yes, delete it",
       cancelButtonText: "Cancel",
+      background: "#121a33",
+      color: "#fff",
     });
-    
-    if (!result.isConfirmed) {
-      return;
-    }
+
+    if (!result.isConfirmed) return;
 
     try {
       const toastId = toast.loading("Deleting movie...");
       await deleteMovie(id);
       toast.dismiss(toastId);
-
       toast.success("Movie deleted successfully!");
-
       loadMovies();
-    } catch (error: any) 
-    {
+    } catch (error: any) {
       console.error(error);
-    
       if (error.response?.status === 403) {
-        toast.error(
-          "You can only delete movies that you created."
-        );
+        toast.error("You can only delete movies that you created.");
         return;
       }
-    
       toast.error("Failed to delete movie");
     }
   }
 
   function handleFilterChange(key: string, value: string) {
     setPage(1);
-
-    setFilters({
-      ...filters,
-
-      [key]: value,
-    });
+    setFilters({ ...filters, [key]: value });
   }
+
+  const inputClass =
+    "rounded-lg bg-navy-800 border border-navy-600 px-3 py-2 text-sm text-white placeholder:text-ink-400 focus:outline-none focus:border-accent";
 
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-navy-900 text-ink-200">
+        Loading...
+      </div>
+    );
   }
+  if (!user) return null;
+  const genreOptions = [
+    { value: "", label: "All Genres" },
+    ...genres.map((genre) => ({
+      value: genre,
+      label: genre,
+    })),
+  ];
 
-  if (!user) {
-    return null;
-  }
+  const directorOptions = [
+    { value: "", label: "All Directors" },
+    ...directors.map((director) => ({
+      value: String(director.id),
+      label: director.name,
+    })),
+  ];
+
+  const actorOptions = [
+    { value: "", label: "All Actors" },
+    ...actors.map((actor) => ({
+      value: String(actor.id),
+      label: actor.name,
+    })),
+  ];
+
+  const sortOptions = [
+    { value: "", label: "Sort By" },
+    { value: "title", label: "Title" },
+    { value: "rating", label: "Rating Score" },
+    { value: "year", label: "Release Year" },
+  ];
+
+  const orderOptions = [
+    { value: "desc", label: "Descending" },
+    { value: "asc", label: "Ascending" },
+  ];
 
   return (
-    <div>
+    <div className="min-h-screen bg-navy-900">
       <Navbar />
 
-      <h1>Movies</h1>
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold text-white">Movies</h1>
+          {(isAdmin || isEditor) && (
+            <Link
+              href="/movies/create"
+              className="rounded-full bg-gradient-to-r from-accent to-accent-2 px-5 py-2 text-sm font-semibold text-white hover:opacity-90"
+            >
+              + Create Movie
+            </Link>
+          )}
+        </div>
 
-      <button onClick={() => router.push("/")}>Home</button>
+        <div className="mb-8 flex flex-wrap gap-3 rounded-2xl bg-navy-800 p-4">
+          <input
+            type="text"
+            placeholder="Search movie title..."
+            value={filters.search}
+            onChange={(e) => handleFilterChange("search", e.target.value)}
+            className={`${inputClass} flex-1 min-w-[200px]`}
+          />
 
-      <br />
-      <br />
+          <CustomSelect
+            value={filters.genre}
+            onChange={(value) => handleFilterChange("genre", value)}
+            options={genreOptions}
+            placeholder="All Genres"
+            className="w-48"
+          />
 
-      {(isAdmin || isEditor) && <Link href="/movies/create">Create Movie</Link>}
+          <CustomSelect
+            value={filters.directorId}
+            onChange={(value) => handleFilterChange("directorId", value)}
+            options={directorOptions}
+            placeholder="All Directors"
+            className="w-56"
+          />
 
-      <br />
-      <br />
+          <CustomSelect
+            value={filters.actorId}
+            onChange={(value) => handleFilterChange("actorId", value)}
+            options={actorOptions}
+            placeholder="All Actors"
+            className="w-56"
+          />
 
-      <h3>Search & Filter</h3>
+          <input
+            type="number"
+            placeholder="Release Year"
+            max={new Date().getFullYear()}
+            value={filters.year}
+            onChange={(e) => handleFilterChange("year", e.target.value)}
+            className={`${inputClass} w-32`}
+          />
 
-      <input
-        type="text"
-        placeholder="Search movie title..."
-        value={filters.search}
-        onChange={(e) => handleFilterChange("search", e.target.value)}
-      />
+          <CustomSelect
+            value={filters.sortBy}
+            onChange={(value) => handleFilterChange("sortBy", value)}
+            options={sortOptions}
+            placeholder="Sort By"
+            className="w-44"
+          />
 
-      <br />
-      <br />
+          <CustomSelect
+            value={filters.order}
+            onChange={(value) => handleFilterChange("order", value)}
+            options={orderOptions}
+            placeholder="Order"
+            className="w-44"
+          />
+        </div>
 
-      <select
-        value={filters.genre}
-        onChange={(e) => handleFilterChange("genre", e.target.value)}
-      >
-        <option value="">All Genres</option>
-
-        {genres.map((genre) => (
-          <option key={genre} value={genre}>
-            {genre}
-          </option>
-        ))}
-      </select>
-
-      <br />
-      <br />
-
-      <select
-        value={filters.directorId}
-        onChange={(e) => handleFilterChange("directorId", e.target.value)}
-      >
-        <option value="">All Directors</option>
-
-        {directors.map((director) => (
-          <option key={director.id} value={director.id}>
-            {director.name}
-          </option>
-        ))}
-      </select>
-
-      <br />
-      <br />
-
-      <select
-        value={filters.actorId}
-        onChange={(e) => handleFilterChange("actorId", e.target.value)}
-      >
-        <option value="">All Actors</option>
-
-        {actors.map((actor) => (
-          <option key={actor.id} value={actor.id}>
-            {actor.name}
-          </option>
-        ))}
-      </select>
-
-      <br />
-      <br />
-
-      <input
-        type="number"
-        placeholder="Release Year"
-        max={new Date().getFullYear()}
-        value={filters.year}
-        onChange={(e) => handleFilterChange("year", e.target.value)}
-      />
-      <br />
-      <br />
-
-      <select
-        value={filters.sortBy}
-        onChange={(e) => handleFilterChange("sortBy", e.target.value)}
-      >
-        <option value="">Sort By</option>
-
-        <option value="title">Title</option>
-
-        <option value="rating">Rating Score</option>
-
-        <option value="year">Release Year</option>
-      </select>
-
-      <br />
-      <br />
-
-      <select
-        value={filters.order}
-        onChange={(e) => handleFilterChange("order", e.target.value)}
-      >
-        <option value="desc">Descending (Newest / Highest First)</option>
-
-        <option value="asc">Ascending (Oldest / Lowest First)</option>
-      </select>
-
-      <br />
-      <br />
-      {movies.length === 0 ? (
-        <p>No movies found.</p>
-      ) : (
-        movies.map((movie) => (
-          <div
-            key={movie.id}
-            style={{
-              border: "1px solid #ccc",
-              padding: "20px",
-              marginBottom: "20px",
-              borderRadius: "8px",
-            }}
-          >
-            <h2>{movie.title}</h2>
-            {movie.posterPath && (
-              <img
-                src={movie.posterPath}
-                alt={movie.title}
-                style={{
-                  width: "180px",
-                  height: "260px",
-                  objectFit: "cover",
-                }}
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
+        {movies.length === 0 ? (
+          <p className="text-ink-400">No movies found.</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {movies.map((movie) => (
+              <MovieCard
+                key={movie.id}
+                movie={movie}
+                actions={
+                  <>
+                    {user.role === "VIEWER" && (
+                      <>
+                        <button
+                          onClick={() => handleFavorite(movie.id)}
+                          className="rounded-full bg-navy-700 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-navy-600"
+                        >
+                          {favorites.includes(movie.id)
+                            ? "♥ Favorited"
+                            : "♡ Favorite"}
+                        </button>
+                        <button
+                          onClick={() => handleWatchlist(movie.id)}
+                          className="rounded-full bg-navy-700 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-navy-600"
+                        >
+                          {watchlist.includes(movie.id)
+                            ? "✓ Watchlisted"
+                            : "+ Watchlist"}
+                        </button>
+                      </>
+                    )}
+                    {(isAdmin || isEditor) && (
+                      <Link
+                        href={`/movies/edit/${movie.id}`}
+                        className="rounded-full bg-navy-700 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-navy-600"
+                      >
+                        Edit
+                      </Link>
+                    )}
+                    {(isAdmin || movie.createdById === user?.id) && (
+                      <button
+                        onClick={() => handleDelete(movie.id)}
+                        className="rounded-full bg-rose-500/20 px-2.5 py-1 text-[11px] font-medium text-rose-300 hover:bg-rose-500/30"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </>
+                }
               />
-            )}
-            <p>
-              <strong>Description:</strong>
-              {movie.description}
-            </p>
-            <p>
-              <strong>Duration:</strong>
-              {movie.duration} minutes
-            </p>
-            <p>
-              <strong>Language:</strong>
-              {movie.language}
-            </p>
-            <p>
-              <strong>Release Date:</strong>{" "}
-              {movie.releaseDate
-                ? new Date(movie.releaseDate).toLocaleDateString("en-GB")
-                : "N/A"}
-            </p>
-            <p>
-              <strong>Genre:</strong>
-              {movie.genre}
-            </p>
-            <p>
-              <strong>Rating:</strong>
-              {movie.rating}/10
-            </p>
-            <p>
-              <strong>Director:</strong>
-              {movie.director?.name}
-            </p>
-            <p>
-              <strong>Actors:</strong>
-
-              {movie.actors?.length
-                ? movie.actors.map((actor: any) => actor.name).join(", ")
-                : "No actors"}
-            </p>
-            <Link href={`/movies/${movie.id}`}>View Reviews</Link>
-            {" | "}
-            {user.role === "VIEWER" && (
-              <>
-                <button onClick={() => handleFavorite(movie.id)}>
-                  {favorites.includes(movie.id)
-                    ? "Remove Favorite"
-                    : "Add Favorite"}
-                </button>
-
-                {" | "}
-
-                <button onClick={() => handleWatchlist(movie.id)}>
-                  {watchlist.includes(movie.id)
-                    ? "Remove Watchlist"
-                    : "Add Watchlist"}
-                </button>
-
-                {" | "}
-
-                <Link href={`/movies/${movie.id}/review`}>Write Review</Link>
-              </>
-            )}
-            {(isAdmin || isEditor) && (
-              <Link href={`/movies/edit/${movie.id}`}>Edit</Link>
-            )}{" "}
-            {(isAdmin || movie.createdById === user?.id) && (
-              <button onClick={() => handleDelete(movie.id)}>Delete</button>
-            )}
+            ))}
           </div>
-        ))
-      )}
+        )}
 
-      <br />
-
-      <button disabled={page === 1} onClick={() => setPage(page - 1)}>
-        Previous
-      </button>
-
-      <span style={{ margin: "20px" }}>
-        Page {page} of {totalPages}
-      </span>
-
-      <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>
-        Next
-      </button>
+        <div className="mt-10 flex items-center justify-center gap-4">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="rounded-full bg-navy-800 px-4 py-2 text-sm text-white disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-ink-400">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+            className="rounded-full bg-navy-800 px-4 py-2 text-sm text-white disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

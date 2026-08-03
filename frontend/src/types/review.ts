@@ -1,3 +1,5 @@
+import{ Movie } from "./movie"; 
+
 export interface Review {
     id: number;
     rating: number;
@@ -13,4 +15,5 @@ export interface Review {
     user: {
       username: string;
     };
+    movie?: Movie;
   }

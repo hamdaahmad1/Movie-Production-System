@@ -13,6 +13,7 @@ import {
   MaxLength,
   Matches,
   IsNumber,
+  IsOptional,
 } from 'class-validator';
 
 import { Transform, Type } from 'class-transformer';
@@ -255,4 +256,6 @@ export class CreateMovieDto {
 
   
   posterPath: any;
+  bannerPath: any;
+
 }

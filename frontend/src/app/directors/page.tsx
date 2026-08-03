@@ -2,25 +2,27 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import Navbar from "@/app/components/Navbar";
+import PersonCard from "@/app/components/PersonCard";
+
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import CustomSelect from "@/app/components/CustomSelect";
 
 import { getDirectors, deleteDirector } from "@/services/directorService";
 
 import { Director } from "@/types/director";
 
-import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 
 export default function DirectorsPage() {
   const router = useRouter();
 
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   const isAdmin = user?.role === "ADMIN";
-
   const isEditor = user?.role === "EDITOR";
 
   const [directors, setDirectors] = useState<Director[]>([]);
@@ -31,11 +33,8 @@ export default function DirectorsPage() {
 
   const [filters, setFilters] = useState({
     search: "",
-
     birthYear: "",
-
     sortBy: "",
-
     order: "desc" as "asc" | "desc",
   });
 
@@ -45,35 +44,37 @@ export default function DirectorsPage() {
     try {
       const response = await getDirectors({
         search: filters.search,
-
         birthYear: filters.birthYear ? Number(filters.birthYear) : undefined,
-
         sortBy: filters.sortBy,
-
         order: filters.order,
-
         page,
-
         limit: 10,
       });
 
-      console.log("DIRECTORS RESPONSE:", response);
-
       setDirectors(response.data);
-
       setTotalPages(response.totalPages);
+
       toast.dismiss(toastId);
     } catch (error) {
       console.error(error);
+
       toast.dismiss(toastId);
 
-      toast.error("Failed to load directors");
+      toast.error("Failed to load directors.");
     }
   }
 
   useEffect(() => {
     loadDirectors();
   }, [page, filters]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      router.replace("/login");
+    }
+  }, [loading, user, router]);
 
   async function handleDelete(id: number) {
     const result = await Swal.fire({
@@ -83,24 +84,26 @@ export default function DirectorsPage() {
       showCancelButton: true,
       confirmButtonText: "Yes, delete it",
       cancelButtonText: "Cancel",
+      background: "#121a33",
+      color: "#fff",
     });
-    
+
     if (!result.isConfirmed) {
       return;
     }
-    const toastId = toast.loading("Deleting director...");
 
     try {
-      const result = await deleteDirector(id);
+      const toastId = toast.loading("Deleting director...");
 
-      if (!result.success) {
-        toast.dismiss(toastId);
+      const response = await deleteDirector(id);
 
-        toast.error(result.message || "Failed to delete director.");
+      toast.dismiss(toastId);
+
+      if (!response.success) {
+        toast.error(response.message || "Failed to delete director.");
         return;
       }
 
-      toast.dismiss(toastId);
       toast.success("Director deleted successfully!");
 
       loadDirectors();
@@ -112,7 +115,7 @@ export default function DirectorsPage() {
         return;
       }
 
-      toast.error("Failed to delete director");
+      toast.error("Failed to delete director.");
     }
   }
 
@@ -121,171 +124,156 @@ export default function DirectorsPage() {
 
     setFilters({
       ...filters,
-
       [key]: value,
     });
   }
 
+  const inputClass =
+    "rounded-lg bg-navy-800 border border-navy-600 px-3 py-2 text-sm text-white placeholder:text-ink-400 focus:outline-none focus:border-accent";
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-navy-900 text-ink-200">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!user) return null;
+  const sortOptions = [
+    { value: "", label: "Sort By" },
+    { value: "name", label: "Name" },
+    { value: "dob", label: "Date of Birth" },
+    { value: "createdAt", label: "Created Date" },
+  ];
+
+  const orderOptions = [
+    { value: "desc", label: "Descending" },
+    { value: "asc", label: "Ascending" },
+  ];
+
   return (
-    <div>
+    <div className="min-h-screen bg-navy-900">
       <Navbar />
 
-      <h1>Directors</h1>
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold text-white">Directors</h1>
 
-      <button onClick={() => router.push("/")}>Home</button>
+          {(isAdmin || isEditor) && (
+            <Link
+              href="/directors/create"
+              className="rounded-full bg-gradient-to-r from-accent to-accent-2 px-5 py-2 text-sm font-semibold text-white hover:opacity-90"
+            >
+              + Create Director
+            </Link>
+          )}
+        </div>
+        <div className="mb-8 flex flex-wrap gap-3 rounded-2xl bg-navy-800 p-4">
+          <input
+            type="text"
+            placeholder="Search director..."
+            value={filters.search}
+            onChange={(e) => handleFilterChange("search", e.target.value)}
+            className={`${inputClass} min-w-[220px] flex-1`}
+          />
 
-      <br />
-      <br />
+          <input
+            type="number"
+            placeholder="Birth Year"
+            max={new Date().getFullYear()}
+            value={filters.birthYear}
+            onChange={(e) => handleFilterChange("birthYear", e.target.value)}
+            className={`${inputClass} w-40`}
+          />
 
-      {(isAdmin || isEditor) && (
-        <Link href="/directors/create">Create Director</Link>
-      )}
+          <CustomSelect
+            value={filters.sortBy}
+            onChange={(value) => handleFilterChange("sortBy", value)}
+            options={sortOptions}
+            placeholder="Sort By"
+            className="w-48"
+          />
 
-      <br />
-      <br />
+          <CustomSelect
+            value={filters.order}
+            onChange={(value) => handleFilterChange("order", value)}
+            options={orderOptions}
+            placeholder="Order"
+            className="w-44"
+          />
+        </div>
 
-      <h3>Search & Filter</h3>
+        {directors.length === 0 ? (
+          <p className="text-ink-400">No directors found.</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {directors.map((director) => (
+              <PersonCard
+                key={director.id}
+                name={director.name}
+                imagePath={director.imagePath}
+                subtitle={
+                  director.dob
+                    ? new Date(director.dob).toLocaleDateString("en-GB")
+                    : "Unknown DOB"
+                }
+                href={`/directors/${director.id}`}
+                actions={
+                  <>
+                    <Link
+                      href={`/directors/${director.id}`}
+                      className="rounded-full bg-navy-700 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-navy-600"
+                    >
+                      View Details
+                    </Link>
+                    
+                    {(isAdmin || isEditor) && (
+                      <Link
+                        href={`/directors/edit/${director.id}`}
+                        className="rounded-full bg-navy-700 px-2.5 py-1 text-[11px] font-medium text-white transition hover:bg-navy-600"
+                      >
+                        Edit
+                      </Link>
+                    )}
 
-      <input
-        type="text"
-        placeholder="Search director name..."
-        value={filters.search}
-        onChange={(e) => handleFilterChange("search", e.target.value)}
-      />
-
-      <br />
-      <br />
-
-      <input
-        type="number"
-        placeholder="Birth Year"
-        max={new Date().getFullYear()}
-        value={filters.birthYear}
-        onChange={(e) => handleFilterChange("birthYear", e.target.value)}
-      />
-
-      <br />
-      <br />
-
-      <select
-        value={filters.sortBy}
-        onChange={(e) => handleFilterChange("sortBy", e.target.value)}
-      >
-        <option value="">Sort By</option>
-
-        <option value="name">Name</option>
-
-        <option value="dob">Date of Birth</option>
-
-        <option value="createdAt">Created Date</option>
-      </select>
-
-      <br />
-      <br />
-
-      <select
-        value={filters.order}
-        onChange={(e) => handleFilterChange("order", e.target.value)}
-      >
-        <option value="desc">Descending (Z-A / Newest)</option>
-
-        <option value="asc">Ascending (A-Z / Oldest)</option>
-      </select>
-
-      <br />
-      <br />
-
-      {directors.length === 0 ? (
-        <p>No directors found.</p>
-      ) : (
-        directors.map((director) => (
-          <div
-            key={director.id}
-            style={{
-              border: "1px solid #ccc",
-
-              padding: "20px",
-
-              marginBottom: "20px",
-
-              borderRadius: "10px",
-            }}
-          >
-            <h2>{director.name}</h2>
-
-            {director.imagePath ? (
-              <img
-                src={director.imagePath}
-                alt={director.name}
-                width={160}
-                height={220}
-                style={{
-                  objectFit: "cover",
-
-                  borderRadius: "8px",
-
-                  border: "1px solid #ccc",
-
-                  display: "block",
-
-                  marginBottom: "15px",
-                }}
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
+                    {(isAdmin || director.createdById === user?.id) && (
+                      <button
+                        onClick={() => handleDelete(director.id)}
+                        className="rounded-full bg-rose-500/20 px-2.5 py-1 text-[11px] font-medium text-rose-300 transition hover:bg-rose-500/30"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </>
+                }
               />
-            ) : (
-              <p>No image available</p>
-            )}
-
-            <p>
-              <strong>Date of Birth:</strong>{" "}
-              {director.dob
-                ? new Date(director.dob).toLocaleDateString("en-GB")
-                : "N/A"}
-            </p>
-
-            <p>
-              <strong>Nationality:</strong> {director.nationality}
-            </p>
-
-            <p>
-              <strong>Biography:</strong> {director.biography}
-            </p>
-
-            <p>
-              <strong>Movies:</strong>{" "}
-              {director.movies?.length
-                ? director.movies.map((movie: any) => movie.title).join(", ")
-                : "No movies"}
-            </p>
-
-            {(isAdmin || isEditor) && (
-              <Link href={`/directors/edit/${director.id}`}>Edit</Link>
-            )}
-
-            {" | "}
-
-            {(isAdmin || director.createdById === user?.id) && (
-              <button onClick={() => handleDelete(director.id)}>Delete</button>
-            )}
+            ))}
           </div>
-        ))
-      )}
+        )}
 
-      <br />
+        <div className="mt-10 flex items-center justify-center gap-4">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="rounded-full bg-navy-800 px-4 py-2 text-sm text-white transition hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Previous
+          </button>
 
-      <button disabled={page === 1} onClick={() => setPage(page - 1)}>
-        Previous
-      </button>
+          <span className="text-sm text-ink-400">
+            Page {page} of {totalPages}
+          </span>
 
-      <span style={{ margin: "20px" }}>
-        Page {page} of {totalPages}
-      </span>
-
-      <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>
-        Next
-      </button>
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+            className="rounded-full bg-navy-800 px-4 py-2 text-sm text-white transition hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
