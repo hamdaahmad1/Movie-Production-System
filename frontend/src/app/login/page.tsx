@@ -184,7 +184,7 @@ export default function LoginPage() {
       toast.success("Login successful!");
 
       if (response.user.role === "ADMIN") {
-        router.replace("/admin");
+        window.location.assign("/admin");
       } else if (response.user.role === "EDITOR") {
         router.replace("/editor");
       } else if (response.user.role === "VIEWER") {
