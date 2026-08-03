@@ -9,13 +9,13 @@ import Navbar from "@/app/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import { getMovie } from "@/services/movieService";
 import { Movie } from "@/types/movie";
-import StarRating from "@/app/components/StarRating";
 
 import { getMovieReviews, deleteReview } from "@/services/reviewService";
 
 import Link from "next/link";
 
 import toast from "react-hot-toast";
+import StarRating from "@/app/components/StarRating";
 
 export default function MovieDetailsPage() {
   const params = useParams();
@@ -129,13 +129,7 @@ export default function MovieDetailsPage() {
         </button>
 
         <div className="relative h-[620px] overflow-hidden rounded-3xl">
-          {movie.bannerPath ? (
-            <img
-              src={movie.bannerPath}
-              alt={movie.title}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : movie.posterPath ? (
+         { movie.posterPath ? (
             <img
               src={movie.posterPath}
               alt={movie.title}
@@ -172,9 +166,8 @@ export default function MovieDetailsPage() {
                 {movie.description}
               </p>
 
-              <div className="mt-6 flex flex-wrap items-center gap-5 text-white">
+              <div className="mt-6 flex flex-wrap gap-5 text-white">
                 <span>{movie.duration} min</span>
-
                 <div className="flex items-center gap-2">
                   <StarRating value={movie.averageRating} readOnly size={16} />
 
@@ -182,7 +175,6 @@ export default function MovieDetailsPage() {
                     {movie.averageRating.toFixed(1)}/5.0
                   </span>
                 </div>
-
                 <span>{movie.language}</span>
               </div>
 
