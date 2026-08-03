@@ -129,7 +129,7 @@ export default function MovieDetailsPage() {
         </button>
 
         <div className="relative h-[620px] overflow-hidden rounded-3xl">
-         { movie.posterPath ? (
+          {movie.posterPath ? (
             <img
               src={movie.posterPath}
               alt={movie.title}
@@ -288,17 +288,21 @@ export default function MovieDetailsPage() {
             <div>
               <h2 className="text-4xl font-bold text-white">Reviews</h2>
 
-              <p className="mt-2 text-ink-400">
-                Share your thoughts about this movie.
-              </p>
+              {user?.role === "VIEWER" && (
+                <p className="mt-2 text-ink-400">
+                  Share your thoughts about this movie.
+                </p>
+              )}
             </div>
 
-            <Link
-              href={`/movies/${movieId}/review/create`}
-              className="rounded-full bg-gradient-to-r from-accent to-accent-2 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-105"
-            >
-              + Add Review
-            </Link>
+            {user?.role === "VIEWER" && (
+              <Link
+                href={`/movies/${movieId}/review`}
+                className="rounded-full bg-gradient-to-r from-accent to-accent-2 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-105"
+              >
+                + Add Review
+              </Link>
+            )}
           </div>
 
           {reviews.length === 0 ? (

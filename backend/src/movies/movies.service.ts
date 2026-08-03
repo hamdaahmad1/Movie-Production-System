@@ -380,6 +380,8 @@ if (poster) {
           reviews: true,
         },
       });
+      console.log("DATABASE_URL:", process.env.DATABASE_URL);
+console.log("Movie from Prisma:", movie);
 
     if (!movie) {
 
