@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import Navbar from "@/app/components/Navbar";
 import ImageUpload from "@/app/components/ImageUpload";
 import CustomSelect from "@/app/components/CustomSelect";
+import StarRating from "@/app/components/StarRating";
 
 const inputClass =
   "w-full rounded-lg bg-navy-700 border border-navy-600 px-3 py-2.5 text-sm text-white placeholder:text-ink-400 focus:outline-none focus:border-accent";
@@ -169,7 +170,7 @@ export default function CreateMovie() {
 
     if (!movie.rating) return "Rating is required";
     if (isNaN(rating)) return "Rating must be a number";
-    if (rating < 1 || rating > 10) return "Rating must be between 1 and 10";
+    if (rating < 1 || rating > 5) return "Rating must be between 1 and 5";
 
     if (!trailerId) return "Trailer URL is required";
     if (!movie.directorId) return "Director is required";
@@ -368,17 +369,23 @@ export default function CreateMovie() {
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label className={labelClass}>Rating (1–10)</label>
-              <input
-                type="number"
-                min={1}
-                max={10}
-                step={0.1}
-                placeholder="e.g. 8.5"
-                value={movie.rating}
-                onChange={(e) => setMovie({ ...movie, rating: e.target.value })}
-                className={inputClass}
-              />
+              <label className={labelClass}>Rating</label>
+
+              <div className="mt-2">
+                <StarRating
+                  value={Number(movie.rating)}
+                  onChange={(rating) =>
+                    setMovie({
+                      ...movie,
+                      rating: rating.toString(),
+                    })
+                  }
+                />
+              </div>
+
+              <p className="mt-2 text-sm text-gray-500">
+                Selected Rating: {movie.rating || "0"} / 5
+              </p>
             </div>
 
             <div>

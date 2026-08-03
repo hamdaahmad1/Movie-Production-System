@@ -163,21 +163,4 @@ findOne(
 }
 
   
-    @Get('movie/:movieId/rating')
-    @ApiOperation({
-      summary: 'Get average movie rating',
-    })
-    @ApiParam({
-      name: 'movieId',
-      example: 1,
-    })
-    getAverageRating(
-      @Param('movieId') movieId: string,
-    ) {
-      return this.reviewsService.getAverageRating(
-        Number(movieId),
-      );
-    }
-
-
   }

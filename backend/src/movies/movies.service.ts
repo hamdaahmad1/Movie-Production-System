@@ -23,6 +23,31 @@ export class MoviesService
     private cloudinaryService: CloudinaryService
   ) {}
 
+  private calculateMovieRating(movie: any) {
+
+  const ratings = [
+    movie.rating,
+    ...movie.reviews.map(review => review.rating),
+  ];
+
+  const totalRatings = ratings.length;
+
+  const averageRating =
+    ratings.reduce((sum, rating) => sum + rating, 0) /
+    totalRatings;
+
+
+  return {
+    averageRating: Number(averageRating.toFixed(1)),
+    totalRatings,
+
+    popularityScore:
+      Number(averageRating) *
+      Math.log10(totalRatings + 1),
+  };
+}
+
+
   async create(dto: CreateMovieDto, user: any, poster?: Express.Multer.File,banner?: Express.Multer.File,) {
 
     if (new Date(dto.releaseDate) > new Date()) {
@@ -225,29 +250,35 @@ if (poster) {
     let orderBy: any = {
       createdAt: "desc",
     };
-  
+    
     if (sortBy) {
       const sortOrder = order === "asc" ? "asc" : "desc";
-  
+    
       switch (sortBy) {
+    
         case "title":
           orderBy = {
             title: sortOrder,
           };
           break;
-  
-        case "rating":
-          orderBy = {
-            rating: sortOrder,
-          };
-          break;
-  
+    
+    
         case "year":
           orderBy = {
             releaseDate: sortOrder,
           };
           break;
-  
+    
+    
+        case "rating":
+          // Rating is calculated from reviews,
+          // so sorting will be done after calculating averageRating
+          orderBy = {
+            createdAt: "desc",
+          };
+          break;
+    
+    
         default:
           orderBy = {
             createdAt: "desc",
@@ -255,38 +286,83 @@ if (poster) {
       }
     }
   
-    const skip = (page - 1) * limit;
-  
     const [movies, total] = await Promise.all([
       this.prisma.movie.findMany({
         where,
-  
-        include: {
-          director: true,
-          actors: true,
+    
+        include:{
+          director:true,
+          actors:true,
+          reviews:true,
         },
-  
-        orderBy,
-  
-        skip,
-  
-        take: limit,
       }),
-  
+    
       this.prisma.movie.count({
         where,
       }),
     ]);
-  
+    
+    
+    let moviesWithRatings = movies.map(movie => ({
+      ...movie,
+      ...this.calculateMovieRating(movie),
+    }));
+    
+    
+    if(sortBy === "rating") {
+
+      moviesWithRatings.sort((a,b)=>{
+    
+        return order === "asc"
+          ? a.popularityScore - b.popularityScore
+          : b.popularityScore - a.popularityScore;
+    
+      });
+    
+    }
+    else if(sortBy === "title"){
+    
+      moviesWithRatings.sort((a,b)=>
+        order === "asc"
+          ? a.title.localeCompare(b.title)
+          : b.title.localeCompare(a.title)
+      );
+    
+    }
+    else if(sortBy === "year"){
+    
+      moviesWithRatings.sort((a,b)=>
+        order === "asc"
+          ? new Date(a.releaseDate).getTime() - new Date(b.releaseDate).getTime()
+          : new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+      );
+    
+    }
+    else{
+    
+      moviesWithRatings.sort((a,b)=>
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
+      );
+    
+    }
+    
+    
+    // pagination after sorting
+    const skip = (page-1)*limit;
+    
+    const paginatedMovies =
+      moviesWithRatings.slice(
+        skip,
+        skip + limit
+      );
+    
+    
     return {
-      data: movies,
-  
+      data: paginatedMovies,
       total,
-  
       page,
-  
       limit,
-  
       totalPages: Math.ceil(total / limit),
     };
   }
@@ -301,6 +377,7 @@ if (poster) {
         include: {
           director: true,
           actors: true,
+          reviews: true,
         },
       });
 
@@ -315,7 +392,10 @@ if (poster) {
       );
     }
 
-    return movie;
+    return {
+      ...movie,
+      ...this.calculateMovieRating(movie),
+    };
   }
 
  

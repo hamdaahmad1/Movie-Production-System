@@ -165,37 +165,6 @@ import
    }
 
 
-   async getAverageRating(movieId:number)
-   {
-   const result = await this.prisma.review.aggregate({
-   
-   where:{
-   movieId
-   },
-   
-   _avg:{
-   rating:true
-   },
-   
-   _count:{
-   rating:true
-   }
-   
-   });
-   
-   
-   return {
-   
-   averageRating:
-   result._avg.rating ?? 0,
-   
-   totalReviews:
-   result._count.rating
-   
-   };   
-   
-}
-
 async getMyReviews(userId:number){
 
     return this.prisma.review.findMany({

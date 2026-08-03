@@ -4,12 +4,6 @@ import Link from "next/link";
 import { Movie } from "@/types/movie";
 import { ReactNode } from "react";
 
-function ratingColor(rating: number) {
-  if (rating >= 7) return "bg-emerald-500";
-  if (rating >= 5) return "bg-amber-500";
-  return "bg-rose-500";
-}
-
 export default function MovieCard({
   movie,
   actions,
@@ -42,13 +36,11 @@ export default function MovieCard({
           </div>
         )}
 
-        <span
-          className={`absolute left-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-navy-950 ${ratingColor(
-            movie.rating
-          )}`}
-        >
-          {Math.round(movie.rating * 10)}
-        </span>
+        {movie.averageRating >= 4.5 && movie.totalRatings >= 2 && (
+          <span className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 px-2.5 py-1 text-[11px] font-semibold text-navy-950 shadow-md">
+            ⭐ Most Popular
+          </span>
+        )}
 
         {movie.genre && (
           <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur">
