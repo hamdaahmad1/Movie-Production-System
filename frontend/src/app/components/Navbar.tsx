@@ -67,7 +67,8 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-2 backdrop-blur-lg md:flex">
+        {/* Desktop Navigation */}
+        <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-2 backdrop-blur-lg lg:flex">
           {navLinks.map((link) => {
             const active =
               link.href === "/"
@@ -91,8 +92,9 @@ export default function Navbar() {
         </div>
 
         {/* Right Side */}
+        {/* Right Side */}
         <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-4">
             {user && (
               <span className="rounded-full border border-accent/30 bg-accent/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-accent">
                 {user.role}
@@ -134,7 +136,7 @@ export default function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden rounded-xl border border-white/10 bg-white/5 p-2 text-white"
+            className="lg:hidden rounded-xl border border-white/10 bg-white/5 p-2 text-white"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -143,8 +145,9 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Menu */}
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="border-t border-white/10 bg-navy-950/95 backdrop-blur-xl md:hidden">
+        <div className="border-t border-white/10 bg-navy-950/95 backdrop-blur-xl lg:hidden">
           <div className="flex flex-col space-y-3 px-6 py-5">
             {navLinks.map((link) => {
               const active =
