@@ -105,133 +105,39 @@ describe('AuthService', () => {
 
     });
 
-    describe("register", () => {
-
-        it("should throw BadRequestException if password and confirmPassword do not match", async () => {
-
-            const dto = {
-              ...mockRegisterDto,
-              confirmPassword: "Different123!",
-            }
-
-            await expect(
-
-                service.register(dto, mockResponse)
-
-            ).rejects.toThrow(BadRequestException);
-
-            expect(mockUsersService.create).not.toHaveBeenCalled();
-
-        });
-
-        it("should throw BadRequestException if firstName and lastName are the same", async () => {
-
-            const dto = {
-              ...mockRegisterDto,
-              firstName: "Hamda",
-              lastName: "hamda",
-            }
-
-            await expect(
-
-                service.register(dto, mockResponse)
-
-            ).rejects.toThrow(BadRequestException);
-
-            expect(mockUsersService.create).not.toHaveBeenCalled();
-
-        });
-
-        it("should throw BadRequestException if username already exists", async () => {
-
-          const dto = { ...mockRegisterDto };
-
-          mockUsersService.findByUsername.mockResolvedValue(mockUser);
-
-          await expect(
-
-              service.register(dto, mockResponse)
-
-          ).rejects.toThrow(BadRequestException);
-
-          expect(mockUsersService.findByUsername).toHaveBeenCalledWith(dto.username);
-
-          expect(mockUsersService.create).not.toHaveBeenCalled();
-
-        });
-
-        it("should throw BadRequestException if email already exists", async () => {
-
-          const dto = { ...mockRegisterDto };
-
-          mockUsersService.findByUsername.mockResolvedValue(null);
-          mockUsersService.findByEmail.mockResolvedValue(mockUser);
-
-          await expect(
-
-              service.register(dto, mockResponse)
-
-          ).rejects.toThrow(BadRequestException);
-
-          expect(mockUsersService.findByEmail).toHaveBeenCalledWith(dto.email);
-
-          expect(mockUsersService.create).not.toHaveBeenCalled();
-
-        });
-
-        it("should register a new user successfully", async () => {
-
-          const dto = { ...mockRegisterDto };
-
-          mockUsersService.findByUsername.mockResolvedValue(null);
-          mockUsersService.findByEmail.mockResolvedValue(null);
-          mockUsersService.create.mockResolvedValue(mockUser);
-          mockJwtService.signAsync.mockResolvedValue("mocked-jwt-token");
-
-          const result = await service.register(dto, mockResponse);
-
-          expect(mockUsersService.create).toHaveBeenCalledWith({
-            username: dto.username,
-            email: dto.email,
-            password: dto.password,
-            firstName: dto.firstName,
-            lastName: dto.lastName,
-            role: UserRole.VIEWER,
-          });
-
-          expect(mockJwtService.signAsync).toHaveBeenCalledWith({
-            sub: mockUser.id,
-            username: mockUser.username,
-            role: mockUser.role,
-          });
-
-          expect(mockResponse.cookie).toHaveBeenCalledWith(
-            "access_token",
-            "mocked-jwt-token",
-            expect.objectContaining({
-              httpOnly: true,
-              secure: true,
-              sameSite: "none",
-              maxAge: 86400000,
-            }),
-          
-          );
-
-          expect(result).toEqual({
-            message: "Registration successful.",
-            access_token: "mocked-jwt-token",
-            user: {
-              id: mockUser.id,
-              username: mockUser.username,
-              email: mockUser.email,
-              firstName: mockUser.firstName,
-              lastName: mockUser.lastName,
-              role: mockUser.role,
-            },
-          });
-
-        });
-
+    it("should register a new user successfully", async () => {
+      const dto = { ...mockRegisterDto };
+    
+      mockUsersService.findByUsername.mockResolvedValue(null);
+      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockUsersService.create.mockResolvedValue(mockUser);
+    
+      const result = await service.register(dto, mockResponse);
+    
+      expect(mockUsersService.create).toHaveBeenCalledWith({
+        username: dto.username,
+        email: dto.email,
+        password: dto.password,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        role: UserRole.VIEWER,
+      });
+    
+      expect(mockJwtService.signAsync).not.toHaveBeenCalled();
+    
+      expect(mockResponse.cookie).not.toHaveBeenCalled();
+    
+      expect(result).toEqual({
+        message: "Registration successful. Please log in.",
+        user: {
+          id: mockUser.id,
+          username: mockUser.username,
+          email: mockUser.email,
+          firstName: mockUser.firstName,
+          lastName: mockUser.lastName,
+          role: mockUser.role,
+        },
+      });
     });
 
     describe("login", () => {

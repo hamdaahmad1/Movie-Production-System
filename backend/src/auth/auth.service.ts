@@ -115,11 +115,17 @@ import {
 
 
 
-      return this.generateAuthResponse(
-        user,
-        'Registration successful.',
-        res,
-      );
+      return {
+        message: 'Registration successful. Please log in.',
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+        },
+      };
 
     
     }
