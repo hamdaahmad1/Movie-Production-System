@@ -51,8 +51,14 @@ async function bootstrap() {
     const allowedOrigins = [
       'http://localhost:3000',
       'https://movie-production-system.vercel.app',
+      'https://morally-press-easiness.ngrok-free.dev'
     ];
-    if (!origin || allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+    if (
+      !origin ||
+      allowedOrigins.includes(origin) ||
+      /\.vercel\.app$/.test(origin) ||
+      /\.ngrok-free\.dev$/.test(origin)
+    ) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
